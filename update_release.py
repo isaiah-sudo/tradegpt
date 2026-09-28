@@ -253,6 +253,11 @@ def update_version_py(file_path: str, version: str) -> bool:
         rf'\g<1>{version}\g<2>',
         content
     )
+    content = re.sub(
+        r'(GITHUB_REPO\s*=\s*")[^"]+(")',
+        r'\g<1>isaiah-sudo/tradeism\g<2>',
+        content
+    )
 
     if content != original:
         with open(file_path, "w", encoding="utf-8") as f:
@@ -296,18 +301,15 @@ def main():
         except Exception:
             pass
 
-    target_tag = args.tag or (f"v{v_file_ver}" if v_file_ver else None)
+    target_tag = args.tag
     target_label = target_tag if target_tag else "latest release"
     print(f"[*] Fetching {target_label} from GitHub API (repo: {args.repo})...")
     try:
         release = get_release_data(args.repo, target_tag)
     except Exception as e:
-        if target_tag:
-            print(f"[!] Warning: Could not fetch tag {target_tag} from GitHub ({e}). Using synthetic metadata...")
-            release = {"tag_name": target_tag, "name": f"TradeGPT {target_tag}", "assets": []}
-        else:
-            print(f"[!] Failed to fetch release: {e}", file=sys.stderr)
-            sys.exit(1)
+        fallback_tag = target_tag or (f"v{v_file_ver}" if v_file_ver else "v2.0.5")
+        print(f"[!] Warning: Could not fetch from GitHub ({e}). Using synthetic metadata for {fallback_tag}...")
+        release = {"tag_name": fallback_tag, "name": f"TradeGPT {fallback_tag}", "assets": []}
 
     tag = release.get("tag_name", "")
     version = tag.lstrip("vV")

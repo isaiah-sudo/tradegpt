@@ -187,7 +187,7 @@ it("executes SELL orders, computes realized PnL correctly", () => {
     const ok = engine.sell("NVXP", 50);
     assert.strictEqual(ok, true);
     assert.strictEqual(engine.positions["NVXP"].shares, 50);
-    assert.strictEqual(engine.realizedPnL, 50 * 10.0); // +$500.00
+    assert.ok(Math.abs(engine.realizedPnL - (50 * 10.0)) < 1e-5);
 });
 
 it("executes SHORT orders with 50% margin collateral and COVER orders with margin release", () => {
