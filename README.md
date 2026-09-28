@@ -81,7 +81,7 @@ Lock in your hard-earned trading profits and build a persistent empire:
 - **🔍 Pro Market Scanner & Watchlist**:
   - Live monitoring of all **100 stocks**.
   - **Instant Search**: Type any ticker or company name to filter the market in real-time.
-  - **Dynamic Sorting**: Rank by **▲ Gainers** (top % spikes), **▼ Losers** (dip buys/shorts), or **A-Z**.
+  - **Dynamic Sorting**: Rank by **▲ Gainers** (top % spikes), **▼ Losers** (dip buys/shorts), or **💼 Owned** (track your active open positions).
   - **Sector Quick-Filters**: Instant tabs for `ALL`, `MEME`, `BIO`, `CRYPTO`, and `PENNY`.
 
 - **🕹️ 4 Simulation Speed Difficulties**:

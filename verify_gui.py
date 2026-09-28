@@ -37,18 +37,55 @@ def verify_gui():
         app.update()
         print(f"Switched to {ticker} - chart rendered.", flush=True)
 
-    # Execute a test trade
+    # Verify Owned tab existence
+    assert "OWNED" in app.watchlist.sort_buttons, "Expected 'OWNED' sort button"
+    assert "TICKER" not in app.watchlist.sort_buttons, "Expected 'TICKER' (A-Z) button to be replaced"
+    print("Verified Owned tab replaced A-Z sort tab.", flush=True)
+
+    # Test Owned tab when empty
+    app.watchlist._set_sort("OWNED")
+    app.update()
+    assert len(app.watchlist.rendered_tickers) == 0, f"Expected 0 owned stocks initially, got {len(app.watchlist.rendered_tickers)}"
+    assert "0 OWNED" in app.watchlist.lbl_count.cget("text")
+    print("Verified Owned tab empty state with 0 open positions.", flush=True)
+
+    # Execute a test trade (Buy NVXP)
     print("Testing Buy execution in GUI...", flush=True)
+    app.watchlist.select_stock("NVXP")
     app.trading_panel._set_qty(100)
     app.trading_panel.do_buy()
     app.update()
     print("Buy executed, equity and position updated.", flush=True)
 
-    # Execute a test sell
+    # Verify NVXP is shown in Owned tab
+    assert "NVXP" in app.watchlist.rendered_tickers, f"Expected NVXP in owned tickers, got {app.watchlist.rendered_tickers}"
+    assert "1 OWNED" in app.watchlist.lbl_count.cget("text")
+    print("Verified Owned tab updates with purchased stock NVXP.", flush=True)
+
+    # Buy another stock and leave it (PUMP)
+    app.watchlist.select_stock("PUMP")
+    app.trading_panel._set_qty(50)
+    app.trading_panel.do_buy()
+    app.update()
+    assert "NVXP" in app.watchlist.rendered_tickers and "PUMP" in app.watchlist.rendered_tickers
+    assert "2 OWNED" in app.watchlist.lbl_count.cget("text")
+    print("Verified multiple owned stocks tracked in Owned tab.", flush=True)
+
+    # Select stock from owned list
+    app.watchlist.select_stock("NVXP")
+    app.update()
+    assert app.active_ticker == "NVXP"
+    print("Verified stock selection from Owned tab works.", flush=True)
+
+    # Execute a test sell (close NVXP)
     print("Testing Sell execution in GUI...", flush=True)
+    app.trading_panel._set_qty(100)
     app.trading_panel.do_sell()
     app.update()
-    print("Sell executed.", flush=True)
+    assert "NVXP" not in app.watchlist.rendered_tickers
+    assert "PUMP" in app.watchlist.rendered_tickers
+    assert "1 OWNED" in app.watchlist.lbl_count.cget("text")
+    print("Sell executed, Owned tab updated dynamically.", flush=True)
 
     # Cancel loop job so manual stepping doesn't trigger duplicate timers
     if app._loop_job:

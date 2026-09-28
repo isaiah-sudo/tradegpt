@@ -317,6 +317,7 @@ class DayTradeSimApp(tk.Tk):
         self.watchlist = WatchlistPanel(
             main_f,
             stocks=self.engine.stocks,
+            positions=self.engine.positions,
             on_select_stock=self._on_stock_selected
         )
         self.watchlist.pack(side=tk.LEFT, fill=tk.Y, padx=(0, 6))
@@ -435,6 +436,10 @@ class DayTradeSimApp(tk.Tk):
         self._update_header_metrics()
         pos = self.engine.positions.get(self.active_ticker)
         self.chart.set_position(pos)
+        if self.watchlist.current_sort == "OWNED":
+            self.watchlist.refresh_list()
+        else:
+            self.watchlist.update_prices()
         if self.engine.trades:
             latest = self.engine.trades[0]
             self.chart.show_trade_notification(latest.action, latest.shares, latest.price, latest.ticker)
@@ -462,7 +467,10 @@ class DayTradeSimApp(tk.Tk):
         confirm = messagebox.askyesno("Reset Account", "Reset your balance to $25,000 and restart simulation?")
         if confirm:
             self.engine.reset_account()
-            self.watchlist.update_prices()
+            if self.watchlist.current_sort == "OWNED":
+                self.watchlist.refresh_list()
+            else:
+                self.watchlist.update_prices()
             self.chart.set_stock(self.engine.stocks[self.active_ticker])
             self.trading_panel.update_display()
             self.trade_log_panel.refresh_trades([])
@@ -759,7 +767,10 @@ class DayTradeSimApp(tk.Tk):
         else:
             self._build_battle_hud()
 
-        self.watchlist.update_prices()
+        if self.watchlist.current_sort == "OWNED":
+            self.watchlist.refresh_list()
+        else:
+            self.watchlist.update_prices()
         self.chart.set_stock(self.engine.stocks[self.active_ticker])
         self.trading_panel.update_display()
         self.trade_log_panel.refresh_trades([])

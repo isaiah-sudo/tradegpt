@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-from typing import Dict, Callable, List
+from typing import Dict, Callable, List, Optional, Any
 from simulation.stock import Stock
 
 class WatchlistPanel(tk.Frame):
@@ -8,7 +8,7 @@ class WatchlistPanel(tk.Frame):
     Pro Day-Trader Watchlist & Market Scanner for 100 stocks.
     Features:
     - Real-time search filter by Ticker / Name
-    - Sorting by: Gainers (highest %), Losers (lowest %), Ticker (A-Z)
+    - Sorting by: Gainers (highest %), Losers (lowest %), Owned (Active Positions)
     - Sector filter tabs: All, Tech, Meme, Bio, Crypto, Energy, Penny
     - High-performance scrollable list with mouse-wheel support
     - Visual pill badges for % change and selected stock indicator
@@ -21,16 +21,17 @@ class WatchlistPanel(tk.Frame):
     GREEN = "#089981"
     RED = "#f23645"
 
-    def __init__(self, parent, stocks: Dict[str, Stock], on_select_stock: Callable[[str], None], **kwargs):
+    def __init__(self, parent, stocks: Dict[str, Stock], on_select_stock: Callable[[str], None], positions: Optional[Dict[str, Any]] = None, **kwargs):
         super().__init__(parent, bg=self.BG_COLOR, width=270, **kwargs)
         self.stocks = stocks
+        self.positions = positions if positions is not None else {}
         self.on_select_stock = on_select_stock
         self.selected_ticker = "NVXP"
 
         # Search, sector and sort state
         self.search_query = ""
         self.current_sector = "ALL"
-        self.current_sort = "GAINERS"  # "GAINERS", "LOSERS", "TICKER"
+        self.current_sort = "GAINERS"  # "GAINERS", "LOSERS", "OWNED"
 
         self.row_widgets: Dict[str, dict] = {}
         self.rendered_tickers: List[str] = []
@@ -86,7 +87,7 @@ class WatchlistPanel(tk.Frame):
         filter_f.pack(fill=tk.X, padx=8, pady=(0, 4))
 
         self.sort_buttons = {}
-        for mode, label in [("GAINERS", "▲ Gainers"), ("LOSERS", "▼ Losers"), ("TICKER", "A-Z")]:
+        for mode, label in [("GAINERS", "▲ Gainers"), ("LOSERS", "▼ Losers"), ("OWNED", "💼 Owned")]:
             btn = tk.Button(
                 filter_f,
                 text=label,
@@ -198,8 +199,36 @@ class WatchlistPanel(tk.Frame):
             self.select_stock(next_t)
         return "break"
 
+    def _is_owned(self, ticker: str) -> bool:
+        if not self.positions:
+            return False
+        pos = self.positions.get(ticker)
+        if pos is None:
+            return False
+        if hasattr(pos, "shares"):
+            return pos.shares != 0
+        if isinstance(pos, dict):
+            return pos.get("shares", 0) != 0
+        if isinstance(pos, (int, float)):
+            return pos != 0
+        return False
+
+    def set_positions(self, positions: Dict[str, Any]):
+        self.positions = positions
+        if self.current_sort == "OWNED":
+            self.refresh_list()
+
     def _set_sort(self, sort_mode: str):
         self.current_sort = sort_mode
+        # When switching to OWNED, show all owned stocks by defaulting sector to ALL
+        if sort_mode == "OWNED" and self.current_sector != "ALL":
+            self.current_sector = "ALL"
+            for s, btn in self.sec_buttons.items():
+                if s == "ALL":
+                    btn.config(bg="#3d4454", fg="#ffffff")
+                else:
+                    btn.config(bg="#1e222d", fg=self.MUTED_COLOR)
+
         for m, btn in self.sort_buttons.items():
             if m == sort_mode:
                 btn.config(bg="#2962ff", fg="#ffffff")
@@ -219,6 +248,10 @@ class WatchlistPanel(tk.Frame):
     def get_filtered_stocks(self) -> List[Stock]:
         stocks = list(self.stocks.values())
 
+        # Owned filter
+        if self.current_sort == "OWNED":
+            stocks = [s for s in stocks if self._is_owned(s.ticker)]
+
         # Sector filter
         if self.current_sector != "ALL":
             stocks = [s for s in stocks if self.current_sector.lower() in s.sector.lower()]
@@ -235,7 +268,7 @@ class WatchlistPanel(tk.Frame):
             stocks.sort(key=lambda s: s.change_pct, reverse=True)
         elif self.current_sort == "LOSERS":
             stocks.sort(key=lambda s: s.change_pct, reverse=False)
-        elif self.current_sort == "TICKER":
+        elif self.current_sort == "OWNED":
             stocks.sort(key=lambda s: s.ticker)
 
         return stocks
@@ -249,7 +282,40 @@ class WatchlistPanel(tk.Frame):
 
         filtered = self.get_filtered_stocks()
         self.rendered_tickers = [s.ticker for s in filtered]
-        self.lbl_count.config(text=f"{len(filtered)} / {len(self.stocks)}")
+
+        if self.current_sort == "OWNED":
+            self.lbl_count.config(text=f"{len(filtered)} OWNED")
+        else:
+            self.lbl_count.config(text=f"{len(filtered)} / {len(self.stocks)}")
+
+        if not filtered:
+            msg_frame = tk.Frame(self.scrollable_inner, bg=self.BG_COLOR)
+            msg_frame.pack(fill=tk.BOTH, expand=True, pady=32, padx=12)
+            if self.current_sort == "OWNED":
+                tk.Label(
+                    msg_frame,
+                    text="💼 No Owned Stocks",
+                    font=("Segoe UI", 9, "bold"),
+                    fg="#a0aec0",
+                    bg=self.BG_COLOR
+                ).pack(pady=(0, 4))
+                tk.Label(
+                    msg_frame,
+                    text="Buy or short stocks to\nview your open positions here.",
+                    font=("Segoe UI", 8),
+                    fg=self.MUTED_COLOR,
+                    bg=self.BG_COLOR,
+                    justify=tk.CENTER
+                ).pack()
+            else:
+                tk.Label(
+                    msg_frame,
+                    text="No matching stocks",
+                    font=("Segoe UI", 8),
+                    fg=self.MUTED_COLOR,
+                    bg=self.BG_COLOR
+                ).pack()
+            return
 
         for stock in filtered:
             ticker = stock.ticker
@@ -259,14 +325,25 @@ class WatchlistPanel(tk.Frame):
             row = tk.Frame(self.scrollable_inner, bg=bg_color, bd=1, relief=tk.FLAT, cursor="hand2")
             row.pack(fill=tk.X, pady=2, padx=2)
 
-            # Left block: Ticker & Sector / Name
+            # Left block: Ticker & Sector / Name or Position details
             left_f = tk.Frame(row, bg=bg_color)
             left_f.pack(side=tk.LEFT, padx=6, pady=4)
 
             lbl_t = tk.Label(left_f, text=ticker, font=("Segoe UI", 10, "bold"), fg=self.TEXT_COLOR, bg=bg_color)
             lbl_t.pack(anchor="w")
 
-            lbl_n = tk.Label(left_f, text=f"{stock.name[:13]}", font=("Segoe UI", 7), fg=self.MUTED_COLOR, bg=bg_color)
+            pos = self.positions.get(ticker) if self.positions else None
+            is_pos = pos is not None and getattr(pos, "shares", 0) != 0
+
+            if self.current_sort == "OWNED" and is_pos:
+                side_tag = "LONG" if pos.shares > 0 else "SHORT"
+                sub_text = f"{side_tag} {abs(pos.shares)} @ ${pos.avg_price:.2f}"
+                sub_fg = "#00e676" if pos.shares > 0 else "#ff9100"
+            else:
+                sub_text = f"{stock.name[:13]}"
+                sub_fg = self.MUTED_COLOR
+
+            lbl_n = tk.Label(left_f, text=sub_text, font=("Segoe UI", 7), fg=sub_fg, bg=bg_color)
             lbl_n.pack(anchor="w")
 
             # Right block: Price & % pill
@@ -276,13 +353,24 @@ class WatchlistPanel(tk.Frame):
             lbl_p = tk.Label(right_f, text=f"${stock.price:.2f}", font=("Segoe UI", 9, "bold"), fg=self.TEXT_COLOR, bg=bg_color)
             lbl_p.pack(anchor="e")
 
-            pct = stock.change_pct
+            if self.current_sort == "OWNED" and is_pos:
+                pct = pos.unrealized_pnl_pct(stock.price)
+                pnl = pos.unrealized_pnl(stock.price)
+                pill_bg = self.GREEN if pnl >= 0 else self.RED
+                sign = "+" if pct >= 0 else ""
+                pill_text = f"{sign}{pct:.2f}%"
+            else:
+                pct = stock.change_pct
+                pill_bg = self.GREEN if pct >= 0 else self.RED
+                sign = "+" if pct >= 0 else ""
+                pill_text = f"{sign}{pct:.2f}%"
+
             lbl_chg = tk.Label(
                 right_f,
-                text=f"{'+' if pct >= 0 else ''}{pct:.2f}%",
+                text=pill_text,
                 font=("Segoe UI", 7, "bold"),
                 fg="#ffffff",
-                bg=self.GREEN if pct >= 0 else self.RED,
+                bg=pill_bg,
                 padx=4, pady=0
             )
             lbl_chg.pack(anchor="e", pady=(1, 0))
@@ -306,7 +394,11 @@ class WatchlistPanel(tk.Frame):
                 "ticker": lbl_t,
                 "name": lbl_n,
                 "price": lbl_p,
-                "pct": lbl_chg
+                "pct": lbl_chg,
+                "last_p": f"${stock.price:.2f}",
+                "last_pct": pill_text,
+                "last_color": pill_bg,
+                "last_sub": sub_text
             }
 
     def select_stock(self, ticker: str):
@@ -328,6 +420,13 @@ class WatchlistPanel(tk.Frame):
 
     def update_prices(self):
         """Fast tick refresh with text caching to eliminate redundant widget config calls."""
+        # If in OWNED mode, ensure rendered tickers match active positions
+        if self.current_sort == "OWNED":
+            expected_tickers = [s.ticker for s in self.get_filtered_stocks()]
+            if expected_tickers != self.rendered_tickers:
+                self.refresh_list()
+                return
+
         for ticker in self.rendered_tickers:
             stock = self.stocks.get(ticker)
             widgets = self.row_widgets.get(ticker)
@@ -339,10 +438,26 @@ class WatchlistPanel(tk.Frame):
                 widgets["price"].config(text=p_str)
                 widgets["last_p"] = p_str
 
-            pct = stock.change_pct
-            color = self.GREEN if pct >= 0 else self.RED
-            sign = "+" if pct >= 0 else ""
-            pct_str = f"{sign}{pct:.2f}%"
+            pos = self.positions.get(ticker) if self.positions else None
+            is_pos = pos is not None and getattr(pos, "shares", 0) != 0
+
+            if self.current_sort == "OWNED" and is_pos:
+                pct = pos.unrealized_pnl_pct(stock.price)
+                pnl = pos.unrealized_pnl(stock.price)
+                color = self.GREEN if pnl >= 0 else self.RED
+                sign = "+" if pct >= 0 else ""
+                pct_str = f"{sign}{pct:.2f}%"
+
+                side_tag = "LONG" if pos.shares > 0 else "SHORT"
+                sub_text = f"{side_tag} {abs(pos.shares)} @ ${pos.avg_price:.2f}"
+                if widgets.get("last_sub") != sub_text:
+                    widgets["name"].config(text=sub_text)
+                    widgets["last_sub"] = sub_text
+            else:
+                pct = stock.change_pct
+                color = self.GREEN if pct >= 0 else self.RED
+                sign = "+" if pct >= 0 else ""
+                pct_str = f"{sign}{pct:.2f}%"
 
             if widgets.get("last_pct") != pct_str or widgets.get("last_color") != color:
                 widgets["pct"].config(text=pct_str, bg=color)
