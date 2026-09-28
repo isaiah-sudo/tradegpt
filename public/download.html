@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download TradeGPT for Windows • v2.0.5</title>
+    <meta name="description" content="Download TradeGPT for Windows 10/11. Native 60+ FPS desktop client with high-speed hotkeys, 100+ simulated stocks, and real-time 1v1 PvP duels.">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="stylesheet" href="css/landing.css">
+
+    <!-- Firebase Compat SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+</head>
+<body>
+
+    <!-- =========================================================
+         NAVIGATION BAR
+         ========================================================= -->
+    <header class="nav-wrap">
+        <div class="nav-container">
+            <a href="/" class="nav-brand">
+                <img src="assets/icon.png" alt="TradeGPT Logo">
+                <span>TRADEGPT</span>
+                <span class="badge-tag">v2.0.5</span>
+            </a>
+
+            <nav class="nav-links">
+                <a href="/">Home</a>
+                <a href="/#features">Features</a>
+                <a href="/#how-it-works">How It Works</a>
+                <a href="#specs">System Specs</a>
+                <a href="#instructions">Install Guide</a>
+                <a href="https://github.com/isaiah-sudo/tradeism/releases" target="_blank" rel="noopener">All Releases</a>
+            </nav>
+
+            <div class="nav-actions">
+                <a href="/#auth" class="btn btn-secondary btn-sm" id="nav-btn-signin">👤 Sign In</a>
+                <a href="/play" class="btn btn-primary btn-sm">⚡ Play Web Version</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- =========================================================
+         DOWNLOAD HERO & MAIN CARD
+         ========================================================= -->
+    <section class="download-hero">
+        <span class="badge-glow" style="margin-bottom: 12px;">OFFICIAL WINDOWS DESKTOP RELEASE</span>
+        <h1 class="hero-title" style="margin-top:10px;font-size: clamp(30px, 4.5vw, 48px);">
+            Download TradeGPT
+        </h1>
+        <p class="hero-subtitle" style="max-width: 650px;">
+            Experience the ultimate low-latency desktop paper trading environment with native 60+ FPS hardware acceleration, zero-lag global hotkeys, and automatic background updates.
+        </p>
+
+        <div class="download-main-card">
+            <img src="assets/icon.png" alt="App Icon" class="download-icon-big">
+            <h2 class="download-title-big">TradeGPT for Windows</h2>
+            
+            <div class="download-version-pill">
+                <span>⚡ Version 2.0.5</span>
+                <span>•</span>
+                <span>Windows 10 / 11 (64-Bit)</span>
+                <span>•</span>
+                <span>Latest Stable</span>
+            </div>
+
+            <!-- Primary Download Buttons -->
+            <div class="download-buttons-group">
+                <a id="download-installer-btn" href="https://github.com/isaiah-sudo/tradegpt/releases/latest/download/TradeGPT-Setup-v2.0.5.exe" class="btn btn-primary btn-lg" style="font-size:16px;padding:16px 32px;">
+                    <span>📥 Download Windows Installer (.exe)</span>
+                </a>
+                <a id="download-portable-btn" href="https://github.com/isaiah-sudo/tradegpt/releases/latest/download/TradeGPT.exe" class="btn btn-secondary btn-lg" style="font-size:15px;padding:16px 26px;">
+                    <span>📦 Portable Standalone (.exe)</span>
+                </a>
+            </div>
+
+            <div style="font-size:12px;color:var(--text-muted);display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap;margin-bottom:20px;">
+                <span id="download-filename">File: TradeGPT-Setup-v2.0.3.exe</span>
+                <span>•</span>
+                <span id="download-filesize">Size: ~13.3 MB</span>
+                <span>•</span>
+                <span>MD5 / SHA-256 Verified</span>
+                <span>•</span>
+                <a href="https://github.com/isaiah-sudo/tradeism/releases" target="_blank" rel="noopener" style="color:var(--accent-blue);text-decoration:none;">View on GitHub</a>
+            </div>
+
+            <div style="border-top: 1px solid var(--border-subtle);padding-top:20px;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;">
+                <span style="font-size:13px;color:var(--text-secondary);">Don't want to install software right now?</span>
+                <a href="/play" class="btn btn-outline-blue btn-sm">⚡ Play Instantly in Your Browser</a>
+            </div>
+
+            <!-- Specs Grid -->
+            <div class="download-specs-grid" id="specs">
+                <div class="spec-box">
+                    <div class="spec-label">Operating System</div>
+                    <div class="spec-value">Windows 10 / 11 (64-bit)</div>
+                </div>
+                <div class="spec-box">
+                    <div class="spec-label">Processor</div>
+                    <div class="spec-value">Intel Core i3 / AMD Ryzen 3+</div>
+                </div>
+                <div class="spec-box">
+                    <div class="spec-label">Memory (RAM)</div>
+                    <div class="spec-value">2 GB min (4 GB recommended)</div>
+                </div>
+                <div class="spec-box">
+                    <div class="spec-label">Disk Storage</div>
+                    <div class="spec-value">100 MB free space</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         INSTALLATION INSTRUCTIONS (3 STEPS)
+         ========================================================= -->
+    <section class="how-it-works-section" id="instructions">
+        <div class="how-container">
+            <div class="section-header">
+                <span class="section-tag">STEP-BY-STEP SETUP</span>
+                <h2 class="section-title">Quick Installation Guide</h2>
+                <p class="section-desc">
+                    Get up and running on your desktop in less than 60 seconds.
+                </p>
+            </div>
+
+            <div class="steps-grid">
+                <div class="step-card">
+                    <span class="step-badge">STEP 1</span>
+                    <span class="step-icon">⬇️</span>
+                    <h3 class="step-title">Download Setup Installer</h3>
+                    <p class="step-desc">
+                        Click the green <strong>Download Windows Installer</strong> button above. The setup executable will be saved to your browser downloads folder.
+                    </p>
+                </div>
+
+                <div class="step-card">
+                    <span class="step-badge">STEP 2</span>
+                    <span class="step-icon">⚙️</span>
+                    <h3 class="step-title">Run Setup Wizard</h3>
+                    <p class="step-desc">
+                        Open <code id="step-filename">TradeGPT-Setup-v2.0.3.exe</code>. If prompted by Windows Defender SmartScreen, click <strong>"More info"</strong> and select <strong>"Run anyway"</strong>. Complete the quick wizard.
+                    </p>
+                </div>
+
+                <div class="step-card">
+                    <span class="step-badge">STEP 3</span>
+                    <span class="step-icon">🚀</span>
+                    <h3 class="step-title">Launch & Trade</h3>
+                    <p class="step-desc">
+                        Launch <strong>TradeGPT</strong> from your Desktop or Start Menu. Sign in with Google to sync your Menu Vault or dive straight into 1v1 PvP Duels!
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         WHAT'S NEW IN V2.0.5
+         ========================================================= -->
+    <section class="features-section" style="padding-top:40px;padding-bottom:50px;">
+        <div class="section-header">
+            <span class="section-tag">CHANGELOG</span>
+            <h2 class="section-title">What's New in Version 2.0.5</h2>
+            <p class="section-desc">
+                Latest improvements, bug fixes, and feature additions in this release.
+            </p>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-card green-theme">
+                <div class="feature-icon-wrap">💼</div>
+                <h3 class="feature-title">Scanner "Owned" Positions Tab</h3>
+                <p class="feature-text">
+                    New dedicated scanner filter tab replacing alphabetical sort. Instantly view and manage only the stocks where you currently have active open positions (both Long and Short), tracking live P&amp;L in real-time.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon-wrap" style="color:#ff5252;">🌐</div>
+                <h3 class="feature-title">tradeism.men Cloud Sync</h3>
+                <p class="feature-text">
+                    Seamless cross-platform authentication using Google and Email. The desktop app securely opens tradeism.men in your browser to authorize your credentials and sync your saved vault, stats, and cosmetics.
+                </p>
+            </div>
+
+            <div class="feature-card purple-theme">
+                <div class="feature-icon-wrap">⚔️</div>
+                <h3 class="feature-title">Enhanced 1v1 PvP & Auto-Updater</h3>
+                <p class="feature-text">
+                    Zero-latency sub-4-second matchmaking queue with real-time rival trade markers, plus built-in background updater ensuring you are always on the newest release.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         BOTTOM CTA BANNER
+         ========================================================= -->
+    <section class="cta-banner-section">
+        <div class="cta-banner">
+            <h2>Prefer Not to Download?</h2>
+            <p>
+                The complete TradeGPT experience is available directly in your web browser with zero installation required.
+            </p>
+            <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
+                <a href="/play" class="btn btn-primary btn-lg">⚡ Play Web Version Now</a>
+                <a href="/" class="btn btn-secondary btn-lg">🏠 Back to Homepage</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         FOOTER
+         ========================================================= -->
+    <footer class="footer-wrap">
+        <div class="footer-container">
+            <div class="footer-col">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+                    <img src="assets/icon.png" alt="Logo" style="width:26px;height:26px;border-radius:4px;">
+                    <strong style="color:#fff;font-size:16px;">TRADEGPT</strong>
+                </div>
+                <p style="font-size:13px;color:var(--text-muted);line-height:1.6;max-width:340px;">
+                    High-frequency paper trading platform. Available on Windows desktop and directly in all modern web browsers at tradeism.men.
+                </p>
+            </div>
+
+            <div class="footer-col">
+                <h4>Navigation</h4>
+                <ul class="footer-links">
+                    <li><a href="/">Home (tradeism.men)</a></li>
+                    <li><a href="/play">Web Terminal (Play Online)</a></li>
+                    <li><a href="/download">Download Desktop Client</a></li>
+                    <li><a href="/#features">Feature Breakdown</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h4>Releases & GitHub</h4>
+                <ul class="footer-links">
+                    <li><a href="https://github.com/isaiah-sudo/tradeism/releases/latest" target="_blank" rel="noopener">Latest Release (v2.0.5)</a></li>
+                    <li><a href="https://github.com/isaiah-sudo/tradeism/releases" target="_blank" rel="noopener">All Version Releases</a></li>
+                    <li><a href="https://github.com/isaiah-sudo/tradeism" target="_blank" rel="noopener">GitHub Repository</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h4>Legal & Disclaimer</h4>
+                <ul class="footer-links">
+                    <li><a href="/">Terms & Privacy</a></li>
+                    <li><a href="https://github.com/isaiah-sudo/tradeism/issues" target="_blank" rel="noopener">Report a Bug</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <div>
+                © 2026 TradeGPT • tradeism.men • All rights reserved.
+            </div>
+            <div>
+                Windows 64-bit Edition v2.0.5
+            </div>
+        </div>
+
+        <div class="footer-bottom" style="border:none;padding-top:10px;">
+            <p class="legal-disclaimer">
+                Disclaimer: TradeGPT is an educational and entertainment simulation game. All financial figures, company tickers, and market movements are purely simulated. No real money or actual trading is involved.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Custom Landing Auth Script -->
+    <script src="js/landing-auth.js"></script>
+
+    <!-- Dynamic GitHub Release Resolver -->
+    <script>
+        (async function() {
+            try {
+                const res = await fetch('https://api.github.com/repos/isaiah-sudo/tradeism/releases/latest');
+                if (!res.ok) return;
+                const release = await res.json();
+                const tag = release.tag_name || '';
+                const cleanVer = tag.replace(/^v/i, '');
+                if (!cleanVer) return;
+
+                const assets = release.assets || [];
+                const setupAsset = assets.find(a => a.name && a.name.toLowerCase().includes('setup') && a.name.endsWith('.exe'));
+                const portableAsset = assets.find(a => a.name && !a.name.toLowerCase().includes('setup') && a.name.endsWith('.exe'));
+
+                const setupUrl = setupAsset ? setupAsset.browser_download_url : `https://github.com/isaiah-sudo/tradeism/releases/latest/download/TradeGPT-Setup-v${cleanVer}.exe`;
+                const portableUrl = portableAsset ? portableAsset.browser_download_url : 'https://github.com/isaiah-sudo/tradeism/releases/latest/download/TradeGPT.exe';
+                const setupName = setupAsset ? setupAsset.name : `TradeGPT-Setup-v${cleanVer}.exe`;
+                const setupSize = setupAsset && setupAsset.size ? `~${(setupAsset.size / (1024 * 1024)).toFixed(1)} MB` : null;
+
+                const installerBtn = document.getElementById('download-installer-btn');
+                if (installerBtn) installerBtn.href = setupUrl;
+                const portableBtn = document.getElementById('download-portable-btn');
+                if (portableBtn) portableBtn.href = portableUrl;
+
+                const fileInfo = document.getElementById('download-filename');
+                if (fileInfo) fileInfo.textContent = `File: ${setupName}`;
+                const sizeInfo = document.getElementById('download-filesize');
+                if (sizeInfo && setupSize) sizeInfo.textContent = `Size: ${setupSize}`;
+                const stepCode = document.getElementById('step-filename');
+                if (stepCode) stepCode.textContent = setupName;
+            } catch (err) {
+                // Silently fallback to static pre-rendered values
+            }
+        })();
+    </script>
+</body>
+</html>

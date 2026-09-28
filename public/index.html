@@ -3,464 +3,729 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Day Trading Simulator • Pro Trader Web Terminal v2.0.1</title>
-    <link rel="stylesheet" href="css/style.css">
+    <title>TradeGPT • Real-Time Trading Arena & 1v1 PvP Duels</title>
+    <meta name="description" content="Experience high-frequency paper trading with 100+ simulated stocks, breaking news catalysts, margin leverage, and real-time 1v1 PvP trading duels. Play online or download for Windows.">
     <link rel="icon" type="image/x-icon" href="favicon.ico">
-</head>
-<body>
-
-    <!-- =========================================================
-         TOP APP HEADER (Solo Sandbox Mode)
-         ========================================================= -->
-    <header id="top-header">
-        <div class="brand">
-            <img src="assets/icon.png" alt="Logo" style="width:24px;height:24px;border-radius:4px;"> DAY TRADE SIMULATOR
-        </div>
-
-        <div class="header-metrics">
-            <div class="metric-pill">
-                <span class="label">Total Equity</span>
-                <span class="value" id="hdr-balance">$25,000.00</span>
-            </div>
-            <div class="metric-pill">
-                <span class="label">Buying Power</span>
-                <span class="value" id="hdr-bp">$100,000.00</span>
-            </div>
-            <div class="metric-pill">
-                <span class="label">Unrealized P&L</span>
-                <span class="value" id="hdr-unrealized">$0.00</span>
-            </div>
-            <div class="metric-pill">
-                <span class="label">Realized P&L</span>
-                <span class="value" id="hdr-realized">$0.00</span>
-            </div>
-            <div class="metric-pill">
-                <span class="label">Total Return</span>
-                <span class="value" id="hdr-total-pnl">+0.00%</span>
-            </div>
-        </div>
-
-        <div class="header-controls">
-            <select class="speed-select" id="speed-select">
-                <option value="Relaxed (1x)">Casual (1x)</option>
-                <option value="Day Trader (3x)" selected>Day Trader (3x)</option>
-                <option value="High Frequency (8x)">HFT Scalper (8x)</option>
-                <option value="TURBO INSANE (20x)">TURBO (20x)</option>
-            </select>
-            <button class="btn-ctrl" id="btn-pause">⏸ Pause</button>
-            <button class="btn-ctrl btn-bank-profit" id="btn-bank-profit" disabled>💰 Bank Profit</button>
-            <button class="btn-ctrl" id="btn-reset">↺ Reset</button>
-            <button class="btn-ctrl" id="btn-shop-open" style="color:var(--gold);font-weight:700;">🛒 Shop</button>
-            <button class="btn-ctrl" id="btn-menu">🏠 Menu</button>
-            <button class="btn-duel" id="btn-switch-duel">⚔️ 1v1 Online Duel</button>
-        </div>
-    </header>
-
-    <!-- =========================================================
-         TOP BATTLE HUD (1v1 Online PvP Mode)
-         ========================================================= -->
-    <div id="battle-hud">
-        <div class="player-box you">
-            <span class="p-tag" id="hud-my-name">YOU (Trader)</span>
-            <span class="p-score" id="hud-my-score">$25,000.00 (+0.00%)</span>
-        </div>
-
-        <div class="hud-center">
-            <div class="hud-leader-badge gold" id="hud-leader-badge">⚔️ 1v1 MATCH STARTED • TIED</div>
-            <div class="hud-timer-wrap">
-                <span>TIME REMAINING:</span>
-                <span class="hud-timer" id="hud-timer">03:00</span>
-            </div>
-        </div>
-
-        <div class="player-box opponent" style="align-items:flex-end;">
-            <span class="p-tag" id="hud-opp-name">OPPONENT</span>
-            <span class="p-score" id="hud-opp-score">$25,000.00 (+0.00%)</span>
-        </div>
-
-        <div class="hud-actions">
-            <button class="btn-ctrl" id="btn-hud-shop" style="color:var(--gold);font-weight:700;margin-right:4px;">🛒 Shop</button>
-            <button class="btn-next-opp" id="btn-next-opp">⏭ Next Opponent</button>
-            <button class="btn-leave" id="btn-leave-duel">Leave Duel</button>
-        </div>
-    </div>
-
-
-    <!-- =========================================================
-         MAIN 3-COLUMN LAYOUT
-         ========================================================= -->
-    <main id="main-layout">
-
-        <!-- 1. LEFT COLUMN: Market Scanner & Watchlist -->
-        <aside id="left-panel">
-            <div class="scanner-header">
-                <div class="search-box">
-                    <span style="color:var(--text-muted);margin-right:6px;">🔍</span>
-                    <input type="text" id="scanner-search" placeholder="Search 100 stocks...">
-                </div>
-                <div class="sector-scroll" id="sector-scroll">
-                    <!-- Injected dynamically -->
-                </div>
-            </div>
-            <div class="stock-list" id="stock-list">
-                <!-- Stock rows injected dynamically -->
-            </div>
-        </aside>
-
-        <!-- 2. CENTER COLUMN: Chart & Active Ticker -->
-        <section id="center-panel">
-            <div class="chart-header">
-                <div class="ticker-title-cluster">
-                    <span class="active-ticker" id="chart-active-ticker">NVXP</span>
-                    <span class="active-name" id="chart-active-name">NovaX AI Tech</span>
-                    <span class="active-sector-tag" id="chart-active-sector">AI & Tech</span>
-                </div>
-                <div class="ticker-price-cluster">
-                    <span class="active-price" id="chart-active-price">$84.50</span>
-                    <span class="active-chg up" id="chart-active-chg">+0.00 (+0.00%)</span>
-                </div>
-            </div>
-
-            <div class="chart-canvas-container">
-                <canvas id="chart-canvas"></canvas>
-            </div>
-        </section>
-
-        <!-- 3. RIGHT COLUMN: Order Execution Desk -->
-        <aside id="right-panel">
-            <div>
-                <div class="panel-sec-title">Order Execution</div>
-                <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;">
-                    <span style="font-size:16px; font-weight:800; color:var(--text-white);" id="desk-ticker">MARKET ORDER</span>
-                    <span style="font-family:var(--font-mono); font-size:16px; font-weight:800; color:var(--text-white);" id="desk-price">$84.50</span>
-                </div>
-
-                <div class="order-buttons-grid">
-                    <button class="btn-trade btn-buy" id="btn-buy">
-                        BUY / LONG
-                        <small>[B]</small>
-                    </button>
-                    <button class="btn-trade btn-sell" id="btn-sell">
-                        SELL
-                        <small>[S]</small>
-                    </button>
-                    <button class="btn-trade btn-short" id="btn-short">
-                        SHORT
-                        <small>[H]</small>
-                    </button>
-                    <button class="btn-trade btn-cover" id="btn-cover">
-                        COVER
-                        <small>[C]</small>
-                    </button>
-                </div>
-            </div>
-
-            <div class="qty-cluster">
-                <div class="panel-sec-title">Order Quantity</div>
-                <div class="qty-presets">
-                    <button class="btn-qty" data-qty="10">10</button>
-                    <button class="btn-qty active" data-qty="50">50</button>
-                    <button class="btn-qty" data-qty="100">100</button>
-                    <button class="btn-qty" data-qty="500">500</button>
-                    <button class="btn-qty" data-qty="MAX">MAX</button>
-                </div>
-                <div class="qty-input-row">
-                    <button class="qty-btn-step" id="btn-qty-minus">-</button>
-                    <input type="number" id="qty-input" value="50" min="1">
-                    <button class="qty-btn-step" id="btn-qty-plus">+</button>
-                </div>
-                <div class="order-est">
-                    <span id="order-est-cost">Est. Value: $4,225.00</span>
-                    <span>Margin: 50%</span>
-                </div>
-            </div>
-
-            <div class="position-card">
-                <div class="panel-sec-title" style="margin-bottom:4px;">Current Position</div>
-                <div class="pos-row">
-                    <span class="label">Shares:</span>
-                    <span class="val" id="pos-shares">0 (FLAT)</span>
-                </div>
-                <div class="pos-row">
-                    <span class="label">Avg Entry:</span>
-                    <span class="val" id="pos-avg">$0.00</span>
-                </div>
-                <div class="pos-row">
-                    <span class="label">Market Value:</span>
-                    <span class="val" id="pos-val">$0.00</span>
-                </div>
-                <div class="pos-row">
-                    <span class="label">Unrealized P&L:</span>
-                    <span class="val" id="pos-pnl">$0.00 (+0.00%)</span>
-                </div>
-                <button class="btn-reverse" id="btn-reverse" style="margin-top:4px;">🔄 Reverse Position [R]</button>
-                <button class="btn-flatten" id="btn-flatten" style="margin-top:4px;">🚨 Flatten Position [Space]</button>
-            </div>
-
-            <div class="hotkeys-guide">
-                <b>Hotkeys:</b> <kbd>B</kbd> Buy • <kbd>S</kbd> Sell • <kbd>H</kbd> Short • <kbd>C</kbd> Cover • <kbd>R</kbd> Reverse • <kbd>Space</kbd> Flatten • <kbd>1-5</kbd> Qty
-            </div>
-        </aside>
-
-    </main>
-
-    <!-- =========================================================
-         BOTTOM TABS: Positions, Trade Log, News Feed
-         ========================================================= -->
-    <footer id="bottom-panel">
-        <div class="tab-nav">
-            <button class="tab-btn active" data-tab="positions">Open Positions</button>
-            <button class="tab-btn" data-tab="trades">Trade History</button>
-            <button class="tab-btn" data-tab="news">Breaking News Feed</button>
-        </div>
-
-        <div class="tab-content active" id="tab-positions">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Ticker</th>
-                        <th>Sector</th>
-                        <th>Side</th>
-                        <th>Shares</th>
-                        <th>Avg Price</th>
-                        <th>Current Price</th>
-                        <th>Market Value</th>
-                        <th>Unrealized P&L</th>
-                        <th>P&L %</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody id="table-positions-body">
-                    <!-- Injected dynamically -->
-                </tbody>
-            </table>
-        </div>
-
-        <div class="tab-content" id="tab-trades">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Time</th>
-                        <th>Ticker</th>
-                        <th>Action</th>
-                        <th>Shares</th>
-                        <th>Fill Price</th>
-                        <th>Realized P&L</th>
-                    </tr>
-                </thead>
-                <tbody id="table-trades-body">
-                    <!-- Injected dynamically -->
-                </tbody>
-            </table>
-        </div>
-
-        <div class="tab-content" id="tab-news">
-            <div id="news-feed-list">
-                <!-- Injected dynamically -->
-            </div>
-        </div>
-    </footer>
-
-    <!-- =========================================================
-         MODALS
-         ========================================================= -->
-    <!-- 1. Mode Select Modal -->
-    <div class="modal-overlay" id="modal-mode">
-        <div class="modal-card" style="position:relative;">
-            <!-- Top Left Sign-In Button -->
-            <div id="modal-top-left-auth" style="position:absolute;top:18px;left:20px;display:flex;align-items:center;gap:8px;">
-                <button class="btn-ctrl" id="btn-top-auth" style="background:#2962ff;color:#fff;font-weight:700;padding:6px 12px;border-radius:6px;cursor:pointer;border:none;">👤 Sign In</button>
-            </div>
-            <div style="font-size:36px;margin-bottom:8px;">⚡</div>
-            <h2 class="modal-title">DAY TRADE SIMULATOR <span style="font-size:14px;color:var(--text-muted);">v2.0.1</span></h2>
-            <p class="modal-sub">Choose your game mode to enter the trading floor</p>
-
-            <div class="menu-vault-pill" id="menu-vault-pill">
-                <span>💰 Menu Vault Balance: <strong id="modal-vault-bal" class="up">$0.00</strong></span>
-                <button class="btn-shop-badge" id="btn-modal-shop">🛒 Trader Shop</button>
-            </div>
-
-            <input type="text" class="nickname-input" id="nickname-input" placeholder="Enter Trader Nickname">
-
-            <div class="mode-cards-grid">
-                <div class="mode-card" id="mode-solo">
-                    <span class="icon">🎮</span>
-                    <span class="title">Solo Sandbox</span>
-                    <span class="desc">Unlimited practice, multiple speeds (1x to 20x), breaking catalysts & margin scalping.</span>
-                </div>
-                <div class="mode-card" id="mode-online" style="border-color:rgba(229,57,53,0.4);">
-                    <span class="icon">⚔️</span>
-                    <span class="title">1v1 Online Duel</span>
-                    <span class="desc">Omegle-style pairing with desktop & web traders! 3-minute high-stakes showdown.</span>
-                </div>
-            </div>
-
-            <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted);">
-                <span style="color:#00e676;">●</span> Connected to Firebase Cloud Matchmaker (tradisim-188a6)
-            </div>
-        </div>
-    </div>
-
-    <!-- 2. Matchmaking Radar Modal -->
-    <div class="modal-overlay" id="modal-matchmaking" style="display:none;">
-        <div class="modal-card">
-            <h2 class="modal-title">⚔️ 1v1 PvP MATCHMAKER</h2>
-            <p class="modal-sub">Searching for an active desktop or web opponent...</p>
-
-            <div class="radar-wrap">
-                <div class="radar-circle"></div>
-                <div class="radar-circle" style="transform: scale(0.65);"></div>
-                <div class="radar-circle" style="transform: scale(0.35);"></div>
-                <div class="radar-sweep"></div>
-            </div>
-
-            <div class="status-txt" id="match-status-txt">Broadcasting queue ticket to cloud...</div>
-
-            <button class="btn-ctrl" id="btn-cancel-match" style="padding:8px 24px;">Cancel Search</button>
-        </div>
-    </div>
-
-    <!-- 3. Match End Dialog -->
-    <div class="modal-overlay" id="modal-match-end" style="display:none;">
-        <div class="modal-card">
-            <h2 class="modal-title" id="end-outcome">🏆 VICTORY!</h2>
-            <div id="end-details" style="margin: 16px 0;">
-                <!-- Outcome details injected -->
-            </div>
-            <div style="display:flex;gap:12px;margin-top:14px;">
-                <button class="btn-duel" id="btn-end-next" style="padding:10px 20px;">⏭ Next Opponent</button>
-                <button class="btn-ctrl" id="btn-end-menu" style="padding:10px 20px;">Main Menu</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 4. Trader Shop Modal -->
-    <div class="modal-overlay" id="modal-shop" style="display:none;">
-        <div class="modal-card shop-modal-card">
-            <div class="shop-header">
-                <div>
-                    <h2 class="modal-title" style="text-align:left;">🛒 TRADER SHOP & REWARDS</h2>
-                    <p class="modal-sub" style="text-align:left;margin-bottom:0;">Bank profits above $25k to unlock crazy victory celebrations & custom perks!</p>
-                </div>
-                <div class="shop-vault-box">
-                    <span class="label">MENU VAULT BALANCE</span>
-                    <span class="value up" id="shop-vault-bal">$0.00</span>
-                </div>
-            </div>
-
-            <div class="shop-category-tabs" id="shop-category-tabs">
-                <button class="shop-tab-btn active" data-cat="all">🌟 All Items</button>
-                <button class="shop-tab-btn" data-cat="animation">🎆 Crazy Win Animations</button>
-                <button class="shop-tab-btn" data-cat="theme">🎨 Themes</button>
-                <button class="shop-tab-btn" data-cat="sfx">🔊 Audio</button>
-                <button class="shop-tab-btn" data-cat="title">🎖️ Titles</button>
-            </div>
-
-            <div class="shop-items-list" id="shop-items-list">
-                <!-- Dynamically rendered items -->
-            </div>
-
-            <div style="display:flex;justify-content:flex-end;margin-top:14px;">
-                <button class="btn-ctrl" id="btn-close-shop" style="padding:8px 24px;">Close Shop</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 5. Cloud Sign-In Modal -->
-    <div class="modal-overlay" id="modal-auth" style="display:none;">
-        <div class="modal-card" style="max-width:440px;">
-            <div id="auth-unauthed-view">
-                <div style="font-size:32px;margin-bottom:6px;">⚡</div>
-                <h2 class="modal-title" style="font-size:20px;">Trader Cloud Account</h2>
-                <p class="modal-sub" style="margin-bottom:16px;">Sign in to save your trader name, money vault, and shop items across devices.</p>
-
-                <button class="btn-google-auth" id="btn-google-auth" style="width:100%;display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:#1f1f1f;font-weight:600;padding:10px 14px;border-radius:6px;border:none;cursor:pointer;margin-bottom:14px;font-size:13px;">
-                    <svg viewBox="0 0 18 18" style="width:18px;height:18px;">
-                        <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.616z"/>
-                        <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/>
-                        <path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.039l3.007-2.332z"/>
-                        <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/>
-                    </svg>
-                    Sign in with Google
-                </button>
-
-                <div style="display:flex;align-items:center;text-align:center;margin:14px 0;color:#4f5869;font-size:11px;font-weight:600;text-transform:uppercase;">
-                    <span style="flex:1;border-bottom:1px solid #2a2e39;"></span>
-                    <span style="padding:0 8px;">or with email</span>
-                    <span style="flex:1;border-bottom:1px solid #2a2e39;"></span>
-                </div>
-
-                <div style="display:flex;background:#0e1117;border-radius:6px;border:1px solid #2a2e39;padding:3px;margin-bottom:12px;">
-                    <button type="button" id="tab-auth-signin" style="flex:1;background:#2962ff;color:#fff;border:none;padding:6px;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;">Sign In</button>
-                    <button type="button" id="tab-auth-signup" style="flex:1;background:transparent;color:var(--text-muted);border:none;padding:6px;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;">Create Account</button>
-                </div>
-
-                <div id="auth-group-nick" style="display:none;margin-bottom:10px;text-align:left;">
-                    <label style="font-size:11px;font-weight:600;color:#c5c8d1;display:block;margin-bottom:4px;">Trader Nickname</label>
-                    <input type="text" id="auth-input-nick" placeholder="e.g. WallStreetBull" style="width:100%;background:#0e1117;border:1px solid #2a2e39;border-radius:6px;padding:8px 10px;color:#fff;font-size:13px;outline:none;">
-                </div>
-
-                <div style="margin-bottom:10px;text-align:left;">
-                    <label style="font-size:11px;font-weight:600;color:#c5c8d1;display:block;margin-bottom:4px;">Email Address</label>
-                    <input type="email" id="auth-input-email" placeholder="trader@example.com" style="width:100%;background:#0e1117;border:1px solid #2a2e39;border-radius:6px;padding:8px 10px;color:#fff;font-size:13px;outline:none;">
-                </div>
-
-                <div style="margin-bottom:12px;text-align:left;">
-                    <label style="font-size:11px;font-weight:600;color:#c5c8d1;display:block;margin-bottom:4px;">Password</label>
-                    <input type="password" id="auth-input-pass" placeholder="••••••••" style="width:100%;background:#0e1117;border:1px solid #2a2e39;border-radius:6px;padding:8px 10px;color:#fff;font-size:13px;outline:none;">
-                </div>
-
-                <button type="button" class="btn-ctrl" id="btn-auth-submit" style="width:100%;background:#00c853;color:#000;font-weight:700;padding:10px;border-radius:6px;border:none;cursor:pointer;font-size:13px;margin-bottom:8px;">Sign In</button>
-                <div id="auth-status-msg" style="display:none;font-size:12px;color:#ff5252;margin-bottom:10px;"></div>
-
-                <button type="button" class="btn-ctrl" id="btn-close-auth" style="background:transparent;border:none;color:var(--text-muted);font-size:12px;cursor:pointer;">Cancel</button>
-            </div>
-
-            <!-- Authenticated View -->
-            <div id="auth-authed-view" style="display:none;">
-                <div style="font-size:36px;margin-bottom:8px;">👑</div>
-                <h2 class="modal-title" id="auth-user-name" style="font-size:20px;color:#00e676;">Trader</h2>
-                <p class="modal-sub" id="auth-user-email" style="margin-bottom:12px;">user@example.com</p>
-
-                <div style="display:inline-block;font-size:11px;font-weight:700;color:#00e676;background:rgba(0,230,118,0.12);border:1px solid rgba(0,230,118,0.3);border-radius:20px;padding:4px 12px;margin-bottom:16px;">
-                    ☁️ CLOUD SYNC ACTIVE • PROGRESS SAVED
-                </div>
-
-                <div style="background:#0e1117;border:1px solid #2a2e39;border-radius:8px;padding:12px;margin-bottom:16px;text-align:left;font-size:12px;line-height:1.8;">
-                    <div style="display:flex;justify-content:space-between;"><span>💰 Menu Vault Balance:</span><strong id="auth-vault-bal" style="color:#00e676;">$0.00</strong></div>
-                    <div style="display:flex;justify-content:space-between;"><span>📈 Total Profit Banked:</span><strong id="auth-profit-banked" style="color:#fff;">$0.00</strong></div>
-                    <div style="display:flex;justify-content:space-between;"><span>🎒 Shop Items Owned:</span><strong id="auth-items-count" style="color:#fff;">1 items</strong></div>
-                    <div style="display:flex;justify-content:space-between;"><span>🏆 PvP Duels Won:</span><strong id="auth-duels-won" style="color:#fff;">0</strong></div>
-                </div>
-
-                <div style="display:flex;gap:8px;justify-content:center;">
-                    <button type="button" class="btn-ctrl" id="btn-auth-sync" style="background:#1e222d;color:#fff;border:1px solid #2a2e39;padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px;">🔄 Sync Now</button>
-                    <button type="button" class="btn-ctrl" id="btn-auth-signout" style="background:#ff5252;color:#fff;border:none;padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px;">Sign Out</button>
-                    <button type="button" class="btn-ctrl" id="btn-close-auth-view" style="background:#161a25;color:var(--text-muted);border:1px solid #2a2e39;padding:8px 14px;border-radius:6px;cursor:pointer;font-size:12px;">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Fullscreen Win Animation Canvas Overlay -->
-    <canvas id="anim-canvas" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:999999;pointer-events:all;background:rgba(6,9,14,0.92);"></canvas>
-    <div id="anim-overlay-ui" style="display:none;position:fixed;top:20px;right:20px;z-index:1000000;">
-        <button class="btn-ctrl" id="btn-skip-anim" style="background:#222631;border:1px solid #3d4454;color:#fff;font-weight:700;padding:6px 14px;border-radius:4px;cursor:pointer;">✕ Close</button>
-    </div>
+    <link rel="stylesheet" href="css/landing.css">
 
     <!-- Firebase Compat SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+</head>
+<body>
 
-    <!-- Application Scripts -->
-    <script src="js/stock-universe.js"></script>
-    <script src="js/news-generator.js"></script>
-    <script src="js/simulation-engine.js"></script>
-    <script src="js/chart.js"></script>
-    <script src="js/firebase-matchmaker.js"></script>
-    <script src="js/win-animations.js"></script>
-    <script src="js/app.js"></script>
+    <!-- =========================================================
+         TOP NAVIGATION BAR
+         ========================================================= -->
+    <header class="nav-wrap">
+        <div class="nav-container">
+            <a href="/" class="nav-brand">
+                <img src="assets/icon.png" alt="TradeGPT Logo">
+                <span>TRADEGPT</span>
+                <span class="badge-tag">v2.0.5</span>
+            </a>
+
+            <nav class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#how-it-works">How It Works</a>
+                <a href="#modes">Game Modes</a>
+                <a href="#comparison">Web vs Desktop</a>
+                <a href="/download" style="color:var(--accent-blue);font-weight:700;">💾 Downloads</a>
+            </nav>
+
+            <div class="nav-actions">
+                <!-- User Profile Pill when logged in -->
+                <a href="#auth" class="nav-user-pill" id="nav-user-pill">
+                    <span class="dot"></span>
+                    <span id="nav-user-name">Trader</span>
+                    <span class="vault-text" id="nav-user-vault">$0.00</span>
+                </a>
+
+                <!-- Sign in button when logged out -->
+                <a href="#auth" class="btn btn-secondary btn-sm" id="nav-btn-signin">👤 Sign In</a>
+
+                <!-- Web Version button -->
+                <a href="/play" class="btn btn-primary btn-sm">⚡ Play Web Version</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- =========================================================
+         LIVE TICKER MARQUEE
+         ========================================================= -->
+    <div class="ticker-strip">
+        <div class="ticker-track">
+            <div class="ticker-item"><span class="ticker-symbol">NVDA</span> <span class="ticker-price">$124.85</span> <span class="ticker-up">+6.42%</span></div>
+            <div class="ticker-item"><span class="ticker-symbol">TSLA</span> <span class="ticker-price">$254.10</span> <span class="ticker-up">+4.18%</span></div>
+            <div class="ticker-item"><span class="ticker-symbol">AAPL</span> <span class="ticker-price">$228.30</span> <span class="ticker-down">-1.12%</span></div>
+            <div class="ticker-item"><span class="ticker-symbol">BTCX</span> <span class="ticker-price">$64,250.00</span> <span class="ticker-up">+8.75%</span></div>
+            <div class="ticker-item"><span class="ticker-symbol">SPY</span> <span class="ticker-price">$562.40</span> <span class="ticker-up">+0.84%</span></div>
+            <div class="ticker-item"><span class="ticker-symbol">AMD</span> <span class="ticker-price">$158.90</span> <span class="ticker-down">-2.35%</span></div>
+            <div class="ticker-item"><span class="ticker-symbol">MSFT</span> <span class="ticker-price">$432.15</span> <span class="ticker-up">+1.45%</span></div>
+            <div class="ticker-item"><span class="ticker-symbol">AMZN</span> <span class="ticker-price">$186.20</span> <span class="ticker-up">+3.10%</span></div>
+            <div class="ticker-item"><span class="ticker-symbol">META</span> <span class="ticker-price">$512.75</span> <span class="ticker-down">-0.65%</span></div>
+            <div class="ticker-item"><span class="ticker-symbol">PLTR</span> <span class="ticker-price">$37.40</span> <span class="ticker-up">+9.20%</span></div>
+            <!-- Duplicate for seamless continuous loop -->
+            <div class="ticker-item"><span class="ticker-symbol">NVDA</span> <span class="ticker-price">$124.85</span> <span class="ticker-up">+6.42%</span></div>
+            <div class="ticker-item"><span class="ticker-symbol">TSLA</span> <span class="ticker-price">$254.10</span> <span class="ticker-up">+4.18%</span></div>
+            <div class="ticker-item"><span class="ticker-symbol">AAPL</span> <span class="ticker-price">$228.30</span> <span class="ticker-down">-1.12%</span></div>
+            <div class="ticker-item"><span class="ticker-symbol">BTCX</span> <span class="ticker-price">$64,250.00</span> <span class="ticker-up">+8.75%</span></div>
+            <div class="ticker-item"><span class="ticker-symbol">SPY</span> <span class="ticker-price">$562.40</span> <span class="ticker-up">+0.84%</span></div>
+            <div class="ticker-item"><span class="ticker-symbol">AMD</span> <span class="ticker-price">$158.90</span> <span class="ticker-down">-2.35%</span></div>
+            <div class="ticker-item"><span class="ticker-symbol">MSFT</span> <span class="ticker-price">$432.15</span> <span class="ticker-up">+1.45%</span></div>
+            <div class="ticker-item"><span class="ticker-symbol">AMZN</span> <span class="ticker-price">$186.20</span> <span class="ticker-up">+3.10%</span></div>
+            <div class="ticker-item"><span class="ticker-symbol">META</span> <span class="ticker-price">$512.75</span> <span class="ticker-down">-0.65%</span></div>
+            <div class="ticker-item"><span class="ticker-symbol">PLTR</span> <span class="ticker-price">$37.40</span> <span class="ticker-up">+9.20%</span></div>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         HERO SECTION
+         ========================================================= -->
+    <section class="hero-section">
+        <div class="hero-content">
+            <div class="badge-glow">⚡ THE ULTIMATE REAL-TIME TRADING ARENA • CROSS-PLATFORM</div>
+            
+            <h1 class="hero-title">
+                Master the Markets. <br>
+                <span class="gradient-text">Crush Your Rivals in Live 1v1 Duels.</span>
+            </h1>
+
+            <p class="hero-subtitle">
+                TradeGPT is a fast-paced paper trading battleground. Trade 100+ volatile stocks with continuous algorithmic order books, breaking news catalysts, 4x day trading margin, and Omegle-style PvP duels against desktop and web players.
+            </p>
+
+            <div class="hero-cta-group">
+                <a href="/play" class="btn btn-primary btn-lg">
+                    <span>⚡ Launch Web Terminal</span>
+                    <span style="font-size:12px;opacity:0.85;">(Instant Free Play)</span>
+                </a>
+                <a href="/download" class="btn btn-secondary btn-lg">
+                    <span>💻 Download Desktop App</span>
+                    <span style="font-size:12px;color:var(--text-muted);">(Windows 64-bit)</span>
+                </a>
+            </div>
+
+            <div class="hero-meta-strip">
+                <span>✓ 100% Free & Risk-Free</span>
+                <span>•</span>
+                <span>✓ Zero Install Required for Web</span>
+                <span>•</span>
+                <span>✓ Real-Time Cloud Save & PvP</span>
+                <span>•</span>
+                <span>✓ $25,000 Starting Cash</span>
+            </div>
+        </div>
+
+        <!-- Interactive Terminal Preview Showcase -->
+        <div class="terminal-showcase-wrap">
+            <div class="terminal-glow-bg"></div>
+            <div class="terminal-mockup">
+                <div class="terminal-topbar">
+                    <div class="terminal-dots">
+                        <span></span><span></span><span></span>
+                    </div>
+                    <div class="terminal-title">TRADEGPT • PRO TRADER WEB TERMINAL v2.0.5</div>
+                    <div class="terminal-live-tag">LIVE MARKET SIMULATION</div>
+                </div>
+
+                <div class="terminal-body">
+                    <!-- Left Column: Scanner -->
+                    <div class="term-col term-col-left">
+                        <div class="term-header-mini">
+                            <span>MARKET SCANNER</span>
+                            <span style="color:var(--accent-green);">100 ACTIVE</span>
+                        </div>
+                        <div class="term-stock-item active">
+                            <div>
+                                <strong style="color:#fff;">NVDA</strong>
+                                <div style="font-size:10px;color:var(--text-muted);">Tech • AI Chips</div>
+                            </div>
+                            <div style="text-align:right;">
+                                <div>$124.85</div>
+                                <span class="ticker-up">+6.42%</span>
+                            </div>
+                        </div>
+                        <div class="term-stock-item">
+                            <div>
+                                <strong style="color:#fff;">TSLA</strong>
+                                <div style="font-size:10px;color:var(--text-muted);">EV • Momentum</div>
+                            </div>
+                            <div style="text-align:right;">
+                                <div>$254.10</div>
+                                <span class="ticker-up">+4.18%</span>
+                            </div>
+                        </div>
+                        <div class="term-stock-item">
+                            <div>
+                                <strong style="color:#fff;">PLTR</strong>
+                                <div style="font-size:10px;color:var(--text-muted);">Defense • Software</div>
+                            </div>
+                            <div style="text-align:right;">
+                                <div>$37.40</div>
+                                <span class="ticker-up">+9.20%</span>
+                            </div>
+                        </div>
+                        <div class="term-stock-item">
+                            <div>
+                                <strong style="color:#fff;">AAPL</strong>
+                                <div style="font-size:10px;color:var(--text-muted);">Consumer Tech</div>
+                            </div>
+                            <div style="text-align:right;">
+                                <div>$228.30</div>
+                                <span class="ticker-down">-1.12%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Center Column: Live Chart & PvP HUD -->
+                    <div class="term-center">
+                        <!-- PvP Duel HUD Simulation -->
+                        <div class="term-duel-hud-sim">
+                            <div class="term-duel-names">
+                                <span style="color:var(--accent-green);">🟢 YOU: $28,450.00 (+13.80%)</span>
+                                <span style="color:var(--accent-red);">🔴 OPPONENT: $26,120.00 (+4.48%)</span>
+                            </div>
+                            <div class="term-duel-progress">
+                                <div class="p-you"></div>
+                                <div class="p-opp"></div>
+                            </div>
+                        </div>
+
+                        <!-- Chart Header -->
+                        <div class="term-chart-header">
+                            <div>
+                                <span style="font-size:18px;font-weight:800;color:#fff;">NVDA • NVIDIA Corporation</span>
+                                <div style="font-size:11px;color:var(--text-muted);">Simulated Order Flow • Real-Time Brownian Motion</div>
+                            </div>
+                            <div style="text-align:right;">
+                                <div class="term-price-big" id="demo-term-price">$428.50</div>
+                                <span class="ticker-up" id="demo-term-chg" style="font-weight:700;font-size:13px;">+16.50 (+4.00%)</span>
+                            </div>
+                        </div>
+
+                        <!-- Simulated Candlesticks -->
+                        <div class="term-chart-canvas-sim">
+                            <div class="term-order-toast" id="demo-toast" style="display:none;">🟢 BOUGHT 100 @ $428.50 • ORDER FILLED</div>
+                            
+                            <div class="sim-candle sim-green" style="height:45%;"><div class="sim-wick" style="height:120%;"></div><div class="sim-body" style="height:50%;"></div></div>
+                            <div class="sim-candle sim-red" style="height:38%;"><div class="sim-wick" style="height:115%;"></div><div class="sim-body" style="height:35%;"></div></div>
+                            <div class="sim-candle sim-green" style="height:55%;"><div class="sim-wick" style="height:110%;"></div><div class="sim-body" style="height:60%;"></div></div>
+                            <div class="sim-candle sim-green" style="height:65%;"><div class="sim-wick" style="height:125%;"></div><div class="sim-body" style="height:70%;"></div></div>
+                            <div class="sim-candle sim-red" style="height:50%;"><div class="sim-wick" style="height:130%;"></div><div class="sim-body" style="height:45%;"></div></div>
+                            <div class="sim-candle sim-green" style="height:72%;"><div class="sim-wick" style="height:115%;"></div><div class="sim-body" style="height:65%;"></div></div>
+                            <div class="sim-candle sim-green" style="height:85%;"><div class="sim-wick" style="height:120%;"></div><div class="sim-body" style="height:80%;"></div></div>
+                            <div class="sim-candle sim-red" style="height:75%;"><div class="sim-wick" style="height:110%;"></div><div class="sim-body" style="height:40%;"></div></div>
+                            <div class="sim-candle sim-green" style="height:92%;"><div class="sim-wick" style="height:120%;"></div><div class="sim-body" style="height:85%;"></div></div>
+                        </div>
+
+                        <!-- Trade Execution Row -->
+                        <div class="term-order-buttons">
+                            <button type="button" class="btn-term-buy" id="demo-btn-buy">⚡ BUY 100 (LONG)</button>
+                            <button type="button" class="btn-term-short" id="demo-btn-short">🔴 SHORT 100</button>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: News & Account Feed -->
+                    <div class="term-col term-col-right">
+                        <div class="term-header-mini">
+                            <span>BREAKING NEWS CATALYSTS</span>
+                            <span style="color:var(--accent-blue);">LIVE</span>
+                        </div>
+                        <div style="background:rgba(0,230,118,0.06);border:1px solid rgba(0,230,118,0.2);padding:10px;border-radius:6px;margin-bottom:8px;font-size:11px;">
+                            <div style="color:var(--accent-green);font-weight:700;">🚨 NVDA EARNINGS BEAT</div>
+                            <div style="color:var(--text-secondary);margin-top:2px;">Data center revenue spikes +180% YoY, guidance raised.</div>
+                        </div>
+                        <div style="background:rgba(255,82,82,0.06);border:1px solid rgba(255,82,82,0.2);padding:10px;border-radius:6px;margin-bottom:8px;font-size:11px;">
+                            <div style="color:var(--accent-red);font-weight:700;">⚠️ TECH SECTOR DOWNGRADE</div>
+                            <div style="color:var(--text-secondary);margin-top:2px;">Analyst cites macro inflation pressure across legacy tech.</div>
+                        </div>
+                        <div style="background:#131826;padding:12px;border-radius:6px;margin-top:14px;border:1px solid var(--border-subtle);font-size:11px;line-height:1.7;">
+                            <div style="display:flex;justify-content:space-between;"><span>Seed Cash:</span><strong>$25,000.00</strong></div>
+                            <div style="display:flex;justify-content:space-between;"><span>Buying Power (4x):</span><strong style="color:var(--accent-blue);">$100,000.00</strong></div>
+                            <div style="display:flex;justify-content:space-between;"><span>Menu Vault:</span><strong style="color:var(--accent-green);">$14,250.00</strong></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         HIGHLIGHT METRICS STRIP
+         ========================================================= -->
+    <div class="metrics-strip">
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-number">100+</div>
+                <div class="metric-label">Simulated Tickers</div>
+                <div class="metric-sub">Tech, Energy, Crypto, Bio, Meme & Indices</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-number">1v1 PvP</div>
+                <div class="metric-label">Cloud Matchmaking</div>
+                <div class="metric-sub">Cross-play between Desktop & Web Traders</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-number">20x</div>
+                <div class="metric-label">Turbo Simulation</div>
+                <div class="metric-sub">Scalp a whole trading day in 3 minutes</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-number">$25,000</div>
+                <div class="metric-label">Starting Capital</div>
+                <div class="metric-sub">4x Day Trading Buying Power Margin</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         DETAILED FEATURES SECTION
+         ========================================================= -->
+    <section class="features-section" id="features">
+        <div class="section-header">
+            <span class="section-tag">ENGINEERED FOR TRADERS</span>
+            <h2 class="section-title">Everything You Need to Scalp the Market</h2>
+            <p class="section-desc">
+                From high-speed order execution and short selling to real-time PvP combat and vault banking, TradeGPT replicates the adrenaline of Wall Street.
+            </p>
+        </div>
+
+        <div class="features-grid">
+            <!-- Feature 1: Engine -->
+            <div class="feature-card green-theme">
+                <div class="feature-icon-wrap">📈</div>
+                <h3 class="feature-title">Real-Time Simulation Engine</h3>
+                <p class="feature-text">
+                    Experience dynamic pricing driven by Geometric Brownian Motion, volume clustering, trend momentum drift, and realistic volatility spikes. No canned replays—every session is a unique trading day.
+                </p>
+                <ul class="feature-bullets">
+                    <li><span>✓</span> Continuous algorithmic order flow</li>
+                    <li><span>✓</span> 100+ unique stocks across 8 distinct sectors</li>
+                    <li><span>✓</span> Adjustable speeds from 1x Casual to 20x TURBO</li>
+                </ul>
+            </div>
+
+            <!-- Feature 2: 1v1 PvP Duels -->
+            <div class="feature-card">
+                <div class="feature-icon-wrap" style="color:#ff5252;">⚔️</div>
+                <h3 class="feature-title">1v1 Real-Time PvP Duels</h3>
+                <p class="feature-text">
+                    Queue up Omegle-style into instant head-to-head trading battles against live desktop and web opponents. Both traders enter the exact same live market for 3 minutes—highest P&L takes the glory.
+                </p>
+                <ul class="feature-bullets">
+                    <li><span>✓</span> Firebase-powered real-time synchronization</li>
+                    <li><span>✓</span> Live rival P&L tracker & time remaining HUD</li>
+                    <li><span>✓</span> Intelligent fallback bot if no human is queueing</li>
+                </ul>
+            </div>
+
+            <!-- Feature 3: News & Catalysts -->
+            <div class="feature-card">
+                <div class="feature-icon-wrap">📰</div>
+                <h3 class="feature-title">Breaking News & Catalysts</h3>
+                <p class="feature-text">
+                    Markets don't move in a vacuum. A dynamic news engine injects breaking headlines—earnings surprises, FDA drug approvals, CEO tweets, and sector downgrades—that create instant breakout volatility.
+                </p>
+                <ul class="feature-bullets">
+                    <li><span>✓</span> Live news feed directly beside the charts</li>
+                    <li><span>✓</span> Instant sentiment impact on stock prices</li>
+                    <li><span>✓</span> Trade the immediate reaction or scalp the fade</li>
+                </ul>
+            </div>
+
+            <!-- Feature 4: Day Trading Execution Desk -->
+            <div class="feature-card gold-theme">
+                <div class="feature-icon-wrap">⚡</div>
+                <h3 class="feature-title">Professional Execution Desk</h3>
+                <p class="feature-text">
+                    Enter and exit positions with institutional precision. Execute Longs, Shorts, 1-click position reversals (Flip), and smart MAX share sizing calculated directly from your available Buying Power.
+                </p>
+                <ul class="feature-bullets">
+                    <li><span>✓</span> Instant Market orders & customizable Limit orders</li>
+                    <li><span>✓</span> 4x Day Trading Margin & Short selling with collateral</li>
+                    <li><span>✓</span> Rapid-fire keyboard hotkeys for lightning execution</li>
+                </ul>
+            </div>
+
+            <!-- Feature 5: Interactive Candlestick Charts -->
+            <div class="feature-card">
+                <div class="feature-icon-wrap">📊</div>
+                <h3 class="feature-title">Hardware-Accelerated Charts</h3>
+                <p class="feature-text">
+                    Custom high-performance canvas candlestick charts with accurate wicks, volume histograms, moving averages, and on-chart entry & exit execution badges showing your exact fill prices.
+                </p>
+                <ul class="feature-bullets">
+                    <li><span>✓</span> Real-time candlestick formation at 60 FPS</li>
+                    <li><span>✓</span> Buy & Sell trade markers drawn directly on canvas</li>
+                    <li><span>✓</span> Interactive crosshair price and date cursor</li>
+                </ul>
+            </div>
+
+            <!-- Feature 6: Menu Vault & Profit Banking -->
+            <div class="feature-card green-theme">
+                <div class="feature-icon-wrap">🏦</div>
+                <h3 class="feature-title">Menu Vault & Career Mode</h3>
+                <p class="feature-text">
+                    Don't risk blowing up your gains. Hit "Bank Profit" whenever your equity exceeds your $25,000 initial seed money. Profits are locked safely into your permanent Menu Vault across sessions.
+                </p>
+                <ul class="feature-bullets">
+                    <li><span>✓</span> Permanent Vault storage immune to market wipeouts</li>
+                    <li><span>✓</span> Career progression and lifetime banked profit stats</li>
+                    <li><span>✓</span> Reset session balance without losing your vault</li>
+                </ul>
+            </div>
+
+            <!-- Feature 7: Trader Shop & Celebrations -->
+            <div class="feature-card purple-theme">
+                <div class="feature-icon-wrap">🎆</div>
+                <h3 class="feature-title">Crazy Win Celebrations & Shop</h3>
+                <p class="feature-text">
+                    Spend your banked vault profits in the Trader Shop. Unlock insane fullscreen particle victory animations—Rocket to the Moon, Golden Riches, Nuclear Meltdown—plus audio SFX and VIP themes.
+                </p>
+                <ul class="feature-bullets">
+                    <li><span>✓</span> 5 animated celebration engines with custom physics</li>
+                    <li><span>✓</span> Cyberpunk & Gold VIP terminal color themes</li>
+                    <li><span>✓</span> Unlockable trader titles to flex in 1v1 PvP</li>
+                </ul>
+            </div>
+
+            <!-- Feature 8: Cloud Sync & Cross-Platform -->
+            <div class="feature-card">
+                <div class="feature-icon-wrap">☁️</div>
+                <h3 class="feature-title">Universal Cloud Synchronization</h3>
+                <p class="feature-text">
+                    Sign in with Google or Email on tradeism.men to automatically sync your trader nickname, money vault, purchased cosmetics, and duel wins between the Web version and the Windows Desktop app.
+                </p>
+                <ul class="feature-bullets">
+                    <li><span>✓</span> 1-click Google Sign-In with official Firebase SDK</li>
+                    <li><span>✓</span> Direct credential handoff to Desktop game</li>
+                    <li><span>✓</span> Play on any browser, anywhere, anytime</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         HOW THE GAME WORKS (3-STEP TIMELINE)
+         ========================================================= -->
+    <section class="how-it-works-section" id="how-it-works">
+        <div class="how-container">
+            <div class="section-header">
+                <span class="section-tag">QUICKSTART GUIDE</span>
+                <h2 class="section-title">How To Play in 3 Simple Steps</h2>
+                <p class="section-desc">
+                    Whether you're practicing solo or competing for rank in 1v1 duels, here is the core gameplay loop.
+                </p>
+            </div>
+
+            <div class="steps-grid">
+                <div class="step-card">
+                    <span class="step-badge">STEP 1</span>
+                    <span class="step-icon">🔍</span>
+                    <h3 class="step-title">Scout the Tickers & News</h3>
+                    <p class="step-desc">
+                        Open the 100-stock scanner. Look for high-volume movers, sector trends, and breaking catalyst headlines. Notice a positive earnings announcement? That stock is primed for a spike.
+                    </p>
+                </div>
+
+                <div class="step-card">
+                    <span class="step-badge">STEP 2</span>
+                    <span class="step-icon">⚡</span>
+                    <h3 class="step-title">Go Long or Short with Leverage</h3>
+                    <p class="step-desc">
+                        Pick your position size or tap <strong>MAX</strong> to deploy your full 4x Buying Power. Click <strong>BUY</strong> if you expect prices to rise, or <strong>SHORT</strong> to profit from steep downtrends. If the momentum reverses, tap <strong>FLIP</strong> to instantly switch sides.
+                    </p>
+                </div>
+
+                <div class="step-card">
+                    <span class="step-badge">STEP 3</span>
+                    <span class="step-icon">💰</span>
+                    <h3 class="step-title">Bank Profits & Level Up</h3>
+                    <p class="step-desc">
+                        Flatten your positions when in profit. Click <strong>Bank Profit</strong> to lock earnings into your permanent Menu Vault. Spend your vault fortune in the Trader Shop to customize your terminal and climb the PvP leaderboard.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         GAME MODES SHOWCASE
+         ========================================================= -->
+    <section class="modes-section" id="modes">
+        <div class="section-header">
+            <span class="section-tag">CHOOSE YOUR ARENA</span>
+            <h2 class="section-title">Two Distinct Ways to Play</h2>
+            <p class="section-desc">
+                Hone your strategies at your own pace in Solo Sandbox or battle human traders in timed 1v1 PvP showmatches.
+            </p>
+        </div>
+
+        <div class="modes-grid">
+            <!-- Mode 1: Solo -->
+            <div class="mode-box">
+                <span class="mode-tag">PRACTICE ARENA</span>
+                <h3 class="mode-heading">🎮 Solo Sandbox Mode</h3>
+                <p class="mode-description">
+                    The ultimate risk-free paper trading laboratory. Test new strategies, practice scalping breakouts, and experiment with short selling without time limits or pressure.
+                </p>
+                <ul class="mode-perks-list">
+                    <li><span>⏱</span> <strong>Custom Speeds:</strong> 1x Casual, 3x Day Trader, 8x Scalper, 20x Turbo</li>
+                    <li><span>↺</span> <strong>Instant Session Reset:</strong> Wipe clean and start fresh at any time</li>
+                    <li><span>🏦</span> <strong>Menu Vault Banking:</strong> Stash profits to your persistent profile</li>
+                    <li><span>📰</span> <strong>Full News Stream:</strong> React to unpredictable market catalysts</li>
+                </ul>
+                <a href="/play" class="btn btn-secondary">Enter Solo Sandbox</a>
+            </div>
+
+            <!-- Mode 2: Duel -->
+            <div class="mode-box duel-box">
+                <span class="mode-tag">HIGH STAKES COMPETITIVE</span>
+                <h3 class="mode-heading">⚔️ 1v1 Online PvP Duel</h3>
+                <p class="mode-description">
+                    Jump into Omegle-style live matchmaking. You and an opponent trade the exact same synchronized real-time stock feed in an adrenaline-fueled 3-minute showdown.
+                </p>
+                <ul class="mode-perks-list">
+                    <li><span>📡</span> <strong>Live Matchmaking:</strong> Cross-play between desktop & web clients</li>
+                    <li><span>📊</span> <strong>Real-Time Leaderboard:</strong> Live opponent P&L tracking during the duel</li>
+                    <li><span>🏆</span> <strong>Win Streak System:</strong> Rack up consecutive duel victories</li>
+                    <li><span>🎆</span> <strong>Celebrations:</strong> Trigger fullscreen victory animations upon winning</li>
+                </ul>
+                <a href="/play" class="btn btn-primary" style="background:#ff3d00;box-shadow:0 4px 18px rgba(255,61,0,0.4);">Launch 1v1 Duel</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         CLOUD SIGN IN & PROFILE SECTION
+         ========================================================= -->
+    <section class="auth-section" id="auth">
+        <div class="auth-wrapper">
+            <div class="auth-info-col">
+                <span class="badge-glow" style="margin-bottom:14px;">☁️ UNIVERSAL CLOUD ACCOUNT</span>
+                <h3>Sync Your Vault & Shop Items Across Devices</h3>
+                <p>
+                    Create a free account or log in with Google. Your trader nickname, Menu Vault balance, unlockable cosmetics, and 1v1 PvP duel records will instantly sync between the Web Terminal and Desktop application.
+                </p>
+                <ul class="auth-benefits">
+                    <li><span>✓</span> Never lose your saved vault money or shop unlocks</li>
+                    <li><span>✓</span> Seamlessly jump between your browser and Windows desktop app</li>
+                    <li><span>✓</span> Verified trader nickname in 1v1 PvP matches</li>
+                    <li><span>✓</span> Fast 1-click Google authentication via official Firebase SDK</li>
+                </ul>
+            </div>
+
+            <div class="auth-card-widget">
+                <!-- Logged In State (Hidden by default, shown if currentUser) -->
+                <div class="user-profile-widget" id="user-profile-widget">
+                    <div class="profile-avatar-circle">👑</div>
+                    <div class="profile-username" id="profile-user-name">Trader</div>
+                    <div class="profile-email" id="profile-user-email">user@example.com</div>
+                    
+                    <div style="display:inline-block;font-size:11px;font-weight:700;color:var(--accent-green);background:rgba(0,230,118,0.12);border:1px solid rgba(0,230,118,0.3);border-radius:20px;padding:3px 12px;margin-bottom:16px;">
+                        ● CLOUD SYNC ACTIVE
+                    </div>
+
+                    <div class="profile-stats-grid">
+                        <div class="profile-stats-row"><span>💰 Menu Vault:</span><strong id="profile-vault-bal" style="color:var(--accent-green);">$0.00</strong></div>
+                        <div class="profile-stats-row"><span>📈 Banked Profit:</span><strong id="profile-banked-prof" style="color:#fff;">$0.00</strong></div>
+                        <div class="profile-stats-row"><span>🏆 Duels Won:</span><strong id="profile-duels-won" style="color:#fff;">0</strong></div>
+                    </div>
+
+                    <div style="display:flex;gap:10px;justify-content:center;">
+                        <a href="/play" class="btn btn-primary btn-sm" style="flex:1;">⚡ Launch Terminal</a>
+                        <button type="button" class="btn btn-secondary btn-sm" id="btn-signout" style="border-color:#ff5252;color:#ff8a80;">Sign Out</button>
+                    </div>
+                </div>
+
+                <!-- Unauthenticated State (Form) -->
+                <div id="auth-form-wrap">
+                    <button type="button" class="btn-google-auth" id="btn-google-auth">
+                        <svg viewBox="0 0 18 18">
+                            <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.616z"/>
+                            <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/>
+                            <path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.039l3.007-2.332z"/>
+                            <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/>
+                        </svg>
+                        Sign in with Google
+                    </button>
+
+                    <div class="auth-divider">
+                        <span>or with email</span>
+                    </div>
+
+                    <div class="auth-tabs">
+                        <button type="button" class="auth-tab-btn active" id="tab-signin">Sign In</button>
+                        <button type="button" class="auth-tab-btn" id="tab-signup">Create Account</button>
+                    </div>
+
+                    <form id="home-auth-form">
+                        <div class="auth-form-group" id="group-nickname" style="display:none;">
+                            <label for="auth-nick">Trader Nickname</label>
+                            <input type="text" id="auth-nick" class="auth-input" placeholder="e.g. BullishBeast">
+                        </div>
+
+                        <div class="auth-form-group">
+                            <label for="auth-email">Email Address</label>
+                            <input type="email" id="auth-email" class="auth-input" placeholder="trader@example.com" required>
+                        </div>
+
+                        <div class="auth-form-group">
+                            <label for="auth-pass">Password</label>
+                            <input type="password" id="auth-pass" class="auth-input" placeholder="••••••••" required>
+                        </div>
+
+                        <div class="auth-status-box" id="auth-status-box"></div>
+
+                        <button type="submit" class="btn btn-primary" id="btn-auth-submit" style="width:100%;">Sign In</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         WEB VS DESKTOP COMPARISON TABLE
+         ========================================================= -->
+    <section class="comparison-section" id="comparison">
+        <div class="section-header">
+            <span class="section-tag">TWO WAYS TO PLAY</span>
+            <h2 class="section-title">Web Terminal vs. Desktop App</h2>
+            <p class="section-desc">
+                Play instantly in your browser or install the dedicated Windows client for ultra-low latency.
+            </p>
+        </div>
+
+        <div class="comparison-table-wrap">
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th style="color:var(--accent-blue);">🌐 Web Terminal (tradeism.men)</th>
+                        <th style="color:var(--accent-green);">💻 Windows Desktop App</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Zero Installation</strong></td>
+                        <td class="check">✓ Instant (1-click access)</td>
+                        <td style="color:var(--text-muted);">Requires quick installer</td>
+                    </tr>
+                    <tr>
+                        <td><strong>100+ Stocks Simulation</strong></td>
+                        <td class="check">✓ Full 100 stock universe</td>
+                        <td class="check">✓ Full 100 stock universe</td>
+                    </tr>
+                    <tr>
+                        <td><strong>1v1 Live Online PvP</strong></td>
+                        <td class="check">✓ Real-time cross-play</td>
+                        <td class="check">✓ Real-time cross-play</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cloud Profile & Vault Sync</strong></td>
+                        <td class="check">✓ Synced via Firebase</td>
+                        <td class="check">✓ Synced via Firebase</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Keyboard Hotkey Execution</strong></td>
+                        <td>Standard browser keys</td>
+                        <td class="check">✓ Global, zero-lag desktop hotkeys</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Automatic Background Updates</strong></td>
+                        <td class="check">✓ Always on latest build</td>
+                        <td class="check">✓ Built-in GitHub self-updater</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Offline Simulation Sandbox</strong></td>
+                        <td>Requires initial load</td>
+                        <td class="check">✓ 100% offline standalone support</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         BOTTOM CTA BANNER
+         ========================================================= -->
+    <section class="cta-banner-section">
+        <div class="cta-banner">
+            <h2>Ready to Test Your Trading Instincts?</h2>
+            <p>
+                Step onto the trading floor today. Build your seed capital into a multimillion-dollar vault or take on traders across the globe in 1v1 PvP.
+            </p>
+            <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
+                <a href="/play" class="btn btn-primary btn-lg">⚡ Launch Web Terminal Now</a>
+                <a href="/download" class="btn btn-secondary btn-lg">💾 Download Desktop App</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         FOOTER
+         ========================================================= -->
+    <footer class="footer-wrap">
+        <div class="footer-container">
+            <div class="footer-col">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+                    <img src="assets/icon.png" alt="Logo" style="width:26px;height:26px;border-radius:4px;">
+                    <strong style="color:#fff;font-size:16px;">TRADEGPT</strong>
+                </div>
+                <p style="font-size:13px;color:var(--text-muted);line-height:1.6;max-width:340px;">
+                    The ultimate paper trading arena. Featuring real-time stock simulations, breaking news catalysts, 4x day trading margin, and live 1v1 PvP battles.
+                </p>
+            </div>
+
+            <div class="footer-col">
+                <h4>Play & Download</h4>
+                <ul class="footer-links">
+                    <li><a href="/play">Web Terminal (Play Online)</a></li>
+                    <li><a href="/download">Windows Desktop App</a></li>
+                    <li><a href="/download#specs">System Requirements</a></li>
+                    <li><a href="https://github.com/isaiah-sudo/tradeism/releases" target="_blank" rel="noopener">GitHub Releases</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h4>Features</h4>
+                <ul class="footer-links">
+                    <li><a href="#features">100 Stock Universe</a></li>
+                    <li><a href="#modes">1v1 PvP Duels</a></li>
+                    <li><a href="#features">Menu Vault Banking</a></li>
+                    <li><a href="#auth">Cloud Synchronization</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h4>Community & Open Source</h4>
+                <ul class="footer-links">
+                    <li><a href="https://github.com/isaiah-sudo/tradeism" target="_blank" rel="noopener">GitHub Repository</a></li>
+                    <li><a href="https://github.com/isaiah-sudo/tradeism/issues" target="_blank" rel="noopener">Report an Issue</a></li>
+                    <li><a href="/play">Trader Shop & Rewards</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <div>
+                © 2026 TradeGPT • tradeism.men • All rights reserved.
+            </div>
+            <div>
+                Version 2.0.5 Stable
+            </div>
+        </div>
+
+        <div class="footer-bottom" style="border:none;padding-top:10px;">
+            <p class="legal-disclaimer">
+                Disclaimer: TradeGPT is an educational and entertainment paper trading simulation game. All stocks, prices, news events, companies, and money values are entirely simulated. No real money or real financial assets are traded or held.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Custom Landing Auth & Showcase Script -->
+    <script src="js/landing-auth.js"></script>
 
 </body>
 </html>
-

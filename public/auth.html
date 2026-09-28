@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Day Trade Simulator • Account Sign In</title>
+  <title>TradeGPT • Account Sign In</title>
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <!-- Firebase Compat SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
@@ -215,7 +215,7 @@
 
   <!-- Auth Card -->
   <div class="auth-card" id="authBox">
-    <div class="badge">DAY TRADE SIMULATOR • TRADEISM.MEN</div>
+    <div class="badge">TRADEGPT • TRADEISM.MEN</div>
     <h1>Trader Sign In</h1>
     <p class="subtitle" id="authSubtitle">Sign in to sync your trader name, money vault, and shop items across devices.</p>
 
@@ -266,7 +266,7 @@
     <div class="success-icon">🎉</div>
     <div class="success-title">Successfully Signed In!</div>
     <div class="success-desc" id="successDesc">
-      Welcome back! All your progress (name, vault money, and shop items) is securely synced with Day Trade Simulator.
+      Welcome back! All your progress (name, vault money, and shop items) is securely synced with TradeGPT.
     </div>
     <p style="font-size: 13px; color: #848e9c; margin-bottom: 20px;" id="successSub">
       You can now close this browser tab and return to the game.
@@ -325,7 +325,7 @@
     let mode = 'signin';
 
     if (targetPort) {
-      document.getElementById('authSubtitle').textContent = "Signing in through tradeism.men for Day Trade Simulator Desktop.";
+      document.getElementById('authSubtitle').textContent = "Signing in through tradeism.men for TradeGPT Desktop.";
     }
 
     tabSignIn.onclick = () => {
@@ -359,7 +359,7 @@
       // 1. If not launched by desktop app, save to localStorage and return to web game
       if (!targetPort) {
         try {
-          const raw = localStorage.getItem("daytradesim_profile");
+          const raw = localStorage.getItem("tradegpt_profile") || localStorage.getItem("daytradesim_profile");
           const p = raw ? JSON.parse(raw) : {};
           p.auth_uid = authData.uid;
           p.auth_email = authData.email || '';
@@ -369,6 +369,7 @@
           if (authData.displayName && !p.player_name) {
             p.player_name = authData.displayName;
           }
+          localStorage.setItem("tradegpt_profile", JSON.stringify(p));
           localStorage.setItem("daytradesim_profile", JSON.stringify(p));
         } catch (e) {
           console.error("Local storage sync error:", e);
@@ -379,7 +380,7 @@
         successDesc.textContent = "Welcome! Your progress is now synced on tradeism.men.";
         successSub.textContent = "Redirecting to trading terminal...";
         setTimeout(() => {
-          window.location.href = "/";
+          window.location.href = "/play";
         }, 1500);
         return;
       }
@@ -387,7 +388,7 @@
       // 2. Desktop app receiver flow
       authBox.style.display = 'none';
       successBox.style.display = 'block';
-      successDesc.textContent = "Successfully authenticated via tradeism.men! Relaying credentials to Day Trade Simulator...";
+      successDesc.textContent = "Successfully authenticated via tradeism.men! Relaying credentials to TradeGPT...";
       successSub.textContent = "You can return to the desktop game window.";
 
       const localBase = `http://127.0.0.1:${targetPort}/callback`;

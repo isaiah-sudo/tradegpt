@@ -77,6 +77,19 @@ class SimulatedOpponentBot {
         this.pnlPct = 0.0;
         this.status = "playing";
         this.trend = (Math.random() > 0.5 ? 1 : -1) * (0.5 + Math.random());
+
+        const botAnims = ["money_rain", "rocket_moon", "matrix_glitch", "diamond_hands", "golden_bull"];
+        if (this.name.includes("Diamond")) {
+            this.equipped_animation = "diamond_hands";
+        } else if (this.name.includes("Bull") || this.name.includes("Titan")) {
+            this.equipped_animation = "golden_bull";
+        } else if (this.name.includes("Quant") || this.name.includes("Algo")) {
+            this.equipped_animation = "matrix_glitch";
+        } else if (this.name.includes("Moon") || this.name.includes("Momentum")) {
+            this.equipped_animation = "rocket_moon";
+        } else {
+            this.equipped_animation = botAnims[Math.floor(Math.random() * botAnims.length)];
+        }
     }
 
     tick() {
@@ -92,6 +105,7 @@ class SimulatedOpponentBot {
 
         return {
             name: this.name,
+            equipped_animation: this.equipped_animation,
             equity: this.equity,
             pnl: this.pnl,
             pnl_pct: this.pnlPct,
@@ -278,7 +292,7 @@ class FirebaseMatchmaker {
         }
     }
 
-    async findMatch(onStatusUpdate, abortSignal, customDisplayName) {
+    async findMatch(onStatusUpdate, abortSignal, customDisplayName, myAnimation = "money_rain") {
         if (customDisplayName) {
             this.displayName = customDisplayName.trim();
         }
@@ -299,7 +313,8 @@ class FirebaseMatchmaker {
             await this._firestoreSet(queuePath, {
                 name: this.displayName,
                 status: "waiting",
-                timestamp: now
+                timestamp: now,
+                equipped_animation: myAnimation || "money_rain"
             }, false);
 
             // Polling loop: up to 15 seconds before bot fallback
@@ -321,6 +336,7 @@ class FirebaseMatchmaker {
                     let startTime = ticket.start_time || (Date.now() / 1000);
                     let oppName = ticket.opponent_name || "Opponent";
                     let oppUid = ticket.opponent_uid || "";
+                    let oppAnim = ticket.opponent_animation || "money_rain";
 
                     // Fetch match document with short retries for replication
                     let matchDoc = null;
@@ -337,6 +353,7 @@ class FirebaseMatchmaker {
                         const oppData = matchDoc[oppSlot] || {};
                         oppName = oppData.name || oppName;
                         oppUid = oppData.uid || oppUid;
+                        oppAnim = oppData.equipped_animation || oppAnim;
                         seed = matchDoc.seed || seed;
                         startTime = matchDoc.start_time || startTime;
                     }
@@ -354,6 +371,7 @@ class FirebaseMatchmaker {
                         opponent: {
                             uid: oppUid,
                             name: oppName,
+                            equipped_animation: oppAnim,
                             equity: 25000.0,
                             pnl: 0.0,
                             pnl_pct: 0.0
@@ -395,6 +413,7 @@ class FirebaseMatchmaker {
                     const cand = candidates[0];
                     const candUid = cand.uid;
                     const candName = cand.name || "Opponent";
+                    const candAnim = cand.equipped_animation || "money_rain";
                     const candTs = cand.timestamp || 0;
 
                     // Deterministic tie-breaker: Lower UID creates match
@@ -412,6 +431,7 @@ class FirebaseMatchmaker {
                             player1: {
                                 uid: this.userId,
                                 name: this.displayName,
+                                equipped_animation: myAnimation || "money_rain",
                                 equity: 25000.0,
                                 pnl: 0.0,
                                 pnl_pct: 0.0,
@@ -421,6 +441,7 @@ class FirebaseMatchmaker {
                             player2: {
                                 uid: candUid,
                                 name: candName,
+                                equipped_animation: candAnim,
                                 equity: 25000.0,
                                 pnl: 0.0,
                                 pnl_pct: 0.0,
@@ -442,6 +463,7 @@ class FirebaseMatchmaker {
                             player_slot: "player2",
                             opponent_name: this.displayName,
                             opponent_uid: this.userId,
+                            opponent_animation: myAnimation || "money_rain",
                             timestamp: currTime
                         }, false);
 
@@ -461,6 +483,7 @@ class FirebaseMatchmaker {
                             opponent: {
                                 uid: candUid,
                                 name: candName,
+                                equipped_animation: candAnim,
                                 equity: 25000.0,
                                 pnl: 0.0,
                                 pnl_pct: 0.0
@@ -486,6 +509,7 @@ class FirebaseMatchmaker {
                 opponent: {
                     uid: "bot_rival",
                     name: this.opponentBot.name,
+                    equipped_animation: this.opponentBot.equipped_animation,
                     equity: 25000.0,
                     pnl: 0.0,
                     pnl_pct: 0.0
@@ -510,6 +534,7 @@ class FirebaseMatchmaker {
                 opponent: {
                     uid: "bot_rival",
                     name: this.opponentBot.name,
+                    equipped_animation: this.opponentBot.equipped_animation,
                     equity: 25000.0,
                     pnl: 0.0,
                     pnl_pct: 0.0
@@ -518,7 +543,7 @@ class FirebaseMatchmaker {
         }
     }
 
-    async updatePlayerMetrics(equity, pnl, pnlPct) {
+    async updatePlayerMetrics(equity, pnl, pnlPct, myAnimation = "money_rain") {
         if (this.opponentBot) {
             return this.opponentBot.tick();
         }
@@ -533,6 +558,7 @@ class FirebaseMatchmaker {
         myData[this.playerSlot] = {
             uid: this.userId,
             name: this.displayName,
+            equipped_animation: myAnimation || "money_rain",
             equity: Number(equity.toFixed(2)),
             pnl: Number(pnl.toFixed(2)),
             pnl_pct: Number(pnlPct.toFixed(2)),
@@ -549,6 +575,7 @@ class FirebaseMatchmaker {
             const oppData = matchDoc[oppSlot];
             return {
                 name: oppData.name || "Opponent",
+                equipped_animation: oppData.equipped_animation || "money_rain",
                 equity: oppData.equity !== undefined ? oppData.equity : 25000.0,
                 pnl: oppData.pnl !== undefined ? oppData.pnl : 0.0,
                 pnl_pct: oppData.pnl_pct !== undefined ? oppData.pnl_pct : 0.0,
@@ -572,6 +599,7 @@ class FirebaseMatchmaker {
                 const oppData = matchDoc[oppSlot];
                 return {
                     name: oppData.name || "Opponent",
+                    equipped_animation: oppData.equipped_animation || "money_rain",
                     equity: oppData.equity !== undefined ? oppData.equity : 25000.0,
                     pnl: oppData.pnl !== undefined ? oppData.pnl : 0.0,
                     pnl_pct: oppData.pnl_pct !== undefined ? oppData.pnl_pct : 0.0,

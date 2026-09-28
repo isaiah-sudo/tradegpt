@@ -1,6 +1,9 @@
 {
   "hosting": {
     "public": "public",
+    "predeploy": [
+      "python update_release.py"
+    ],
     "cleanUrls": true,
     "ignore": [
       "firebase.json",
@@ -8,6 +11,22 @@
       "**/node_modules/**"
     ],
     "rewrites": [
+      {
+        "source": "/play",
+        "destination": "/play.html"
+      },
+      {
+        "source": "/play/**",
+        "destination": "/play.html"
+      },
+      {
+        "source": "/download",
+        "destination": "/download.html"
+      },
+      {
+        "source": "/downloads",
+        "destination": "/download.html"
+      },
       {
         "source": "/auth",
         "destination": "/auth.html"

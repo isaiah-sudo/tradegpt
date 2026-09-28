@@ -296,7 +296,7 @@ class TradingApp {
             auth_refresh_token: ""
         };
         try {
-            const raw = localStorage.getItem("daytradesim_profile");
+            const raw = localStorage.getItem("tradegpt_profile") || localStorage.getItem("daytradesim_profile");
             if (raw) {
                 const p = JSON.parse(raw);
                 if (!Array.isArray(p.inventory)) p.inventory = [...defaults.inventory];
@@ -324,6 +324,7 @@ class TradingApp {
 
     _saveProfile(syncCloud = true) {
         try {
+            localStorage.setItem("tradegpt_profile", JSON.stringify(this.profile));
             localStorage.setItem("daytradesim_profile", JSON.stringify(this.profile));
         } catch (e) {}
         if (syncCloud && this.profile.auth_uid) {
@@ -1076,10 +1077,12 @@ class TradingApp {
 
         try {
             if (this.fb) this.fb.displayName = this.nickname;
+            const myAnim = (this.profile && this.profile.equipped_animation) ? this.profile.equipped_animation : "money_rain";
             const matchData = await this.fb.findMatch(
                 (status) => { this.elMatchStatusTxt.textContent = status; },
                 this.searchAbortCtrl.signal,
-                this.nickname
+                this.nickname,
+                myAnim
             );
 
             if (!matchData) return;
@@ -1133,7 +1136,8 @@ class TradingApp {
             const pnl = this.engine.totalPnL;
             const pnlPct = this.engine.totalPnLPct;
 
-            const oppData = await this.fb.updatePlayerMetrics(eq, pnl, pnlPct);
+            const anim = (this.profile && this.profile.equipped_animation) ? this.profile.equipped_animation : "money_rain";
+            const oppData = await this.fb.updatePlayerMetrics(eq, pnl, pnlPct, anim);
             if (oppData) {
                 this._updateHudDisplay(eq, pnl, pnlPct, oppData);
 
@@ -1159,6 +1163,9 @@ class TradingApp {
             if (this.matchData && this.matchData.opponent) {
                 this.matchData.opponent.name = opp.name;
             }
+        }
+        if (opp && opp.equipped_animation && this.matchData && this.matchData.opponent) {
+            this.matchData.opponent.equipped_animation = opp.equipped_animation;
         }
 
         const oppEq = (opp && opp.equity !== undefined) ? opp.equity : 25000.0;
@@ -1205,6 +1212,7 @@ class TradingApp {
         }
 
         const oppName = (this.matchData && this.matchData.opponent && this.matchData.opponent.name) ? this.matchData.opponent.name : "Opponent";
+        const oppAnim = (this.matchData && this.matchData.opponent && this.matchData.opponent.equipped_animation) ? this.matchData.opponent.equipped_animation : "money_rain";
         let title = "MATCH COMPLETE: TIED!";
         if (myEq > oppEq) {
             title = `🏆 VICTORY! YOU DEFEATED ${oppName}!`;
@@ -1216,6 +1224,9 @@ class TradingApp {
             }
         } else if (myEq < oppEq) {
             title = `💀 DEFEAT! ${oppName} WON THIS ROUND!`;
+            if (window.winAnimations) {
+                window.winAnimations.play(oppAnim, `👑 ${oppName.toUpperCase()} WINS THE DUEL! 👑`);
+            }
         }
 
         this._showMatchEndModal(title, myEq, oppEq);

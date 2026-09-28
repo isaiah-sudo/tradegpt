@@ -1,0 +1,10 @@
+{
+  "name": "tradegpt-web",
+  "version": "2.0.5",
+  "description": "TradeGPT Web Terminal and Landing Page",
+  "scripts": {
+    "update-release": "python update_release.py",
+    "predeploy": "python update_release.py",
+    "deploy": "firebase deploy --only hosting"
+  }
+}
