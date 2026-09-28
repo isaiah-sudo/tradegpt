@@ -307,7 +307,7 @@ def main():
     try:
         release = get_release_data(args.repo, target_tag)
     except Exception as e:
-        fallback_tag = target_tag or (f"v{v_file_ver}" if v_file_ver else "v2.0.5")
+        fallback_tag = target_tag or (f"v{v_file_ver}" if v_file_ver else "v2.0.6")
         print(f"[!] Warning: Could not fetch from GitHub ({e}). Using synthetic metadata for {fallback_tag}...")
         release = {"tag_name": fallback_tag, "name": f"TradeGPT {fallback_tag}", "assets": []}
 

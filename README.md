@@ -2,9 +2,9 @@
 
 <div align="center">
 
-[![Download Windows Installer](https://img.shields.io/badge/Installer-TradeGPT--Setup--v2.0.5.exe-00E676?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/isaiah-sudo/tradeism/releases/latest/download/TradeGPT-Setup-v2.0.5.exe)
-[![Download Portable EXE](https://img.shields.io/badge/Portable-TradeGPT.exe-00B0FF?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/isaiah-sudo/tradeism/releases/latest/download/TradeGPT.exe)
-[![GitHub Release](https://img.shields.io/github/v/release/isaiah-sudo/tradeism?style=for-the-badge&color=2962FF)](https://github.com/isaiah-sudo/tradeism/releases/latest)
+[![Download Windows Installer](https://img.shields.io/badge/Installer-TradeGPT--Setup--v2.0.6.exe-00E676?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/isaiah-sudo/tradegpt/releases/latest/download/TradeGPT-Setup-v2.0.6.exe)
+[![Download Portable EXE](https://img.shields.io/badge/Portable-TradeGPT.exe-00B0FF?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/isaiah-sudo/tradegpt/releases/latest/download/TradeGPT.exe)
+[![GitHub Release](https://img.shields.io/github/v/release/isaiah-sudo/tradegpt?style=for-the-badge&color=2962FF)](https://github.com/isaiah-sudo/tradegpt/releases/latest)
 [![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero%20External-FF9800?style=for-the-badge)](requirements.txt)
 [![Stocks](https://img.shields.io/badge/Universe-100%20Volatile%20Stocks-purple?style=for-the-badge)](#-100-volatile-stocks-across-10-sectors)
 [![Multiplayer](https://img.shields.io/badge/Multiplayer-1v1%20Online%20Duel-ff007f?style=for-the-badge)](#-game-modes)
@@ -142,7 +142,7 @@ Hotkeys work **everywhere** — including while searching stocks or typing share
 Anyone on Windows can download and play immediately—**no Python installation or setup required!**
 
 ### Option 1: Official Windows Installer (Recommended)
-👉 [**Download TradeGPT-Setup-v2.0.5.exe**](https://github.com/isaiah-sudo/tradeism/releases/latest/download/TradeGPT-Setup-v2.0.5.exe)
+👉 [**Download TradeGPT-Setup-v2.0.6.exe**](https://github.com/isaiah-sudo/tradegpt/releases/latest/download/TradeGPT-Setup-v2.0.6.exe)
 - 🚀 Official setup wizard
 - 🖥️ Creates a **Desktop shortcut** with custom trading icon
 - 📌 Adds a **Start Menu shortcut** for instant access

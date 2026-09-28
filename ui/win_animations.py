@@ -157,7 +157,7 @@ class WinAnimationOverlay:
             "money_rain": ("#00e676", "#042614"),
             "rocket_moon": ("#00e5ff", "#041a2e"),
             "matrix_glitch": ("#39ff14", "#02240b"),
-            "diamond_hands": ("#b388ff", "#180a2e"),
+            "diamond_hands": ("#00f0ff", "#0d102b"),
             "golden_bull": ("#ffd700", "#2b1c03")
         }
         border_col, bg_col = theme_colors.get(self.animation_id, ("#00e676", "#071724"))
@@ -722,69 +722,206 @@ class WinAnimationOverlay:
     # 4. DIAMOND HANDS SUPERNOVA (SINGULARITY, EXPANDING SHOCKWAVES & GEMS)
     # =========================================================================
     def _init_diamond_hands(self, w, h):
-        self.canvas.configure(bg="#050314")
+        self.canvas.configure(bg="#07071a")
         self.cx = w // 2
         self.cy = h // 2 + 10
         self.detonated = False
 
-        # Central Diamond Hands Badge
-        self.dh_text_id = self.canvas.create_text(
-            self.cx, self.cy, text="💎🙌💎", font=("Segoe UI", 42)
-        )
-
-        # Gravitational Singularity Inward Contracting Rings (Phase 1)
-        self.gravity_rings = [
-            {"r": 350.0, "tag": self.canvas.create_oval(0, 0, 0, 0, outline="#00e5ff", width=2)},
-            {"r": 250.0, "tag": self.canvas.create_oval(0, 0, 0, 0, outline="#b388ff", width=2)},
-            {"r": 150.0, "tag": self.canvas.create_oval(0, 0, 0, 0, outline="#ffffff", width=1.5)}
+        # Facet geometry coordinates for brilliant-cut diamond (centered at 0, 0)
+        self._dh_facet_coords = [
+            ([(-26, -34), (26, -34), (16, -10), (-16, -10)], "table"),
+            ([(-46, -34), (-26, -34), (-16, -10), (-52, -10)], "crown_left"),
+            ([(26, -34), (46, -34), (52, -10), (16, -10)], "crown_right"),
+            ([(0, 46), (-16, -10), (16, -10)], "pavilion_center"),
+            ([(0, 46), (-52, -10), (-16, -10)], "pavilion_left"),
+            ([(0, 46), (16, -10), (52, -10)], "pavilion_right"),
         ]
 
-        # Inward Gravity Particle Motes
-        for _ in range(40):
+        self._dh_palettes = {
+            "cyan": {
+                "table": "#ffffff", "crown_left": "#a5f3fc", "crown_right": "#7dd3fc",
+                "pavilion_center": "#00f0ff", "pavilion_left": "#0284c7", "pavilion_right": "#0ea5e9",
+                "outline": "#e0f2fe"
+            },
+            "violet": {
+                "table": "#ffffff", "crown_left": "#f3e8ff", "crown_right": "#e9d5ff",
+                "pavilion_center": "#c084fc", "pavilion_left": "#7e22ce", "pavilion_right": "#a855f7",
+                "outline": "#faf5ff"
+            },
+            "gold": {
+                "table": "#ffffff", "crown_left": "#fef9c3", "crown_right": "#fef08a",
+                "pavilion_center": "#fde047", "pavilion_left": "#a16207", "pavilion_right": "#eab308",
+                "outline": "#fffbeb"
+            },
+            "rose": {
+                "table": "#ffffff", "crown_left": "#fce7f3", "crown_right": "#fbcfe8",
+                "pavilion_center": "#f472b6", "pavilion_left": "#9d174d", "pavilion_right": "#db2777",
+                "outline": "#fff1f2"
+            },
+            "ice": {
+                "table": "#ffffff", "crown_left": "#e0f2fe", "crown_right": "#bae6fd",
+                "pavilion_center": "#38bdf8", "pavilion_left": "#0369a1", "pavilion_right": "#0284c7",
+                "outline": "#ffffff"
+            }
+        }
+
+        # 1. Twinkling Cosmic Background Starfield
+        self.cosmic_stars: List[Dict[str, Any]] = []
+        for _ in range(45):
+            self.cosmic_stars.append({
+                "x": random.uniform(10, w - 10),
+                "y": random.uniform(10, h - 10),
+                "phase": random.uniform(0, math.pi * 2),
+                "spd": random.uniform(0.04, 0.09),
+                "size": random.uniform(1.2, 3.2),
+                "color": random.choice(["#ffffff", "#67e8f9", "#c084fc", "#38bdf8", "#fef08a"]),
+                "tag": None
+            })
+
+        # 2. Deep Space Nebula Glow Auras
+        self.nebula_auras = [
+            {"r": 360.0, "color": "#1e103a", "width": 8.0, "tag": self.canvas.create_oval(0, 0, 0, 0, outline="#1e103a", width=8)},
+            {"r": 240.0, "color": "#0c4a6e", "width": 5.0, "tag": self.canvas.create_oval(0, 0, 0, 0, outline="#0c4a6e", width=5)},
+            {"r": 130.0, "color": "#0369a1", "width": 3.0, "tag": self.canvas.create_oval(0, 0, 0, 0, outline="#0369a1", width=3)},
+        ]
+
+        # 3. Rotating Cosmic Prism Beams
+        self.beam_angle = 0.0
+        self.prism_beams: List[int] = []
+        for _ in range(12):
+            tag = self.canvas.create_line(0, 0, 0, 0, fill="#132742", width=1.5)
+            self.prism_beams.append(tag)
+
+        # 4. Central Faceted Brilliant-Cut Diamond (Phase 1 & 2 Core)
+        self.center_diamond_tags: List[int] = []
+        c_pal = self._dh_palettes["cyan"]
+        for _, facet_key in self._dh_facet_coords:
+            tag = self.canvas.create_polygon(0, 0, 0, 0, fill=c_pal[facet_key], outline=c_pal["outline"], width=2)
+            self.center_diamond_tags.append(tag)
+        self.diamond_glint_tag = self.canvas.create_text(self.cx, self.cy, text="✦", font=("Segoe UI", 16, "bold"), fill="#ffffff")
+
+        # 5. Conviction Hands & Charging Callout
+        self.dh_hand_left = self.canvas.create_text(self.cx - 95, self.cy, text="🙌", font=("Segoe UI", 36), fill="#38bdf8")
+        self.dh_hand_right = self.canvas.create_text(self.cx + 95, self.cy, text="🙌", font=("Segoe UI", 36), fill="#38bdf8")
+        self.dh_text_id = self.canvas.create_text(
+            self.cx, self.cy + 85, text="💎 CHARGING SINGULARITY... 💎", font=("Segoe UI", 14, "bold"), fill="#00f0ff"
+        )
+        self.dh_sub_text_id: Optional[int] = None
+
+        # 6. Gravitational Singularity Inward Contracting Rings (Phase 1)
+        self.gravity_rings = [
+            {"r": 380.0, "spd": 11.0, "color": "#00f0ff", "width": 3.0, "tag": self.canvas.create_oval(0, 0, 0, 0, outline="#00f0ff", width=3)},
+            {"r": 280.0, "spd": 9.5, "color": "#c084fc", "width": 2.5, "tag": self.canvas.create_oval(0, 0, 0, 0, outline="#c084fc", width=2.5)},
+            {"r": 180.0, "spd": 8.0, "color": "#38bdf8", "width": 2.0, "tag": self.canvas.create_oval(0, 0, 0, 0, outline="#38bdf8", width=2)},
+            {"r": 90.0, "spd": 6.5, "color": "#ffffff", "width": 1.5, "tag": self.canvas.create_oval(0, 0, 0, 0, outline="#ffffff", width=1.5)},
+        ]
+
+        # 7. Inward Gravity Particle Motes
+        for _ in range(45):
             angle = random.uniform(0, math.pi * 2)
-            dist = random.uniform(180, 420)
+            dist = random.uniform(160, 440)
             self.particles.append({
                 "type": "inward_mote",
                 "angle": angle,
                 "dist": dist,
-                "spd": random.uniform(6.0, 14.0),
-                "char": random.choice(["✨", "✦", "🔹", "⚡"]),
+                "spd": random.uniform(7.0, 16.0),
+                "char": random.choice(["✦", "✧", "⚡", "◆", "💎"]),
+                "color": random.choice(["#00f0ff", "#ffffff", "#c084fc", "#38bdf8", "#fde047"]),
                 "tag": None
             })
 
-        # Outward Cosmic Shockwaves (Phase 2)
+        # 8. Outward Cosmic Shockwaves & Exploding Faceted Shards (Phase 2)
         self.cosmic_shockwaves: List[Dict[str, Any]] = []
+        self.exploding_facets: List[Dict[str, Any]] = []
+
+    def _render_diamond_polygons(self, tags: List[int], cx: float, cy: float, scale: float, angle: float):
+        """Helper to transform and render 6 facets of brilliant diamond gemstone."""
+        cos_a = math.cos(angle)
+        sin_a = math.sin(angle)
+        for i, (facet_pts, _) in enumerate(self._dh_facet_coords):
+            flat = []
+            for px, py in facet_pts:
+                rx = cx + (px * cos_a - py * sin_a) * scale
+                ry = cy + (px * sin_a + py * cos_a) * scale
+                flat.extend((rx, ry))
+            self.canvas.coords(tags[i], *flat)
 
     def _tick_diamond_hands(self, w, h, dt_scale: float):
         self.cx = w // 2
         self.cy = h // 2 + 10
 
+        # 1. Update Twinkling Cosmic Starfield
+        for s in self.cosmic_stars:
+            s["phase"] += s["spd"] * dt_scale
+            twinkle = 0.5 + 0.5 * math.sin(s["phase"])
+            sz = s["size"] * (0.8 + 0.4 * twinkle)
+            x, y = s["x"], s["y"]
+            if s["tag"] is None:
+                s["tag"] = self.canvas.create_oval(x - sz, y - sz, x + sz, y + sz, fill=s["color"], outline="")
+            else:
+                self.canvas.coords(s["tag"], x - sz, y - sz, x + sz, y + sz)
+
+        # 2. Update Rotating Cosmic Prism Beams
+        self.beam_angle += 0.009 * dt_scale
+        beam_len = max(w, h) * 0.75
+        for i, tag in enumerate(self.prism_beams):
+            ang = self.beam_angle + i * (math.pi / 6)
+            bx = self.cx + math.cos(ang) * beam_len
+            by = self.cy + math.sin(ang) * beam_len
+            self.canvas.coords(tag, self.cx, self.cy, bx, by)
+
+        # 3. Update Nebula Glow Auras
+        aura_pulse = 1.0 + math.sin(self.elapsed_time * 4.0) * 0.05
+        for aura in self.nebula_auras:
+            r = aura["r"] * aura_pulse
+            self.canvas.coords(aura["tag"], self.cx - r, self.cy - r, self.cx + r, self.cy + r)
+
         # Phase 1: Singularity Compression (0.0s to 1.1s)
         if self.elapsed_time < 1.1:
             progress = self.elapsed_time / 1.1
-            scale_sz = int(42 + progress * 24)
-            vib_x = random.uniform(-progress * 4, progress * 4)
-            vib_y = random.uniform(-progress * 4, progress * 4)
-            self.canvas.coords(self.dh_text_id, self.cx + vib_x, self.cy + vib_y)
-            self.canvas.itemconfig(self.dh_text_id, font=("Segoe UI", scale_sz))
+            vib_x = random.uniform(-progress * 4.5, progress * 4.5)
+            vib_y = random.uniform(-progress * 4.5, progress * 4.5)
+            d_scale = 0.85 + progress * 0.55
+            d_rot = math.sin(self.elapsed_time * 14.0) * 0.08
+
+            # Render central brilliant diamond
+            self._render_diamond_polygons(
+                self.center_diamond_tags, self.cx + vib_x, self.cy + vib_y, d_scale, d_rot
+            )
+
+            # Specular gleam glint
+            glint_x = self.cx + vib_x - 22 * d_scale
+            glint_y = self.cy + vib_y - 28 * d_scale
+            self.canvas.coords(self.diamond_glint_tag, glint_x, glint_y)
+
+            # Conviction Hands closing in
+            self.canvas.coords(self.dh_hand_left, self.cx - 95 + progress * 25 + vib_x, self.cy + vib_y)
+            self.canvas.coords(self.dh_hand_right, self.cx + 95 - progress * 25 + vib_x, self.cy + vib_y)
+
+            # Pulsing charging text
+            self.canvas.coords(self.dh_text_id, self.cx + vib_x, self.cy + 85 + vib_y)
+            pulse_col = "#00f0ff" if int(self.elapsed_time * 10) % 2 == 0 else "#ffffff"
+            self.canvas.itemconfig(self.dh_text_id, fill=pulse_col)
 
             # Contract gravity rings inward
             for gr in self.gravity_rings:
-                gr["r"] -= 12.0 * dt_scale
-                if gr["r"] <= 10.0:
-                    gr["r"] = 350.0
+                gr["r"] -= gr["spd"] * dt_scale
+                if gr["r"] <= 12.0:
+                    gr["r"] = 380.0
                 r = gr["r"]
                 self.canvas.coords(gr["tag"], self.cx - r, self.cy - r, self.cx + r, self.cy + r)
 
             # Inward motes
             for mote in self.particles:
                 mote["dist"] -= mote["spd"] * dt_scale
-                if mote["dist"] < 15.0:
-                    mote["dist"] = random.uniform(220, 450)
+                if mote["dist"] < 18.0:
+                    mote["dist"] = random.uniform(220, 440)
                 mx = self.cx + math.cos(mote["angle"]) * mote["dist"]
                 my = self.cy + math.sin(mote["angle"]) * mote["dist"]
                 if mote["tag"] is None:
-                    mote["tag"] = self.canvas.create_text(mx, my, text=mote["char"], font=("Segoe UI", 12))
+                    mote["tag"] = self.canvas.create_text(
+                        mx, my, text=mote["char"], font=("Segoe UI", 12, "bold"), fill=mote["color"]
+                    )
                 else:
                     self.canvas.coords(mote["tag"], mx, my)
 
@@ -792,45 +929,134 @@ class WinAnimationOverlay:
         else:
             if not self.detonated:
                 self.detonated = True
-                # Clean up singularity rings and motes
+                # Clean up singularity rings, hands, and motes
                 for gr in self.gravity_rings:
                     self.canvas.delete(gr["tag"])
                 for mote in self.particles:
                     if mote.get("tag"):
                         self.canvas.delete(mote["tag"])
                 self.particles.clear()
+                self.canvas.delete(self.dh_hand_left)
+                self.canvas.delete(self.dh_hand_right)
 
-                # Change central text to burst icon
-                self.canvas.itemconfig(self.dh_text_id, text="💥 SUPERNOVA! 💥", font=("Segoe UI", 48, "bold"))
+                # Flare up cosmic prism beams to vibrant celestial tones
+                beam_colors = ["#00f0ff", "#ffffff", "#c084fc", "#38bdf8", "#fde047"]
+                for i, tag in enumerate(self.prism_beams):
+                    self.canvas.itemconfig(tag, fill=beam_colors[i % len(beam_colors)], width=2.5)
 
-                # Trigger 3 Blinding Shockwave Rings
-                for sw_color, spd in [("#ffffff", 18.0), ("#00e5ff", 12.0), ("#d500f9", 8.0)]:
+                # Update central callout to explosive Supernova title
+                self.canvas.itemconfig(
+                    self.dh_text_id,
+                    text="💥 SUPERNOVA DETONATION! 💥",
+                    font=("Segoe UI", 20, "bold"),
+                    fill="#ffffff"
+                )
+                self.dh_sub_text_id = self.canvas.create_text(
+                    self.cx, self.cy + 115,
+                    text="✨ UNSHAKEABLE CONVICTION • COSMIC WEALTH CREATED ✨",
+                    font=("Segoe UI", 11, "bold"),
+                    fill="#38bdf8"
+                )
+
+                # Trigger 4 Blinding Expanding Shockwave Rings
+                shockwave_specs = [
+                    ("#ffffff", 24.0, 4.0),
+                    ("#00f0ff", 18.0, 3.5),
+                    ("#d946ef", 13.0, 3.0),
+                    ("#38bdf8", 8.5, 2.5),
+                ]
+                for sw_color, spd, sw_w in shockwave_specs:
                     self.cosmic_shockwaves.append({
                         "r": 15.0,
                         "spd": spd,
-                        "max_r": max(w, h) * 0.9,
-                        "color": sw_color,
-                        "tag": self.canvas.create_oval(0, 0, 0, 0, outline=sw_color, width=3)
+                        "max_r": max(w, h) * 0.95,
+                        "tag": self.canvas.create_oval(0, 0, 0, 0, outline=sw_color, width=sw_w)
                     })
 
-                # Explode 90 Faceted Prismatic Gem Shards
-                gem_icons = ["💎", "💠", "🔷", "✨", "⭐", "⚡", "🪙"]
-                colors = ["#00e5ff", "#2979ff", "#e040fb", "#ffd700", "#ffffff"]
-                for _ in range(90):
+                # Explode 35 Faceted Diamond Gem Shards with 3D Rotation
+                palette_keys = ["cyan", "violet", "gold", "rose", "ice"]
+                for _ in range(35):
                     angle = random.uniform(0, math.pi * 2)
-                    spd = random.uniform(6.0, 24.0)
-                    self.particles.append({
-                        "type": "gem_shard",
+                    spd = random.uniform(8.0, 24.0)
+                    pal_name = random.choice(palette_keys)
+                    pal = self._dh_palettes[pal_name]
+                    shard_tags = []
+                    for _, facet_key in self._dh_facet_coords:
+                        tag = self.canvas.create_polygon(0, 0, 0, 0, fill=pal[facet_key], outline=pal["outline"], width=1.2)
+                        shard_tags.append(tag)
+                    self.exploding_facets.append({
                         "x": self.cx,
                         "y": self.cy,
                         "vx": math.cos(angle) * spd,
                         "vy": math.sin(angle) * spd,
-                        "char": random.choice(gem_icons),
-                        "size": random.randint(14, 28),
-                        "color": random.choice(colors),
+                        "rot": random.uniform(0, math.pi * 2),
+                        "v_rot": random.uniform(-0.16, 0.16),
+                        "scale": random.uniform(0.18, 0.38),
+                        "drag": random.uniform(0.975, 0.99),
+                        "tags": shard_tags
+                    })
+
+                # Explode 35 Twinkling Starbursts & Cosmic Sparkles
+                starburst_chars = ["✦", "★", "✧", "💠", "⚡"]
+                starburst_colors = ["#ffffff", "#00f0ff", "#fde047", "#f472b6", "#38bdf8"]
+                for _ in range(35):
+                    angle = random.uniform(0, math.pi * 2)
+                    spd = random.uniform(6.0, 20.0)
+                    self.particles.append({
+                        "type": "starburst",
+                        "x": self.cx,
+                        "y": self.cy,
+                        "vx": math.cos(angle) * spd,
+                        "vy": math.sin(angle) * spd,
+                        "char": random.choice(starburst_chars),
+                        "size": random.randint(16, 26),
+                        "color": random.choice(starburst_colors),
                         "drag": random.uniform(0.97, 0.99),
                         "tag": None
                     })
+
+                # Explode 25 Golden Bullion & Shimmering Gems
+                trophy_chars = ["🪙", "💎", "✨"]
+                for _ in range(25):
+                    angle = random.uniform(0, math.pi * 2)
+                    spd = random.uniform(7.0, 21.0)
+                    char = random.choice(trophy_chars)
+                    col = "#ffd700" if char == "🪙" else "#00f0ff"
+                    self.particles.append({
+                        "type": "trophy",
+                        "x": self.cx,
+                        "y": self.cy,
+                        "vx": math.cos(angle) * spd,
+                        "vy": math.sin(angle) * spd,
+                        "char": char,
+                        "size": random.randint(18, 28),
+                        "color": col,
+                        "drag": random.uniform(0.975, 0.99),
+                        "tag": None
+                    })
+
+            # Screen Shake Tremor (starts at 9px on burst and dampens smoothly)
+            since_det = self.elapsed_time - 1.1
+            shake_amp = max(0.0, 9.0 * (1.0 - since_det / 0.55))
+            self.shake_x = random.uniform(-shake_amp, shake_amp)
+            self.shake_y = random.uniform(-shake_amp, shake_amp)
+
+            # Triumphant Pulsing & Rotating Center Diamond Core
+            c_scale = 1.35 + math.sin(self.elapsed_time * 6.0) * 0.1
+            c_rot = self.elapsed_time * 0.4
+            self._render_diamond_polygons(
+                self.center_diamond_tags, self.cx + self.shake_x, self.cy + self.shake_y, c_scale, c_rot
+            )
+
+            # Specular gleam glint
+            glint_x = self.cx + self.shake_x - 22 * c_scale
+            glint_y = self.cy + self.shake_y - 28 * c_scale
+            self.canvas.coords(self.diamond_glint_tag, glint_x, glint_y)
+
+            # Reposition burst titles with screen shake
+            self.canvas.coords(self.dh_text_id, self.cx + self.shake_x, self.cy + 85 + self.shake_y)
+            if self.dh_sub_text_id:
+                self.canvas.coords(self.dh_sub_text_id, self.cx + self.shake_x, self.cy + 115 + self.shake_y)
 
             # Update Expanding Shockwave Rings
             for sw in list(self.cosmic_shockwaves):
@@ -842,19 +1068,31 @@ class WinAnimationOverlay:
                 else:
                     self.canvas.coords(sw["tag"], self.cx - r, self.cy - r, self.cx + r, self.cy + r)
 
-            # Update Exploding Gem Shards
-            for shard in self.particles:
+            # Update Exploding Faceted Diamond Shards
+            for shard in self.exploding_facets:
                 shard["vx"] *= shard["drag"] ** dt_scale
                 shard["vy"] = (shard["vy"] + 0.22 * dt_scale) * (shard["drag"] ** dt_scale)
                 shard["x"] += shard["vx"] * dt_scale
                 shard["y"] += shard["vy"] * dt_scale
+                shard["rot"] += shard["v_rot"] * dt_scale
+                self._render_diamond_polygons(
+                    shard["tags"], shard["x"], shard["y"], shard["scale"], shard["rot"]
+                )
 
-                if shard["tag"] is None:
-                    shard["tag"] = self.canvas.create_text(
-                        shard["x"], shard["y"], text=shard["char"], font=("Segoe UI", shard["size"])
+            # Update Exploding Starbursts and Trophy Gems
+            for p in self.particles:
+                p["vx"] *= p["drag"] ** dt_scale
+                p["vy"] = (p["vy"] + 0.22 * dt_scale) * (p["drag"] ** dt_scale)
+                p["x"] += p["vx"] * dt_scale
+                p["y"] += p["vy"] * dt_scale
+
+                if p["tag"] is None:
+                    p["tag"] = self.canvas.create_text(
+                        p["x"], p["y"], text=p["char"], font=("Segoe UI", p["size"], "bold"), fill=p["color"]
                     )
                 else:
-                    self.canvas.coords(shard["tag"], shard["x"], shard["y"])
+                    self.canvas.coords(p["tag"], p["x"], p["y"])
+
 
     # =========================================================================
     # 5. GOLDEN BULL STAMPEDE (MOTION BLUR, LASER EYES & BOUNCING BULLION)
