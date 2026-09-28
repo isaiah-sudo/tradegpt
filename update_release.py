@@ -17,7 +17,7 @@ import argparse
 import urllib.request
 import urllib.error
 
-GITHUB_REPO = "isaiah-sudo/tradeism"
+GITHUB_REPO = "isaiah-sudo/tradegpt"
 
 
 def get_release_data(repo: str = GITHUB_REPO, tag: str = None) -> dict:
@@ -281,14 +281,30 @@ def main():
         print(f"[!] Error: {e}", file=sys.stderr)
         sys.exit(1)
 
-    target_label = args.tag if args.tag else "latest release"
+    v_file_ver = None
+    try:
+        import version as _v_mod
+        v_file_ver = getattr(_v_mod, "__version__", None)
+    except Exception:
+        pass
+    if not v_file_ver:
+        try:
+            with open(os.path.join(web_dir, "version.py"), "r", encoding="utf-8") as f:
+                m = re.search(r'__version__\s*=\s*"([^"]+)"', f.read())
+                if m:
+                    v_file_ver = m.group(1)
+        except Exception:
+            pass
+
+    target_tag = args.tag or (f"v{v_file_ver}" if v_file_ver else None)
+    target_label = target_tag if target_tag else "latest release"
     print(f"[*] Fetching {target_label} from GitHub API (repo: {args.repo})...")
     try:
-        release = get_release_data(args.repo, args.tag)
+        release = get_release_data(args.repo, target_tag)
     except Exception as e:
-        if args.tag:
-            print(f"[!] Warning: Could not fetch tag {args.tag} from GitHub ({e}). Using synthetic metadata...")
-            release = {"tag_name": args.tag, "name": f"TradeGPT {args.tag}", "assets": []}
+        if target_tag:
+            print(f"[!] Warning: Could not fetch tag {target_tag} from GitHub ({e}). Using synthetic metadata...")
+            release = {"tag_name": target_tag, "name": f"TradeGPT {target_tag}", "assets": []}
         else:
             print(f"[!] Failed to fetch release: {e}", file=sys.stderr)
             sys.exit(1)
