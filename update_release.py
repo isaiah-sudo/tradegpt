@@ -301,7 +301,7 @@ def main():
         except Exception:
             pass
 
-    target_tag = args.tag
+    target_tag = args.tag or (f"v{v_file_ver}" if v_file_ver else None)
     target_label = target_tag if target_tag else "latest release"
     print(f"[*] Fetching {target_label} from GitHub API (repo: {args.repo})...")
     try:
