@@ -1,9 +1,9 @@
 import sys
-from ui.app import DayTradeSimApp
+from ui.app import TradeGPTApp
 
 def verify_gui():
-    print("Initializing DayTradeSimApp with 100 stocks...", flush=True)
-    app = DayTradeSimApp()
+    print("Initializing TradeGPTApp with 100 stocks...", flush=True)
+    app = TradeGPTApp()
     
     # Process initial events and layout
     app.update()

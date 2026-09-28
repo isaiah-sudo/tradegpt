@@ -1,5 +1,5 @@
 """
-Sign In Dialog for Day Trading Simulator.
+Sign In Dialog for TradeGPT.
 Supports Google Sign-In via browser OAuth and direct Email/Password sign-in/registration.
 Synchronizes user progress (name, menu balance, shop items, animations) with Firebase Cloud.
 """
@@ -41,7 +41,7 @@ class SignInDialog(tk.Toplevel):
         self.profile = get_profile()
         self.on_auth_changed = on_auth_changed
 
-        self.title("⚡ DAY TRADE SIMULATOR • ACCOUNT SIGN IN")
+        self.title("⚡ TRADEGPT • ACCOUNT SIGN IN")
         self.geometry("520x580")
         self.resizable(False, False)
         self.configure(bg=self.THEME_BG)
@@ -221,7 +221,7 @@ class SignInDialog(tk.Toplevel):
 
         tk.Label(
             hdr,
-            text="⚡ SIGN IN TO DAY TRADE SIM",
+            text="⚡ SIGN IN TO TRADEGPT",
             font=("Segoe UI", 16, "bold"),
             fg="#ffffff",
             bg=self.THEME_BG

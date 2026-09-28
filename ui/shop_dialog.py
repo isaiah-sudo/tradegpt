@@ -1,5 +1,5 @@
 """
-Shop Dialog for Day Trading Simulator.
+Shop Dialog for TradeGPT.
 Allows players to spend their banked profits on crazy win animations,
 custom themes, sound packs, and trader titles.
 """

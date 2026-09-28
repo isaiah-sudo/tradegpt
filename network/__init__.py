@@ -1,1 +1,1 @@
-# Network package for Day Trade Sim online multiplayer
+# Network package for TradeGPT online multiplayer

@@ -21,6 +21,7 @@ class BattleHUD(tk.Frame):
         parent,
         my_name: str,
         opponent_name: str,
+        opponent_animation: str = "money_rain",
         round_duration: int = 180,
         start_time: Optional[float] = None,
         on_next_opponent: Optional[Callable[[], None]] = None,
@@ -31,6 +32,7 @@ class BattleHUD(tk.Frame):
 
         self.my_name = my_name
         self.opponent_name = opponent_name
+        self.opp_animation = opponent_animation or "money_rain"
         self.round_duration = round_duration
         self.start_time = start_time or time.time()
         self.on_next_opponent = on_next_opponent
@@ -162,6 +164,8 @@ class BattleHUD(tk.Frame):
             self.opp_equity = opp_data.get("equity", self.opp_equity)
             self.opp_pnl = opp_data.get("pnl", self.opp_pnl)
             self.opp_pnl_pct = opp_data.get("pnl_pct", self.opp_pnl_pct)
+            if opp_data.get("equipped_animation"):
+                self.opp_animation = opp_data["equipped_animation"]
             status = opp_data.get("status", "playing")
             if "name" in opp_data and opp_data["name"]:
                 self.opponent_name = opp_data["name"]
@@ -211,6 +215,7 @@ class BattleHUD(tk.Frame):
     def reset_round(
         self,
         opponent_name: str,
+        opponent_animation: str = "money_rain",
         round_duration: int = 180,
         start_time: Optional[float] = None,
         my_name: Optional[str] = None
@@ -222,6 +227,7 @@ class BattleHUD(tk.Frame):
                 # Update player tag if needed
                 pass
         self.opponent_name = opponent_name
+        self.opp_animation = opponent_animation or "money_rain"
         self.round_duration = round_duration
         self.start_time = start_time or time.time()
 

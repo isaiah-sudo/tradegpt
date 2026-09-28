@@ -130,7 +130,7 @@ class ModeSelectWindow(tk.Tk):
 
     def __init__(self, on_start_solo: Callable[[], None], on_start_online: Callable[[Dict[str, Any], FirebaseManager], None]):
         super().__init__()
-        self.title("⚡ DAY TRADE SIMULATOR • SELECT GAME MODE")
+        self.title("⚡ TRADEGPT • SELECT GAME MODE")
         self.geometry("860x580")
         self.resizable(False, False)
         self.configure(bg=self.THEME_BG)
@@ -176,7 +176,7 @@ class ModeSelectWindow(tk.Tk):
 
         tk.Label(
             header_f,
-            text="⚡ DAY TRADE SIMULATOR",
+            text="⚡ TRADEGPT",
             font=("Segoe UI", 22, "bold"),
             fg=self.GREEN,
             bg=self.THEME_BG
@@ -707,5 +707,5 @@ class ModeSelectWindow(tk.Tk):
                 else:
                     messagebox.showinfo(
                         "You're Up to Date!",
-                        f"Day Trading Simulator v{__version__} is currently the newest version available."
+                        f"TradeGPT v{__version__} is currently the newest version available."
                     )

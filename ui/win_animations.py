@@ -1,5 +1,5 @@
 """
-Next-Generation Ultra-Smooth Win Animation Engine for Day Trading Simulator (v1.7).
+Next-Generation Ultra-Smooth Win Animation Engine for TradeGPT (v1.7).
 Renders 60 FPS delta-time physics-driven celebration overlays:
 - Money Rain & Gold Confetti (3D fluttering banknotes, metallic tumbling ribbons & sparkle starbursts)
 - To The Moon Rocket Blast (Perspective warp-speed starfield, multi-stage thruster plumes & lunar fireworks)
@@ -178,10 +178,51 @@ class WinAnimationOverlay:
             "golden_bull": "MARKET APEX PREDATOR • UNSTOPPABLE RUNNING BULL"
         }
 
+        is_duel = bool(self.profit_info and self.profit_info.get("duel_win"))
+        is_me = bool(not self.profit_info or self.profit_info.get("is_me", True))
+        winner_name = str(self.profit_info.get("winner_name", "Winner")) if self.profit_info else "Winner"
+        opp_name = str(self.profit_info.get("opp_name", "Opponent")) if self.profit_info else "Opponent"
+        diff = float(self.profit_info.get("diff", 0.0)) if self.profit_info else 0.0
+        profit = float(self.profit_info.get("profit", 0.0)) if self.profit_info else 0.0
+
+        if is_duel:
+            if not is_me:
+                # Opponent won - this screen displays the winner's celebration on the other user's end
+                sub_text = f"👑 {winner_name.upper()}'S VICTORY CELEBRATION • {subtitles.get(self.animation_id, 'VICTORY')}"
+                if profit > 0:
+                    p_text = f"👑 {winner_name} WINS (+${diff:,.2f} LEAD) • 💰 +${profit:,.2f} BANKED TO VAULT"
+                else:
+                    p_text = f"👑 {winner_name} WINS THE DUEL (+${diff:,.2f} LEAD OVER {opp_name})!"
+                badge_bg = "#221a08"
+                badge_outline = border_col
+                badge_fg = border_col
+            else:
+                # Local player won
+                sub_text = f"👑 VICTORY OVER {opp_name.upper()} • {subtitles.get(self.animation_id, 'PROFIT SECURED')}"
+                if profit > 0:
+                    p_text = f"🏆 DUEL VICTORY! +${diff:,.2f} LEAD • 💰 +${profit:,.2f} TRANSFERRED TO VAULT"
+                else:
+                    p_text = f"🏆 DUEL VICTORY! +${diff:,.2f} LEAD OVER {opp_name}!"
+                badge_bg = "#102e1b"
+                badge_outline = "#00e676"
+                badge_fg = "#00e676"
+        else:
+            # Solo mode / preview
+            sub_text = subtitles.get(self.animation_id, "PROFIT SECURED")
+            p_text = ""
+            if self.profit_info:
+                if "profit" in self.profit_info and self.profit_info["profit"] > 0:
+                    p_text = f"💰 +${self.profit_info['profit']:,.2f} TRANSFERRED TO VAULT"
+                    if "new_balance" in self.profit_info:
+                        p_text += f" • TOTAL VAULT: ${self.profit_info['new_balance']:,.2f}"
+            badge_bg = "#102e1b"
+            badge_outline = "#00e676"
+            badge_fg = "#00e676"
+
         # Card Background
-        card_w, card_h = 360, 48
+        card_w, card_h = 400, 48
         if self.profit_info:
-            card_h = 68
+            card_h = 70
         self.banner_card = self.canvas.create_rectangle(
             cx - card_w, cy - card_h, cx + card_w, cy + card_h,
             fill=bg_col,
@@ -198,37 +239,28 @@ class WinAnimationOverlay:
         )
         self.sub_id = self.canvas.create_text(
             cx, cy + (12 if not self.profit_info else 10),
-            text=subtitles.get(self.animation_id, "PROFIT SECURED"),
-            font=(font_family, 11, "bold"),
+            text=sub_text,
+            font=(font_family, 10, "bold"),
             fill="#e2e8f0"
         )
 
-        # Banked Profit Pill if available
-        if self.profit_info:
-            p_text = ""
-            if "profit" in self.profit_info and self.profit_info["profit"] > 0:
-                p_text = f"💰 +${self.profit_info['profit']:,.2f} TRANSFERRED TO VAULT"
-                if "new_balance" in self.profit_info:
-                    p_text += f" • TOTAL VAULT: ${self.profit_info['new_balance']:,.2f}"
-            elif "duel_win" in self.profit_info and "diff" in self.profit_info:
-                p_text = f"🏆 DUEL VICTORY! +${self.profit_info['diff']:,.2f} LEAD OVER OPPONENT!"
-
-            if p_text:
-                self.profit_badge_rect = self.canvas.create_rectangle(
-                    cx - 280, cy + 34, cx + 280, cy + 58,
-                    fill="#102e1b", outline="#00e676", width=1
-                )
-                self.profit_badge_text = self.canvas.create_text(
-                    cx, cy + 46,
-                    text=p_text,
-                    font=("Segoe UI", 10, "bold"),
-                    fill="#00e676"
-                )
+        # Banked Profit / Duel Pill if available
+        if p_text:
+            self.profit_badge_rect = self.canvas.create_rectangle(
+                cx - 340, cy + 34, cx + 340, cy + 58,
+                fill=badge_bg, outline=badge_outline, width=1
+            )
+            self.profit_badge_text = self.canvas.create_text(
+                cx, cy + 46,
+                text=p_text,
+                font=("Segoe UI", 10, "bold"),
+                fill=badge_fg
+            )
 
     def _reposition_hud(self):
         cx = self.w // 2
         cy = 90 if self.profit_info else 105
-        card_w, card_h = 360, (68 if self.profit_info else 48)
+        card_w, card_h = 400, (70 if self.profit_info else 48)
 
         if self.banner_card:
             self.canvas.coords(self.banner_card, cx - card_w, cy - card_h, cx + card_w, cy + card_h)
@@ -237,7 +269,7 @@ class WinAnimationOverlay:
         if self.sub_id:
             self.canvas.coords(self.sub_id, cx, cy + (12 if not self.profit_info else 10))
         if self.profit_badge_rect:
-            self.canvas.coords(self.profit_badge_rect, cx - 280, cy + 34, cx + 280, cy + 58)
+            self.canvas.coords(self.profit_badge_rect, cx - 340, cy + 34, cx + 340, cy + 58)
         if self.profit_badge_text:
             self.canvas.coords(self.profit_badge_text, cx, cy + 46)
         if hasattr(self, "btn_skip_win"):

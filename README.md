@@ -1,9 +1,9 @@
-# ⚡ Day Trading Simulator
+# ⚡ TradeGPT
 
 <div align="center">
 
-[![Download Windows Installer](https://img.shields.io/badge/Installer-DayTradeSim--Setup--v1.8.0.exe-00E676?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/isaiah-sudo/tradeism/releases/latest/download/DayTradeSim-Setup-v1.8.0.exe)
-[![Download Portable EXE](https://img.shields.io/badge/Portable-DayTradeSim.exe-00B0FF?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/isaiah-sudo/tradeism/releases/latest/download/DayTradeSim.exe)
+[![Download Windows Installer](https://img.shields.io/badge/Installer-TradeGPT--Setup--v2.0.5.exe-00E676?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/isaiah-sudo/tradeism/releases/latest/download/TradeGPT-Setup-v2.0.5.exe)
+[![Download Portable EXE](https://img.shields.io/badge/Portable-TradeGPT.exe-00B0FF?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/isaiah-sudo/tradeism/releases/latest/download/TradeGPT.exe)
 [![GitHub Release](https://img.shields.io/github/v/release/isaiah-sudo/tradeism?style=for-the-badge&color=2962FF)](https://github.com/isaiah-sudo/tradeism/releases/latest)
 [![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero%20External-FF9800?style=for-the-badge)](requirements.txt)
 [![Stocks](https://img.shields.io/badge/Universe-100%20Volatile%20Stocks-purple?style=for-the-badge)](#-100-volatile-stocks-across-10-sectors)
@@ -20,9 +20,9 @@ Experience the chaos of Wall Street with **100 ultra-volatile stocks**, breaking
 
 ---
 
-## 🎯 What is Day Trading Simulator?
+## 🎯 What is TradeGPT?
 
-**Day Trading Simulator** is a standalone Python application that drops you right into the trader's seat with **$25,000 in trading capital**. 
+**TradeGPT** is a standalone Python application that drops you right into the trader's seat with **$25,000 in trading capital**. 
 
 Prices move continuously using stochastic jump-diffusion and momentum dynamics. Breaking news flashes across the terminal, sending stocks rocketing +40% or plunging -45% in seconds. Execute Longs, Shorts, Covers, and Scalps with lightning-fast universal hotkeys, professional dual-mode MAX order sizing, and real-time P&L tracking.
 
@@ -52,7 +52,7 @@ High-octane competitive head-to-head trading battles:
 
 Lock in your hard-earned trading profits and build a persistent empire:
 - **💰 Real-Time Profit Banking**: Whenever your net equity exceeds your starting $25,000 capital, the header's **💰 Bank Profit** button lights up green. One click takes your profit, saves it to your persistent **Menu Vault**, triggers your equipped high-octane 60 FPS celebration animation with vault stats, and transitions back to the menu!
-- **💾 Local Machine Persistence**: All banked savings, unlocked items, and equipped cosmetic presets are persisted locally (`~/.daytradesim/user_profile.json` on Desktop, `localStorage` on Web).
+- **💾 Local Machine Persistence**: All banked savings, unlocked items, and equipped cosmetic presets are persisted locally (`~/.tradegpt/user_profile.json` on Desktop, `localStorage` on Web).
 - **🎆 Ultra-Smooth 60 FPS Win Animations (v1.7 Overhaul)**:
   - **💸 Money Rain & Gold Confetti** (Free default) — 3D fluttering banknotes with realistic polygon perspective flip physics, metallic tumbling foil confetti, and sparkling starbursts.
   - **🚀 To The Moon Rocket Blast** ($25,000) — Perspective warp-speed radial starfield, dynamic multi-tier thruster plumes (white core, plasma jet, smoke puffs & sparks), supersonic shockwaves, and lunar fireworks splashdown.
@@ -142,7 +142,7 @@ Hotkeys work **everywhere** — including while searching stocks or typing share
 Anyone on Windows can download and play immediately—**no Python installation or setup required!**
 
 ### Option 1: Official Windows Installer (Recommended)
-👉 [**Download DayTradeSim-Setup-v1.8.0.exe**](https://github.com/isaiah-sudo/tradeism/releases/latest/download/DayTradeSim-Setup-v1.8.0.exe)
+👉 [**Download TradeGPT-Setup-v2.0.5.exe**](https://github.com/isaiah-sudo/tradeism/releases/latest/download/TradeGPT-Setup-v2.0.5.exe)
 - 🚀 Official setup wizard
 - 🖥️ Creates a **Desktop shortcut** with custom trading icon
 - 📌 Adds a **Start Menu shortcut** for instant access
@@ -150,7 +150,7 @@ Anyone on Windows can download and play immediately—**no Python installation o
 - 🛡️ Installs safely per-user (no admin / UAC prompt required!)
 
 ### Option 2: Portable Standalone Executable
-👉 [**Download DayTradeSim.exe**](https://github.com/isaiah-sudo/daytradesim/releases/latest/download/DayTradeSim.exe)
+👉 [**Download TradeGPT.exe**](https://github.com/isaiah-sudo/tradeism/releases/latest/download/TradeGPT.exe)
 - 📁 Single 16 MB standalone file
 - ⚡ Run directly from your Downloads folder or USB drive—zero installation required!
 

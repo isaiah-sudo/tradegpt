@@ -1,5 +1,5 @@
 """
-Local Browser Authentication Server for Day Trade Simulator.
+Local Browser Authentication Server for TradeGPT.
 Spins up a lightweight local HTTP server to handle Google Sign-In and Email/Password
 via the official Firebase Web SDK, redirecting credentials back to the desktop application.
 """
@@ -19,7 +19,7 @@ LOGIN_HTML_TEMPLATE = """<!DOCTYPE html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Day Trade Simulator • Cloud Sign In</title>
+  <title>TradeGPT • Cloud Sign In</title>
   <style>
     * {
       box-sizing: border-box;
@@ -248,7 +248,7 @@ LOGIN_HTML_TEMPLATE = """<!DOCTYPE html>
 <body>
 
   <div class="auth-card" id="authBox">
-    <div class="badge">DAY TRADE SIMULATOR</div>
+    <div class="badge">TRADEGPT</div>
     <h1>Trader Sign In</h1>
     <p class="subtitle">Sign in to sync your trader name, money vault, and shop items across devices.</p>
 
@@ -299,7 +299,7 @@ LOGIN_HTML_TEMPLATE = """<!DOCTYPE html>
     <div class="success-icon">🎉</div>
     <div class="success-title">Successfully Signed In!</div>
     <div class="success-desc" id="successDesc">
-      Welcome back! All your progress (name, vault money, and shop items) is securely synced with Day Trade Simulator.
+      Welcome back! All your progress (name, vault money, and shop items) is securely synced with TradeGPT.
     </div>
     <p style="font-size: 13px; color: #848e9c; margin-bottom: 20px;">
       You can now close this browser tab and return to the game.
@@ -384,7 +384,7 @@ LOGIN_HTML_TEMPLATE = """<!DOCTYPE html>
     }
 
     async function sendAuthToApp(authData) {
-      showStatus("Connecting to Day Trade Simulator app...", "info");
+      showStatus("Connecting to TradeGPT app...", "info");
       try {
         const resp = await fetch('/callback', {
           method: 'POST',
@@ -401,7 +401,7 @@ LOGIN_HTML_TEMPLATE = """<!DOCTYPE html>
           showStatus(resJson.error || "Failed to communicate with application.");
         }
       } catch (err) {
-        showStatus("Could not reach Day Trade Simulator. Please verify the game is still running.");
+        showStatus("Could not reach TradeGPT. Please verify the game is still running.");
       }
     }
 
@@ -570,7 +570,7 @@ class _AuthHTTPHandler(BaseHTTPRequestHandler):
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Signed In • Day Trade Simulator</title>
+  <title>Signed In • TradeGPT</title>
   <style>
     body { background: #0e1117; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
     .card { background: #161a25; border: 1px solid #2a2e39; border-radius: 12px; padding: 36px 32px; max-width: 440px; box-shadow: 0 16px 40px rgba(0,0,0,0.6); }
@@ -583,7 +583,7 @@ class _AuthHTTPHandler(BaseHTTPRequestHandler):
   <div class="card">
     <div style="font-size: 40px; margin-bottom: 12px;">🎉</div>
     <h1>Successfully Signed In!</h1>
-    <p>Your Google / Email account is now synced with Day Trade Simulator.<br><br>You can close this tab and return to the game.</p>
+    <p>Your Google / Email account is now synced with TradeGPT.<br><br>You can close this tab and return to the game.</p>
     <button onclick="window.close()">Close Window</button>
   </div>
   <script>setTimeout(() => { try { window.close(); } catch(e){} }, 2500);</script>

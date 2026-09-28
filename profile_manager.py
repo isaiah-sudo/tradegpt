@@ -1,5 +1,5 @@
 """
-User Profile and Shop Data Manager for Day Trading Simulator.
+User Profile and Shop Data Manager for TradeGPT.
 Manages persistent local storage of player menu balance, banked profits,
 shop inventory, equipped win animations, and themes.
 """
@@ -112,9 +112,17 @@ class UserProfile:
     def _get_storage_path(self) -> str:
         try:
             home_dir = os.path.expanduser("~")
-            app_dir = os.path.join(home_dir, ".daytradesim")
+            app_dir = os.path.join(home_dir, ".tradegpt")
             os.makedirs(app_dir, exist_ok=True)
-            return os.path.join(app_dir, "user_profile.json")
+            target_path = os.path.join(app_dir, "user_profile.json")
+            old_path = os.path.join(home_dir, ".daytradesim", "user_profile.json")
+            if not os.path.exists(target_path) and os.path.exists(old_path):
+                try:
+                    import shutil
+                    shutil.copy2(old_path, target_path)
+                except Exception:
+                    pass
+            return target_path
         except Exception:
             return "user_profile.json"
 

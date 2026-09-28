@@ -11,7 +11,7 @@ import os
 import tkinter as tk
 from profile_manager import get_profile, SHOP_ITEMS
 from ui.mode_select import ModeSelectWindow
-from ui.app import DayTradeSimApp
+from ui.app import TradeGPTApp
 from ui.shop_dialog import ShopDialog
 from ui.win_animations import WinAnimationOverlay, play_win_animation
 
@@ -55,12 +55,12 @@ def verify_all():
     shop.destroy()
     launcher.destroy()
 
-    # 3. DayTradeSimApp Banking Verification
-    print("Testing DayTradeSimApp trading terminal with Bank Profit...", flush=True)
-    app = DayTradeSimApp()
+    # 3. TradeGPTApp Banking Verification
+    print("Testing TradeGPTApp trading terminal with Bank Profit...", flush=True)
+    app = TradeGPTApp()
     app.update()
 
-    assert hasattr(app, "btn_bank_profit"), "DayTradeSimApp missing btn_bank_profit"
+    assert hasattr(app, "btn_bank_profit"), "TradeGPTApp missing btn_bank_profit"
     # Starting equity is 25000, bank button should be disabled initially
     assert str(app.btn_bank_profit['state']) == str(tk.DISABLED), "Bank Profit button should be disabled initially"
     print("Verified Bank Profit button is initially disabled at $25,000 equity.", flush=True)

@@ -7,7 +7,7 @@ import tkinter as tk
 import time
 from unittest.mock import MagicMock
 
-from ui.app import DayTradeSimApp
+from ui.app import TradeGPTApp
 from ui.battle_panel import MatchEndDialog
 from network.firebase_manager import FirebaseManager
 
@@ -15,7 +15,7 @@ from network.firebase_manager import FirebaseManager
 class TestDuelNextOpponent(unittest.TestCase):
     def test_next_opponent_flow(self):
         fb = FirebaseManager()
-        app = DayTradeSimApp(
+        app = TradeGPTApp(
             mode="online",
             match_data={"duration_seconds": 180, "opponent": {"name": "Bot_Alpha"}},
             fb_manager=fb

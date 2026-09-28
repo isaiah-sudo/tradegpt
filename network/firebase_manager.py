@@ -27,7 +27,7 @@ class _HttpClient:
     @staticmethod
     def _request(method: str, url: str, json_data: Optional[Dict[str, Any]] = None,
                  headers: Optional[Dict[str, str]] = None, timeout: float = 8.0) -> _Response:
-        req_headers = {"User-Agent": "DayTradeSim/1.1", "Content-Type": "application/json"}
+        req_headers = {"User-Agent": "TradeGPT/1.1", "Content-Type": "application/json"}
         if headers:
             req_headers.update(headers)
         body = json.dumps(json_data).encode("utf-8") if json_data is not None else None
@@ -118,6 +118,14 @@ def dict_to_firestore_doc(data: Dict[str, Any]) -> Dict[str, Any]:
     return {"fields": {k: python_to_firestore_value(v) for k, v in data.items()}}
 
 
+def _get_my_equipped_animation() -> str:
+    try:
+        from profile_manager import get_profile
+        return get_profile().equipped_animation or "money_rain"
+    except Exception:
+        return "money_rain"
+
+
 class SimulatedOpponentBot:
     """Simulates a live opponent when playing in mock/demo mode or when testing offline."""
     BOT_NAMES = [
@@ -133,6 +141,18 @@ class SimulatedOpponentBot:
         self.status = "playing"
         self._trend = random.choice([-1.0, 1.0]) * random.uniform(0.5, 1.5)
 
+        bot_anims = ["money_rain", "rocket_moon", "matrix_glitch", "diamond_hands", "golden_bull"]
+        if "Diamond" in self.name:
+            self.equipped_animation = "diamond_hands"
+        elif "Bull" in self.name or "Titan" in self.name:
+            self.equipped_animation = "golden_bull"
+        elif "Quant" in self.name or "Algo" in self.name:
+            self.equipped_animation = "matrix_glitch"
+        elif "Moon" in self.name or "Momentum" in self.name:
+            self.equipped_animation = "rocket_moon"
+        else:
+            self.equipped_animation = random.choice(bot_anims)
+
     def tick(self) -> Dict[str, Any]:
         """Simulate realistic equity volatility."""
         delta = random.gauss(self._trend * 15.0, 45.0)
@@ -147,6 +167,7 @@ class SimulatedOpponentBot:
 
         return {
             "name": self.name,
+            "equipped_animation": self.equipped_animation,
             "equity": round(self.equity, 2),
             "pnl": round(self.pnl, 2),
             "pnl_pct": round(self.pnl_pct, 2),
@@ -428,6 +449,7 @@ class FirebaseManager:
                 "opponent": {
                     "uid": "bot_opponent",
                     "name": self.opponent_bot.name,
+                    "equipped_animation": self.opponent_bot.equipped_animation,
                     "equity": 25000.0,
                     "pnl": 0.0,
                     "pnl_pct": 0.0
@@ -438,13 +460,15 @@ class FirebaseManager:
         queue_path = f"match_queue/{self.user_id}"
         list_url = self._firestore_url("match_queue")
         now = time.time()
+        my_anim = _get_my_equipped_animation()
 
         try:
             # 1. Register self in queue as waiting (overwriting any stale entry)
             self._firestore_set(queue_path, {
                 "name": self.display_name,
                 "status": "waiting",
-                "timestamp": now
+                "timestamp": now,
+                "equipped_animation": my_anim
             }, merge=False)
 
             # Polling loop: up to 15 seconds before bot fallback
@@ -465,6 +489,7 @@ class FirebaseManager:
                     start_time = ticket.get("start_time", time.time())
                     opp_name = ticket.get("opponent_name") or "Opponent"
                     opp_uid = ticket.get("opponent_uid") or ""
+                    opp_anim = ticket.get("opponent_animation", "money_rain")
 
                     # Verify / fetch match room document (with short retries for replication)
                     match_doc = None
@@ -481,6 +506,7 @@ class FirebaseManager:
                         opp_data = match_doc.get(opp_slot, {})
                         opp_name = opp_data.get("name") or opp_name
                         opp_uid = opp_data.get("uid") or opp_uid
+                        opp_anim = opp_data.get("equipped_animation") or opp_anim
                         seed = match_doc.get("seed", seed)
                         start_time = match_doc.get("start_time", start_time)
 
@@ -496,6 +522,7 @@ class FirebaseManager:
                         "opponent": {
                             "uid": opp_uid,
                             "name": opp_name,
+                            "equipped_animation": opp_anim,
                             "equity": 25000.0,
                             "pnl": 0.0,
                             "pnl_pct": 0.0
@@ -524,6 +551,7 @@ class FirebaseManager:
                     cand = candidates[0]
                     cand_uid = cand["uid"]
                     cand_name = cand.get("name") or "Opponent"
+                    cand_anim = cand.get("equipped_animation", "money_rain")
                     cand_ts = cand.get("timestamp", 0)
 
                     # Deterministic tie-breaker: Lower UID creates match
@@ -541,6 +569,7 @@ class FirebaseManager:
                             "player1": {
                                 "uid": self.user_id,
                                 "name": self.display_name,
+                                "equipped_animation": my_anim,
                                 "equity": 25000.0,
                                 "pnl": 0.0,
                                 "pnl_pct": 0.0,
@@ -550,6 +579,7 @@ class FirebaseManager:
                             "player2": {
                                 "uid": cand_uid,
                                 "name": cand_name,
+                                "equipped_animation": cand_anim,
                                 "equity": 25000.0,
                                 "pnl": 0.0,
                                 "pnl_pct": 0.0,
@@ -571,6 +601,7 @@ class FirebaseManager:
                             "player_slot": "player2",
                             "opponent_name": self.display_name,
                             "opponent_uid": self.user_id,
+                            "opponent_animation": my_anim,
                             "timestamp": curr_time
                         }, merge=False)
 
@@ -589,6 +620,7 @@ class FirebaseManager:
                             "opponent": {
                                 "uid": cand_uid,
                                 "name": cand_name,
+                                "equipped_animation": cand_anim,
                                 "equity": 25000.0,
                                 "pnl": 0.0,
                                 "pnl_pct": 0.0
@@ -609,6 +641,7 @@ class FirebaseManager:
                 "opponent": {
                     "uid": "bot_rival",
                     "name": self.opponent_bot.name,
+                    "equipped_animation": self.opponent_bot.equipped_animation,
                     "equity": 25000.0,
                     "pnl": 0.0,
                     "pnl_pct": 0.0
@@ -631,6 +664,7 @@ class FirebaseManager:
                 "opponent": {
                     "uid": "bot_rival",
                     "name": self.opponent_bot.name,
+                    "equipped_animation": self.opponent_bot.equipped_animation,
                     "equity": 25000.0,
                     "pnl": 0.0,
                     "pnl_pct": 0.0
@@ -652,12 +686,14 @@ class FirebaseManager:
 
         opp_slot = "player2" if self.player_slot == "player1" else "player1"
         now = time.time()
+        my_anim = _get_my_equipped_animation()
 
         # Update my metrics in Firestore (merge=True ensures opponent's slot is preserved!)
         self._firestore_set(f"matches/{self.active_match_id}", {
             self.player_slot: {
                 "uid": self.user_id,
                 "name": self.display_name,
+                "equipped_animation": my_anim,
                 "equity": round(equity, 2),
                 "pnl": round(pnl, 2),
                 "pnl_pct": round(pnl_pct, 2),
@@ -673,6 +709,7 @@ class FirebaseManager:
             if opp_data:
                 return {
                     "name": opp_data.get("name", "Opponent"),
+                    "equipped_animation": opp_data.get("equipped_animation", "money_rain"),
                     "equity": opp_data.get("equity", 25000.0),
                     "pnl": opp_data.get("pnl", 0.0),
                     "pnl_pct": opp_data.get("pnl_pct", 0.0),
@@ -694,6 +731,7 @@ class FirebaseManager:
                 if opp_data:
                     return {
                         "name": opp_data.get("name", "Opponent"),
+                        "equipped_animation": opp_data.get("equipped_animation", "money_rain"),
                         "equity": opp_data.get("equity", 25000.0),
                         "pnl": opp_data.get("pnl", 0.0),
                         "pnl_pct": opp_data.get("pnl_pct", 0.0),

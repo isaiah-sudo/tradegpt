@@ -1,9 +1,9 @@
 ; Script generated for Inno Setup Compiler
-#define MyAppName "Day Trading Simulator"
-#define MyAppVersion "2.0.3"
+#define MyAppName "TradeGPT"
+#define MyAppVersion "2.0.5"
 #define MyAppPublisher "Isaiah"
 #define MyAppURL "https://github.com/isaiah-sudo/tradeism"
-#define MyAppExeName "DayTradeSim.exe"
+#define MyAppExeName "TradeGPT.exe"
 
 [Setup]
 AppId={{D37F2C3A-9E51-4E65-B2A8-E79F52726B1E}
@@ -19,7 +19,7 @@ DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
 LicenseFile=LICENSE
 OutputDir=dist
-OutputBaseFilename=DayTradeSim-Setup-v2.0.3
+OutputBaseFilename=TradeGPT-Setup-v2.0.5
 SetupIconFile=assets\icon.ico
 Compression=lzma2/ultra64
 SolidCompression=yes
@@ -34,7 +34,7 @@ UsePreviousGroup=yes
 UsePreviousTasks=yes
 UsePreviousPrivileges=yes
 CloseApplications=force
-CloseApplicationsFilter=DayTradeSim.exe
+CloseApplicationsFilter=TradeGPT.exe
 RestartApplications=no
 UpdateUninstallLogAppName=yes
 CreateUninstallRegKey=yes
@@ -66,6 +66,7 @@ var
   ErrorCode: Integer;
 begin
   Result := True;
-  // Silently terminate any running instances of DayTradeSim.exe so existing files can be upgraded
+  // Silently terminate any running instances of TradeGPT.exe or DayTradeSim.exe so existing files can be upgraded
+  Exec('taskkill.exe', '/F /IM TradeGPT.exe', '', SW_HIDE, ewWaitUntilTerminated, ErrorCode);
   Exec('taskkill.exe', '/F /IM DayTradeSim.exe', '', SW_HIDE, ewWaitUntilTerminated, ErrorCode);
 end;

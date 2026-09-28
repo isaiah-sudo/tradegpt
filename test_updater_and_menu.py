@@ -11,7 +11,7 @@ from unittest.mock import MagicMock, patch
 
 from version import __version__, GITHUB_REPO
 from network.updater import parse_version, check_for_update, download_file, build_update_script
-from ui.app import DayTradeSimApp
+from ui.app import TradeGPTApp, DayTradeSimApp
 from ui.mode_select import ModeSelectWindow
 
 
@@ -37,18 +37,18 @@ class TestUpdaterLogic(unittest.TestCase):
         mock_response.status = 200
         mock_response.read.return_value = b'''{
             "tag_name": "v1.2.0",
-            "name": "Day Trading Simulator v1.2.0",
+            "name": "TradeGPT v1.2.0",
             "body": "Added auto-updater and solo menu return button!",
-            "html_url": "https://github.com/isaiah-sudo/daytradesim/releases/tag/v1.2.0",
+            "html_url": "https://github.com/isaiah-sudo/tradeism/releases/tag/v1.2.0",
             "assets": [
                 {
-                    "name": "DayTradeSim-Setup-v1.2.0.exe",
-                    "browser_download_url": "https://github.com/isaiah-sudo/daytradesim/releases/download/v1.2.0/DayTradeSim-Setup-v1.2.0.exe",
+                    "name": "TradeGPT-Setup-v1.2.0.exe",
+                    "browser_download_url": "https://github.com/isaiah-sudo/tradeism/releases/download/v1.2.0/TradeGPT-Setup-v1.2.0.exe",
                     "size": 18000000
                 },
                 {
-                    "name": "DayTradeSim.exe",
-                    "browser_download_url": "https://github.com/isaiah-sudo/daytradesim/releases/download/v1.2.0/DayTradeSim.exe",
+                    "name": "TradeGPT.exe",
+                    "browser_download_url": "https://github.com/isaiah-sudo/tradeism/releases/download/v1.2.0/TradeGPT.exe",
                     "size": 17000000
                 }
             ]
@@ -58,9 +58,9 @@ class TestUpdaterLogic(unittest.TestCase):
         res = check_for_update(current_version="1.1.0", repo=GITHUB_REPO)
         self.assertTrue(res["update_available"])
         self.assertEqual(res["latest_version"], "1.2.0")
-        self.assertEqual(res["installer_asset"]["name"], "DayTradeSim-Setup-v1.2.0.exe")
-        self.assertEqual(res["portable_asset"]["name"], "DayTradeSim.exe")
-        self.assertEqual(res["selected_asset"]["name"], "DayTradeSim-Setup-v1.2.0.exe")
+        self.assertEqual(res["installer_asset"]["name"], "TradeGPT-Setup-v1.2.0.exe")
+        self.assertEqual(res["portable_asset"]["name"], "TradeGPT.exe")
+        self.assertEqual(res["selected_asset"]["name"], "TradeGPT-Setup-v1.2.0.exe")
         self.assertIn("auto-updater", res["release_notes"])
 
     @patch("urllib.request.urlopen")
@@ -69,9 +69,9 @@ class TestUpdaterLogic(unittest.TestCase):
         mock_response.status = 200
         mock_response.read.return_value = b'''{
             "tag_name": "v1.1.0",
-            "name": "Day Trading Simulator v1.1.0",
+            "name": "TradeGPT v1.1.0",
             "body": "Current release",
-            "html_url": "https://github.com/isaiah-sudo/daytradesim/releases/tag/v1.1.0",
+            "html_url": "https://github.com/isaiah-sudo/tradeism/releases/tag/v1.1.0",
             "assets": []
         }'''
         mock_urlopen.return_value.__enter__.return_value = mock_response
@@ -107,7 +107,7 @@ class TestUpdaterLogic(unittest.TestCase):
     def test_build_update_script_installer(self):
         script = build_update_script(
             downloaded_file="C:\\temp\\Setup.exe",
-            target_exe="C:\\app\\DayTradeSim.exe",
+            target_exe="C:\\app\\TradeGPT.exe",
             parent_pid=12345,
             is_installer=True
         )
@@ -124,20 +124,20 @@ class TestUpdaterLogic(unittest.TestCase):
         self.assertIn('start /wait "" "C:\\temp\\Setup.exe" /SILENT', script)
 
         # Must launch target_exe with proper working directory
-        self.assertIn('start "" /D "C:\\app" "C:\\app\\DayTradeSim.exe"', script)
+        self.assertIn('start "" /D "C:\\app" "C:\\app\\TradeGPT.exe"', script)
 
     def test_build_update_script_portable(self):
         script = build_update_script(
             downloaded_file="C:\\temp\\New.exe",
-            target_exe="C:\\app\\DayTradeSim.exe",
+            target_exe="C:\\app\\TradeGPT.exe",
             parent_pid=54321,
             is_installer=False
         )
         self.assertIn("set _MEIPASS2=", script)
         self.assertIn('tasklist /FI "PID eq 54321"', script)
         self.assertIn(":copy_loop", script)
-        self.assertIn('copy /y "C:\\temp\\New.exe" "C:\\app\\DayTradeSim.exe"', script)
-        self.assertIn('start "" /D "C:\\app" "C:\\app\\DayTradeSim.exe"', script)
+        self.assertIn('copy /y "C:\\temp\\New.exe" "C:\\app\\TradeGPT.exe"', script)
+        self.assertIn('start "" /D "C:\\app" "C:\\app\\TradeGPT.exe"', script)
 
 
 class TestGUIIntegration(unittest.TestCase):
@@ -146,7 +146,7 @@ class TestGUIIntegration(unittest.TestCase):
         def on_return():
             returned["called"] = True
 
-        app = DayTradeSimApp(mode="solo", on_return_to_menu=on_return)
+        app = TradeGPTApp(mode="solo", on_return_to_menu=on_return)
         app.update()
 
         # Find the Return to Menu button in the top bar
@@ -185,7 +185,7 @@ class TestGUIIntegration(unittest.TestCase):
             "update_available": True,
             "latest_version": "1.2.0",
             "release_notes": "Awesome features",
-            "selected_asset": {"name": "DayTradeSim-Setup-v1.2.0.exe"}
+            "selected_asset": {"name": "TradeGPT-Setup-v1.2.0.exe"}
         }
         window._handle_update_check_result(fake_update_info, user_initiated=False, auto_prompt=False)
         self.assertIn("1.2.0", window.btn_update.cget("text"))

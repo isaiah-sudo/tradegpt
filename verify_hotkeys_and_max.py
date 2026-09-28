@@ -1,9 +1,9 @@
 import sys
-from ui.app import DayTradeSimApp
+from ui.app import TradeGPTApp
 
 def test_hotkeys_and_max():
-    print("Initializing DayTradeSimApp...", flush=True)
-    app = DayTradeSimApp()
+    print("Initializing TradeGPTApp...", flush=True)
+    app = TradeGPTApp()
     app.update()
 
     # 1. Test MAX CASH

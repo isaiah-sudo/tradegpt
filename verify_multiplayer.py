@@ -2,7 +2,7 @@ import time
 from network.firebase_manager import FirebaseManager
 from ui.mode_select import ModeSelectWindow
 from ui.battle_panel import BattleHUD, MatchEndDialog
-from ui.app import DayTradeSimApp
+from ui.app import TradeGPTApp
 
 def verify_multiplayer():
     print("--- 1. Testing FirebaseManager & Bot Fallback ---")
@@ -39,7 +39,7 @@ def verify_multiplayer():
     launcher.destroy()
 
     print("\n--- 3. Testing 1v1 Online App & BattleHUD ---")
-    app = DayTradeSimApp(
+    app = TradeGPTApp(
         mode="online",
         match_data=match_data,
         fb_manager=fb

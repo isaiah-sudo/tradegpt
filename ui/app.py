@@ -15,9 +15,9 @@ from profile_manager import get_profile
 from ui.shop_dialog import ShopDialog
 from ui.win_animations import play_win_animation
 
-class DayTradeSimApp(tk.Tk):
+class TradeGPTApp(tk.Tk):
     """
-    Main Application Window for the Day Trading Simulator.
+    Main Application Window for TradeGPT.
     Supports Solo Sandbox and 1v1 Online PvP Battle modes.
     """
     THEME_BG = "#0e1117"
@@ -49,9 +49,9 @@ class DayTradeSimApp(tk.Tk):
         opp_name = self.match_data.get("opponent", {}).get("name", "Opponent") if self.mode == "online" else ""
 
         if self.mode == "online":
-            self.title(f"⚡ DAY TRADE SIMULATOR • 1v1 DUEL vs {opp_name}")
+            self.title(f"⚡ TRADEGPT • 1v1 DUEL vs {opp_name}")
         else:
-            self.title("⚡ DAY TRADE SIMULATOR • PRO TRADER TERMINAL")
+            self.title("⚡ TRADEGPT • PRO TRADER TERMINAL")
 
         self.geometry("1280x850")
         self.minsize(1050, 720)
@@ -109,8 +109,8 @@ class DayTradeSimApp(tk.Tk):
         brand_f = tk.Frame(top_bar, bg=self.BAR_BG)
         brand_f.pack(side=tk.LEFT, padx=(15, 20), pady=6)
 
-        tk.Label(brand_f, text="DAYTRADE", font=("Segoe UI", 12, "bold"), fg="#00e676", bg=self.BAR_BG).pack(anchor="w")
-        tk.Label(brand_f, text="SIMULATOR PRO", font=("Segoe UI", 8), fg="#787b86", bg=self.BAR_BG).pack(anchor="w")
+        tk.Label(brand_f, text="TRADEGPT", font=("Segoe UI", 12, "bold"), fg="#00e676", bg=self.BAR_BG).pack(anchor="w")
+        tk.Label(brand_f, text="PRO TERMINAL", font=("Segoe UI", 8), fg="#787b86", bg=self.BAR_BG).pack(anchor="w")
 
         # Metrics cluster
         metrics_f = tk.Frame(top_bar, bg=self.BAR_BG)
@@ -289,6 +289,7 @@ class DayTradeSimApp(tk.Tk):
         my_name = getattr(self.fb_manager, "display_name", "You") or "You"
         opp = self.match_data.get("opponent", {})
         opp_name = opp.get("name", "Opponent")
+        opp_anim = opp.get("equipped_animation", "money_rain")
         duration = self.match_data.get("duration_seconds", 180)
         start_time = self.match_data.get("start_time", time.time())
 
@@ -296,6 +297,7 @@ class DayTradeSimApp(tk.Tk):
             self,
             my_name=my_name,
             opponent_name=opp_name,
+            opponent_animation=opp_anim,
             round_duration=duration,
             start_time=start_time,
             on_next_opponent=self._handle_next_opponent,
@@ -619,7 +621,32 @@ class DayTradeSimApp(tk.Tk):
                         self.profile.save()
                         play_win_animation(
                             self,
-                            profit_info={"profit": profit, "duel_win": True, "diff": diff} if profit > 0 else {"duel_win": True, "diff": diff},
+                            animation_id=self.profile.equipped_animation,
+                            profit_info={
+                                "duel_win": True,
+                                "is_me": True,
+                                "winner_name": self.battle_hud.my_name,
+                                "opp_name": self.battle_hud.opponent_name,
+                                "diff": diff,
+                                "profit": profit
+                            },
+                            on_finished=show_match_dialog
+                        )
+                    elif diff < 0.0:
+                        winner_anim = getattr(self.battle_hud, "opp_animation", "money_rain") or "money_rain"
+                        if final_opp_metrics and final_opp_metrics.get("equipped_animation"):
+                            winner_anim = final_opp_metrics["equipped_animation"]
+                        play_win_animation(
+                            self,
+                            animation_id=winner_anim,
+                            profit_info={
+                                "duel_win": True,
+                                "is_me": False,
+                                "winner_name": self.battle_hud.opponent_name,
+                                "opp_name": self.battle_hud.my_name,
+                                "diff": abs(diff),
+                                "profit": profit
+                            },
                             on_finished=show_match_dialog
                         )
                     else:
@@ -664,7 +691,7 @@ class DayTradeSimApp(tk.Tk):
                             return
                         self.battle_hud.update_scores(eq, pnl, pnl_pct, opp_data)
                         if opp_data and opp_data.get("name"):
-                            curr_title = f"⚡ DAY TRADE SIMULATOR • 1v1 DUEL vs {opp_data['name']}"
+                            curr_title = f"⚡ TRADEGPT • 1v1 DUEL vs {opp_data['name']}"
                             try:
                                 if self.title() != curr_title:
                                     self.title(curr_title)
@@ -741,7 +768,9 @@ class DayTradeSimApp(tk.Tk):
         dialog.destroy()
         self._match_dialog_open = False
         self.match_data = new_match
-        opp_name = new_match.get("opponent", {}).get("name", "Opponent")
+        opp_info = new_match.get("opponent", {})
+        opp_name = opp_info.get("name", "Opponent")
+        opp_anim = opp_info.get("equipped_animation", "money_rain")
         my_name = getattr(self.fb_manager, "display_name", "You") or "You"
         duration = new_match.get("duration_seconds", 180)
 
@@ -751,7 +780,7 @@ class DayTradeSimApp(tk.Tk):
             start_time = now
             new_match["start_time"] = now
 
-        self.title(f"⚡ DAY TRADE SIMULATOR • 1v1 DUEL vs {opp_name}")
+        self.title(f"⚡ TRADEGPT • 1v1 DUEL vs {opp_name}")
 
         # Reset account with synchronized seed
         self.engine.reset_account(seed=new_match.get("seed"))
@@ -760,6 +789,7 @@ class DayTradeSimApp(tk.Tk):
         if self.battle_hud and self.battle_hud.winfo_exists():
             self.battle_hud.reset_round(
                 opponent_name=opp_name,
+                opponent_animation=opp_anim,
                 round_duration=duration,
                 start_time=start_time,
                 my_name=my_name
@@ -822,3 +852,8 @@ class DayTradeSimApp(tk.Tk):
         if self.mode == "online" and self.fb_manager:
             self.fb_manager.forfeit_or_leave()
         self.destroy()
+
+
+# Backward compatibility alias
+DayTradeSimApp = TradeGPTApp
+

@@ -1,5 +1,5 @@
 """
-Automatic updater for Day Trading Simulator.
+Automatic updater for TradeGPT.
 Checks GitHub releases, downloads update assets, and applies updates seamlessly.
 """
 
@@ -46,7 +46,7 @@ def check_for_update(current_version: str = __version__, repo: str = GITHUB_REPO
     """
     url = f"https://api.github.com/repos/{repo}/releases/latest"
     headers = {
-        "User-Agent": f"DayTradeSim-Updater/{current_version}",
+        "User-Agent": f"TradeGPT-Updater/{current_version}",
         "Accept": "application/vnd.github.v3+json"
     }
 
@@ -110,7 +110,7 @@ def download_file(
     """
     Downloads a file with chunked streaming and progress reporting.
     """
-    headers = {"User-Agent": f"DayTradeSim-Updater/{__version__}"}
+    headers = {"User-Agent": f"TradeGPT-Updater/{__version__}"}
     req = urllib.request.Request(url, headers=headers)
 
     try:
@@ -244,19 +244,22 @@ if exist "{target_exe}" (
 def apply_update_and_restart(downloaded_file: str, is_installer: bool = True) -> None:
     """
     Applies the downloaded update and relaunches the application.
-    Executes a detached helper batch script so DayTradeSim can terminate cleanly.
+    Executes a detached helper batch script so TradeGPT can terminate cleanly.
     """
     current_exe = sys.executable
     is_frozen = getattr(sys, "frozen", False)
     current_pid = os.getpid()
     temp_dir = tempfile.gettempdir()
-    runner_bat = os.path.join(temp_dir, "daytradesim_update_runner.bat")
+    runner_bat = os.path.join(temp_dir, "tradegpt_update_runner.bat")
 
     if is_frozen or not is_installer:
         target_exe = current_exe
     else:
         # If running from python source in development mode
         candidates = [
+            os.path.expandvars(r"%LOCALAPPDATA%\Programs\TradeGPT\TradeGPT.exe"),
+            os.path.expandvars(r"%ProgramFiles%\TradeGPT\TradeGPT.exe"),
+            os.path.expandvars(r"%ProgramFiles(x86)%\TradeGPT\TradeGPT.exe"),
             os.path.expandvars(r"%LOCALAPPDATA%\Programs\Day Trading Simulator\DayTradeSim.exe"),
             os.path.expandvars(r"%ProgramFiles%\Day Trading Simulator\DayTradeSim.exe"),
             os.path.expandvars(r"%ProgramFiles(x86)%\Day Trading Simulator\DayTradeSim.exe"),
@@ -435,7 +438,7 @@ class UpdateDialog(tk.Toplevel):
         v_latest = self.update_info.get("latest_version", "")
         title_lbl = tk.Label(
             hdr,
-            text=f"Day Trading Simulator v{v_latest}",
+            text=f"TradeGPT v{v_latest}",
             font=("Segoe UI", 16, "bold"),
             fg="#ffffff",
             bg=self.THEME_BG
@@ -511,14 +514,14 @@ class UpdateDialog(tk.Toplevel):
         if not is_frozen:
             answer = messagebox.askyesno(
                 "Running in Developer Mode",
-                "You are currently running Day Trading Simulator from Python source code.\n\n"
+                "You are currently running TradeGPT from Python source code.\n\n"
                 "Would you like to download and run the updated Windows Installer anyway?"
             )
             if not answer:
                 return
 
         download_url = selected_asset.get("browser_download_url")
-        asset_name = selected_asset.get("name", "DayTradeSim-Update.exe")
+        asset_name = selected_asset.get("name", "TradeGPT-Update.exe")
         is_installer = ("setup" in asset_name.lower())
 
         temp_dir = tempfile.gettempdir()

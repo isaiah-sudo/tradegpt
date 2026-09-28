@@ -1,10 +1,10 @@
 import time
-from ui.app import DayTradeSimApp
+from ui.app import TradeGPTApp
 from network.firebase_manager import FirebaseManager
 
 def verify_all_features():
     print("--- 1. Testing Trade Markers & Floating Notifications ---")
-    app = DayTradeSimApp(mode="solo")
+    app = TradeGPTApp(mode="solo")
     app.update()
 
     # Select stock
@@ -98,7 +98,7 @@ def verify_all_features():
             "pnl_pct": 5.80
         }
     }
-    app_online = DayTradeSimApp(mode="online", match_data=match_data, fb_manager=fb)
+    app_online = TradeGPTApp(mode="online", match_data=match_data, fb_manager=fb)
     app_online.update()
 
     # Simulate metric sync: I update my equity to 27,000, and receive opponent's 26,450.50
