@@ -255,7 +255,7 @@ def update_version_py(file_path: str, version: str) -> bool:
     )
     content = re.sub(
         r'(GITHUB_REPO\s*=\s*")[^"]+(")',
-        r'\g<1>isaiah-sudo/tradeism\g<2>',
+        r'\g<1>isaiah-sudo/tradegpt\g<2>',
         content
     )
 
