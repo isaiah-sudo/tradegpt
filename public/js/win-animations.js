@@ -117,7 +117,47 @@ class WinAnimationEngine {
                 });
             }
         } else if (this.animationId === "diamond_hands") {
-            this.extraData.dh = { x: w / 2, y: h / 2, scale: 0.1, maxScale: 1.0, exploded: false };
+            this.extraData.dh = {
+                x: w / 2,
+                y: h / 2,
+                scale: 0.2,
+                rot: 0,
+                flash: 0,
+                shake: 0,
+                detonated: false
+            };
+            this.extraData.stars = [];
+            const starCols = ["#ffffff", "#67e8f9", "#c084fc", "#38bdf8", "#fef08a"];
+            for (let i = 0; i < 55; i++) {
+                this.extraData.stars.push({
+                    x: Math.random() * w,
+                    y: Math.random() * h,
+                    phase: Math.random() * Math.PI * 2,
+                    spd: 0.04 + Math.random() * 0.06,
+                    size: 1.2 + Math.random() * 2.4,
+                    color: starCols[Math.floor(Math.random() * starCols.length)]
+                });
+            }
+            this.extraData.gravityRings = [
+                { r: 380, spd: 10.5, color: "#00f0ff", width: 3.5 },
+                { r: 280, spd: 9.0, color: "#c084fc", width: 2.8 },
+                { r: 180, spd: 7.5, color: "#38bdf8", width: 2.0 },
+                { r: 90, spd: 6.0, color: "#ffffff", width: 1.5 }
+            ];
+            this.extraData.inwardMotes = [];
+            const moteChars = ["✦", "✧", "⚡", "◆", "💎"];
+            const moteCols = ["#00f0ff", "#ffffff", "#c084fc", "#38bdf8", "#fde047"];
+            for (let i = 0; i < 50; i++) {
+                this.extraData.inwardMotes.push({
+                    angle: Math.random() * Math.PI * 2,
+                    dist: 160 + Math.random() * 320,
+                    spd: 7 + Math.random() * 9,
+                    char: moteChars[Math.floor(Math.random() * moteChars.length)],
+                    color: moteCols[Math.floor(Math.random() * moteCols.length)]
+                });
+            }
+            this.extraData.beamAngle = 0;
+            this.extraData.shockwaves = [];
         } else if (this.animationId === "golden_bull") {
             this.extraData.bull = { x: -200, y: h / 2, vx: 18.0, size: 75 };
             for (let i = 0; i < 70; i++) {
@@ -354,61 +394,349 @@ class WinAnimationEngine {
         this.ctx.fillText("HIGH FREQUENCY ALPHA LOCKED • PROFITS TRANSFERRED", w / 2, h / 2 + 25);
     }
 
+    _drawFacetedDiamond(x, y, scale, angle, palette = null) {
+        const pal = palette || {
+            table: "#ffffff",
+            crownLeft: "#a5f3fc",
+            crownRight: "#7dd3fc",
+            pavilionCenter: "#00f0ff",
+            pavilionLeft: "#0284c7",
+            pavilionRight: "#0ea5e9",
+            outline: "#e0f2fe"
+        };
+
+        const facets = [
+            { pts: [[-26, -34], [26, -34], [16, -10], [-16, -10]], fill: pal.table },
+            { pts: [[-46, -34], [-26, -34], [-16, -10], [-52, -10]], fill: pal.crownLeft },
+            { pts: [[26, -34], [46, -34], [52, -10], [16, -10]], fill: pal.crownRight },
+            { pts: [[0, 46], [-16, -10], [16, -10]], fill: pal.pavilionCenter },
+            { pts: [[0, 46], [-52, -10], [-16, -10]], fill: pal.pavilionLeft },
+            { pts: [[0, 46], [16, -10], [52, -10]], fill: pal.pavilionRight }
+        ];
+
+        this.ctx.save();
+        this.ctx.translate(x, y);
+        this.ctx.rotate(angle);
+        this.ctx.scale(scale, scale);
+
+        for (const f of facets) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(f.pts[0][0], f.pts[0][1]);
+            for (let i = 1; i < f.pts.length; i++) {
+                this.ctx.lineTo(f.pts[i][0], f.pts[i][1]);
+            }
+            this.ctx.closePath();
+            this.ctx.fillStyle = f.fill;
+            this.ctx.fill();
+            this.ctx.strokeStyle = pal.outline || "#e0f2fe";
+            this.ctx.lineWidth = 1.6;
+            this.ctx.stroke();
+        }
+
+        // Specular glint star sparkle on top-left facet
+        this.ctx.fillStyle = "#ffffff";
+        this.ctx.beginPath();
+        const gx = -22, gy = -28, gr = 5;
+        this.ctx.moveTo(gx, gy - gr * 1.8);
+        this.ctx.quadraticCurveTo(gx, gy, gx + gr * 1.8, gy);
+        this.ctx.quadraticCurveTo(gx, gy, gx, gy + gr * 1.8);
+        this.ctx.quadraticCurveTo(gx, gy, gx - gr * 1.8, gy);
+        this.ctx.quadraticCurveTo(gx, gy, gx, gy - gr * 1.8);
+        this.ctx.fill();
+
+        this.ctx.restore();
+    }
+
     // 4. Diamond Hands Supernova
     _drawDiamondHands(w, h) {
         const dh = this.extraData.dh;
+        if (!dh) return;
 
-        if (this.frameCount < 40) {
-            // Expanding glowing hands
-            dh.scale = Math.min(1.0, this.frameCount / 35);
-            this.ctx.save();
-            this.ctx.translate(dh.x, dh.y);
-            this.ctx.scale(dh.scale * 1.5, dh.scale * 1.5);
-            this.ctx.font = "64px sans-serif";
+        // 1. Cosmic Deep Space Gradient Background
+        const bgGrad = this.ctx.createRadialGradient(w / 2, h / 2, 40, w / 2, h / 2, Math.max(w, h) * 0.85);
+        bgGrad.addColorStop(0, "#1c0d38");
+        bgGrad.addColorStop(0.45, "#0b0c26");
+        bgGrad.addColorStop(1, "#05060f");
+        this.ctx.fillStyle = bgGrad;
+        this.ctx.fillRect(0, 0, w, h);
+
+        // 2. Twinkling Cosmic Background Starfield
+        if (this.extraData.stars) {
+            for (const s of this.extraData.stars) {
+                s.phase += s.spd;
+                const tw = 0.5 + 0.5 * Math.sin(s.phase);
+                const r = s.size * (0.8 + 0.4 * tw);
+                this.ctx.fillStyle = s.color;
+                this.ctx.globalAlpha = 0.35 + 0.65 * tw;
+                this.ctx.beginPath();
+                this.ctx.arc(s.x, s.y, r, 0, Math.PI * 2);
+                this.ctx.fill();
+            }
+            this.ctx.globalAlpha = 1.0;
+        }
+
+        // 3. Rotating Cosmic Prism Beams
+        this.extraData.beamAngle = (this.extraData.beamAngle || 0) + 0.009;
+        const beamLen = Math.max(w, h) * 0.85;
+        const isDetonated = this.frameCount >= 45;
+        const beamCols = [
+            "rgba(0, 240, 255, 0.35)",
+            "rgba(192, 132, 252, 0.3)",
+            "rgba(255, 255, 255, 0.4)",
+            "rgba(56, 189, 248, 0.35)"
+        ];
+
+        this.ctx.save();
+        this.ctx.translate(w / 2, h / 2);
+        for (let i = 0; i < 12; i++) {
+            const ang = this.extraData.beamAngle + i * (Math.PI / 6);
+            const bx = Math.cos(ang) * beamLen;
+            const by = Math.sin(ang) * beamLen;
+            const col = isDetonated ? beamCols[i % beamCols.length] : "rgba(30, 45, 80, 0.25)";
+            this.ctx.strokeStyle = col;
+            this.ctx.lineWidth = isDetonated ? 3.0 : 1.5;
+            this.ctx.beginPath();
+            this.ctx.moveTo(0, 0);
+            this.ctx.lineTo(bx, by);
+            this.ctx.stroke();
+        }
+        this.ctx.restore();
+
+        // 4. Pulsing Deep Space Nebula Halo Auras
+        const auraPulse = 1.0 + Math.sin(this.frameCount * 0.08) * 0.06;
+        const auras = [
+            { r: 350 * auraPulse, color: "rgba(46, 16, 101, 0.4)", width: 14 },
+            { r: 240 * auraPulse, color: "rgba(12, 74, 110, 0.45)", width: 8 },
+            { r: 130 * auraPulse, color: "rgba(3, 105, 161, 0.55)", width: 4 }
+        ];
+        for (const a of auras) {
+            this.ctx.strokeStyle = a.color;
+            this.ctx.lineWidth = a.width;
+            this.ctx.beginPath();
+            this.ctx.arc(w / 2, h / 2, a.r, 0, Math.PI * 2);
+            this.ctx.stroke();
+        }
+
+        // =========================================================================
+        // Phase 1: Singularity Compression (Frames 0 to 44)
+        // =========================================================================
+        if (this.frameCount < 45) {
+            const progress = this.frameCount / 45;
+            const vibX = (Math.random() - 0.5) * progress * 8;
+            const vibY = (Math.random() - 0.5) * progress * 8;
+
+            // Inward Contracting Gravity Rings
+            if (this.extraData.gravityRings) {
+                for (const gr of this.extraData.gravityRings) {
+                    gr.r -= gr.spd;
+                    if (gr.r <= 12) gr.r = 380;
+                    this.ctx.strokeStyle = gr.color;
+                    this.ctx.lineWidth = gr.width;
+                    this.ctx.beginPath();
+                    this.ctx.arc(w / 2, h / 2, gr.r, 0, Math.PI * 2);
+                    this.ctx.stroke();
+                }
+            }
+
+            // Inward Gravity Motes
+            if (this.extraData.inwardMotes) {
+                for (const mote of this.extraData.inwardMotes) {
+                    mote.dist -= mote.spd;
+                    if (mote.dist < 18) mote.dist = 180 + Math.random() * 260;
+                    const mx = w / 2 + Math.cos(mote.angle) * mote.dist;
+                    const my = h / 2 + Math.sin(mote.angle) * mote.dist;
+                    this.ctx.fillStyle = mote.color;
+                    this.ctx.font = "bold 14px 'Segoe UI', sans-serif";
+                    this.ctx.textAlign = "center";
+                    this.ctx.textBaseline = "middle";
+                    this.ctx.fillText(mote.char, mx, my);
+                }
+            }
+
+            // Conviction Hands moving inward
+            this.ctx.font = "38px 'Segoe UI', sans-serif";
             this.ctx.textAlign = "center";
             this.ctx.textBaseline = "middle";
-            this.ctx.fillText("💎🙌💎", 0, 0);
-            this.ctx.restore();
-        } else if (this.frameCount === 40) {
-            // DETONATE SHARDS!
-            for (let i = 0; i < 110; i++) {
+            this.ctx.fillText("🙌", w / 2 - 95 + progress * 25 + vibX, h / 2 + vibY);
+            this.ctx.fillText("🙌", w / 2 + 95 - progress * 25 + vibX, h / 2 + vibY);
+
+            // Central Faceted Diamond Gemstone
+            const dScale = 0.85 + progress * 0.55;
+            const dRot = Math.sin(this.frameCount * 0.25) * 0.08;
+            this._drawFacetedDiamond(w / 2 + vibX, h / 2 + vibY, dScale, dRot);
+
+            // Pulsing Charging Callout
+            this.ctx.font = "bold 15px 'Segoe UI', Roboto, sans-serif";
+            this.ctx.fillStyle = (this.frameCount % 10 < 5) ? "#00f0ff" : "#ffffff";
+            this.ctx.fillText("💎 CHARGING SINGULARITY... 💎", w / 2 + vibX, h / 2 + 88 + vibY);
+        }
+
+        // =========================================================================
+        // Detonation Trigger (Frame 45)
+        // =========================================================================
+        else if (this.frameCount === 45) {
+            dh.detonated = true;
+            dh.flash = 0.95;
+            dh.shake = 10;
+
+            // 4 Blinding Expanding Cosmic Shockwaves
+            this.extraData.shockwaves = [
+                { r: 15, spd: 24, color: "#ffffff", width: 4.5 },
+                { r: 15, spd: 18, color: "#00f0ff", width: 3.5 },
+                { r: 15, spd: 13, color: "#d946ef", width: 3.0 },
+                { r: 15, spd: 8.5, color: "#38bdf8", width: 2.5 }
+            ];
+
+            // 40 Exploding Faceted Diamond Shards with 3D Rotation
+            const palList = [
+                { table: "#ffffff", crownLeft: "#a5f3fc", crownRight: "#7dd3fc", pavilionCenter: "#00f0ff", pavilionLeft: "#0284c7", pavilionRight: "#0ea5e9", outline: "#e0f2fe" },
+                { table: "#ffffff", crownLeft: "#f3e8ff", crownRight: "#e9d5ff", pavilionCenter: "#c084fc", pavilionLeft: "#7e22ce", pavilionRight: "#a855f7", outline: "#faf5ff" },
+                { table: "#ffffff", crownLeft: "#fef9c3", crownRight: "#fef08a", pavilionCenter: "#fde047", pavilionLeft: "#a16207", pavilionRight: "#eab308", outline: "#fffbeb" },
+                { table: "#ffffff", crownLeft: "#fce7f3", crownRight: "#fbcfe8", pavilionCenter: "#f472b6", pavilionLeft: "#9d174d", pavilionRight: "#db2777", outline: "#fff1f2" },
+                { table: "#ffffff", crownLeft: "#e0f2fe", crownRight: "#bae6fd", pavilionCenter: "#38bdf8", pavilionLeft: "#0369a1", pavilionRight: "#0284c7", outline: "#ffffff" }
+            ];
+            for (let i = 0; i < 40; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const spd = 7 + Math.random() * 20;
+                this.particles.push({
+                    type: "faceted_shard",
+                    x: w / 2, y: h / 2,
+                    vx: Math.cos(angle) * spd,
+                    vy: Math.sin(angle) * spd,
+                    rot: Math.random() * Math.PI * 2,
+                    vrot: (Math.random() - 0.5) * 0.25,
+                    scale: 0.18 + Math.random() * 0.22,
+                    drag: 0.98,
+                    palette: palList[Math.floor(Math.random() * palList.length)]
+                });
+            }
+
+            // 35 Prismatic Starbursts
+            const starChars = ["✦", "★", "✧", "💠", "⚡"];
+            const starCols = ["#ffffff", "#00f0ff", "#fde047", "#f472b6", "#38bdf8"];
+            for (let i = 0; i < 35; i++) {
                 const angle = Math.random() * Math.PI * 2;
                 const spd = 6 + Math.random() * 18;
                 this.particles.push({
-                    type: "shard",
-                    x: dh.x,
-                    y: dh.y,
+                    type: "starburst",
+                    x: w / 2, y: h / 2,
                     vx: Math.cos(angle) * spd,
                     vy: Math.sin(angle) * spd,
-                    text: ["💎", "✨", "🔷", "💠", "⚡"][Math.floor(Math.random() * 5)],
-                    size: 18 + Math.random() * 20
+                    char: starChars[Math.floor(Math.random() * starChars.length)],
+                    color: starCols[Math.floor(Math.random() * starCols.length)],
+                    size: 16 + Math.random() * 12,
+                    drag: 0.98
                 });
             }
-        } else {
-            // Shards exploding outwards
-            for (const p of this.particles) {
-                p.x += p.vx;
-                p.y += p.vy;
-                p.vy += 0.15; // subtle gravity
-                this.ctx.font = `${p.size}px sans-serif`;
-                this.ctx.textAlign = "center";
-                this.ctx.fillText(p.text, p.x, p.y);
+
+            // 25 Golden Bullion & Shimmering Gems
+            const trophies = ["🪙", "💎", "✨"];
+            for (let i = 0; i < 25; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const spd = 7 + Math.random() * 18;
+                const char = trophies[Math.floor(Math.random() * trophies.length)];
+                this.particles.push({
+                    type: "trophy",
+                    x: w / 2, y: h / 2,
+                    vx: Math.cos(angle) * spd,
+                    vy: Math.sin(angle) * spd,
+                    char: char,
+                    color: char === "🪙" ? "#ffd700" : "#00f0ff",
+                    size: 18 + Math.random() * 12,
+                    drag: 0.98
+                });
             }
         }
 
-        // Banner
-        this.ctx.fillStyle = "rgba(14, 17, 23, 0.88)";
-        this.ctx.strokeStyle = "#00e5ff";
-        this.ctx.lineWidth = 3;
-        this.ctx.beginPath();
-        this.ctx.roundRect(w / 2 - 320, h / 2 + 100, 640, 80, 14);
-        this.ctx.fill();
-        this.ctx.stroke();
+        // =========================================================================
+        // Phase 2: Supernova Detonation Active (Frames 46+)
+        // =========================================================================
+        else {
+            // Screen Shake Tremor
+            if (dh.shake > 0) {
+                const sx = (Math.random() - 0.5) * dh.shake;
+                const sy = (Math.random() - 0.5) * dh.shake;
+                this.canvas.style.transform = `translate(${sx}px, ${sy}px)`;
+                dh.shake *= 0.92;
+                if (dh.shake < 0.2) {
+                    dh.shake = 0;
+                    this.canvas.style.transform = "none";
+                }
+            }
 
-        this.ctx.font = "bold 28px 'Segoe UI', Roboto, sans-serif";
-        this.ctx.fillStyle = "#00e5ff";
-        this.ctx.textAlign = "center";
-        this.ctx.fillText(this.titleOverride || "💎 DIAMOND HANDS SUPERNOVA! 💎", w / 2, h / 2 + 148);
+            // Detonation Flash Bloom
+            if (dh.flash > 0.01) {
+                this.ctx.fillStyle = `rgba(255, 255, 255, ${dh.flash})`;
+                this.ctx.fillRect(0, 0, w, h);
+                dh.flash *= 0.78;
+            }
+
+            // Expanding Shockwaves
+            if (this.extraData.shockwaves) {
+                for (let i = this.extraData.shockwaves.length - 1; i >= 0; i--) {
+                    const sw = this.extraData.shockwaves[i];
+                    sw.r += sw.spd;
+                    this.ctx.strokeStyle = sw.color;
+                    this.ctx.lineWidth = sw.width;
+                    this.ctx.beginPath();
+                    this.ctx.arc(w / 2, h / 2, sw.r, 0, Math.PI * 2);
+                    this.ctx.stroke();
+                    if (sw.r > Math.max(w, h) * 0.95) {
+                        this.extraData.shockwaves.splice(i, 1);
+                    }
+                }
+            }
+
+            // Triumphant Majestic Center Diamond Core
+            const cScale = 1.35 + Math.sin(this.frameCount * 0.12) * 0.1;
+            const cRot = this.frameCount * 0.015;
+            this._drawFacetedDiamond(w / 2, h / 2, cScale, cRot);
+
+            // Exploding Shards Physics & Render
+            for (const p of this.particles) {
+                p.vx *= p.drag;
+                p.vy = (p.vy + 0.22) * p.drag;
+                p.x += p.vx;
+                p.y += p.vy;
+
+                if (p.type === "faceted_shard") {
+                    p.rot += p.vrot;
+                    this._drawFacetedDiamond(p.x, p.y, p.scale, p.rot, p.palette);
+                } else {
+                    this.ctx.font = `bold ${p.size}px 'Segoe UI', sans-serif`;
+                    this.ctx.fillStyle = p.color;
+                    this.ctx.textAlign = "center";
+                    this.ctx.textBaseline = "middle";
+                    this.ctx.fillText(p.char, p.x, p.y);
+                }
+            }
+
+            // Supernova Victory HUD Banner
+            this.ctx.save();
+            this.ctx.translate(w / 2, h / 2 + 115);
+
+            // Glass card background
+            this.ctx.fillStyle = "rgba(11, 13, 36, 0.92)";
+            this.ctx.strokeStyle = "#00f0ff";
+            this.ctx.lineWidth = 3;
+            this.ctx.beginPath();
+            this.ctx.roundRect(-340, -45, 680, 90, 14);
+            this.ctx.fill();
+            this.ctx.stroke();
+
+            // Title
+            this.ctx.font = "bold 26px 'Segoe UI', Roboto, sans-serif";
+            this.ctx.fillStyle = "#00f0ff";
+            this.ctx.textAlign = "center";
+            this.ctx.textBaseline = "middle";
+            this.ctx.fillText(this.titleOverride || "💎 DIAMOND HANDS: COSMIC SUPERNOVA! 💎", 0, -10);
+
+            // Subtitle
+            this.ctx.font = "bold 13px 'Segoe UI', Roboto, sans-serif";
+            this.ctx.fillStyle = "#ffffff";
+            this.ctx.fillText("UNSHAKEABLE CONVICTION • COSMIC WEALTH CREATED", 0, 22);
+            this.ctx.restore();
+        }
     }
 
     // 5. Golden Bull Stampede
