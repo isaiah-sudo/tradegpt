@@ -2,7 +2,7 @@
 TradeGPT version and metadata specification.
 """
 
-__version__ = "2.0.6"
+__version__ = "2.1.0"
 APP_NAME = "TradeGPT"
 GITHUB_REPO = "isaiah-sudo/tradegpt"
 

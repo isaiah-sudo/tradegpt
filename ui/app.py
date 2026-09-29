@@ -67,8 +67,9 @@ class TradeGPTApp(tk.Tk):
             except Exception:
                 pass
 
-        # Initialize Simulation Engine (Deterministic seed if online)
-        self.engine = MarketEngine(initial_cash=25000.0, seed=seed)
+        # Initialize Simulation Engine (Deterministic seed and locked 1.0 temp if online)
+        engine_temp = 1.0 if self.mode == "online" else getattr(self.profile, "trading_temperature", 1.0)
+        self.engine = MarketEngine(initial_cash=25000.0, seed=seed, temperature=engine_temp)
         if self.mode == "online":
             self.engine.current_difficulty = "Day Trader (3x)"
 
@@ -265,6 +266,22 @@ class TradeGPTApp(tk.Tk):
                 command=self._open_shop
             )
             btn_shop.pack(side=tk.LEFT, padx=2)
+
+            # Engine Settings Button
+            btn_settings = tk.Button(
+                ctrl_f,
+                text="⚙️ Settings",
+                font=("Segoe UI", 8, "bold"),
+                bg="#1e222d",
+                fg=self.TEXT_WHITE,
+                activebackground="#2a2e39",
+                activeforeground=self.TEXT_WHITE,
+                relief=tk.FLAT,
+                padx=8, pady=2,
+                cursor="hand2",
+                command=self._open_settings
+            )
+            btn_settings.pack(side=tk.LEFT, padx=2)
 
             # Return to Menu Button
             btn_menu = tk.Button(
@@ -468,7 +485,7 @@ class TradeGPTApp(tk.Tk):
             return  # Reset disabled during competitive online matches
         confirm = messagebox.askyesno("Reset Account", "Reset your balance to $25,000 and restart simulation?")
         if confirm:
-            self.engine.reset_account()
+            self.engine.reset_account(temperature=self.engine.get_temperature())
             if self.watchlist.current_sort == "OWNED":
                 self.watchlist.refresh_list()
             else:
@@ -526,6 +543,17 @@ class TradeGPTApp(tk.Tk):
                     bg="#1e222d",
                     fg="#50535e"
                 )
+
+    def _open_settings(self):
+        from ui.settings_dialog import SettingsDialog
+        def on_temp_changed(new_temp: float):
+            self.engine.set_temperature(new_temp)
+        SettingsDialog(
+            self,
+            current_temp=self.engine.get_temperature(),
+            on_temp_changed=on_temp_changed,
+            profile=self.profile
+        )
 
     def _open_shop(self):
         ShopDialog(self)

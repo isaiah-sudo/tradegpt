@@ -619,6 +619,10 @@ class _AuthHTTPHandler(BaseHTTPRequestHandler):
 
             if data and data.get("uid"):
                 self.server.auth_result = data
+                # Trigger success callback on host
+                if self.server.on_success:
+                    self.server.on_success(data)
+
                 resp_body = json.dumps({"status": "ok"}).encode("utf-8")
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json")
@@ -627,10 +631,6 @@ class _AuthHTTPHandler(BaseHTTPRequestHandler):
                 self.send_header("Content-Length", str(len(resp_body)))
                 self.end_headers()
                 self.wfile.write(resp_body)
-
-                # Trigger success callback on host
-                if self.server.on_success:
-                    self.server.on_success(data)
 
                 # Schedule server shutdown
                 threading.Thread(target=self._delayed_shutdown, daemon=True).start()

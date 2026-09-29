@@ -263,7 +263,20 @@ class ModeSelectWindow(tk.Tk):
             cursor="hand2",
             command=self._on_check_updates_click
         )
-        self.btn_update.pack(side=tk.LEFT, padx=(0, 6))
+        self.btn_top_settings = tk.Button(
+            top_ctrls,
+            text="⚙️ Engine Settings",
+            font=("Segoe UI", 8, "bold"),
+            bg="#1e222d",
+            fg="#ffffff",
+            activebackground="#2a2e39",
+            activeforeground="#ffffff",
+            relief=tk.FLAT,
+            padx=8, pady=3,
+            cursor="hand2",
+            command=self._open_settings_dialog
+        )
+        self.btn_top_settings.pack(side=tk.LEFT, padx=(0, 6))
 
         btn_cfg = tk.Button(
             top_ctrls,
@@ -315,6 +328,34 @@ class ModeSelectWindow(tk.Tk):
         ]
         for b in bullets:
             tk.Label(solo_card, text=b, font=("Segoe UI", 9), fg="#c5c8d1", bg=self.CARD_BG).pack(anchor="w", pady=2)
+
+        # Engine temperature indicator & settings quick link
+        temp_row = tk.Frame(solo_card, bg=self.CARD_BG)
+        temp_row.pack(anchor="w", pady=(8, 0))
+        cur_t = getattr(self.profile, "trading_temperature", 1.0)
+        self.lbl_temp_info = tk.Label(
+            temp_row,
+            text=f"⚙️ Temperature: {cur_t:.2f}x",
+            font=("Segoe UI", 8, "bold"),
+            fg="#00e676",
+            bg=self.CARD_BG
+        )
+        self.lbl_temp_info.pack(side=tk.LEFT, padx=(0, 6))
+
+        btn_card_settings = tk.Button(
+            temp_row,
+            text="Adjust",
+            font=("Segoe UI", 8),
+            bg="#1e222d",
+            fg=self.TEXT_MUTED,
+            activebackground="#2a2e39",
+            activeforeground="#ffffff",
+            relief=tk.FLAT,
+            padx=6, pady=1,
+            cursor="hand2",
+            command=self._open_settings_dialog
+        )
+        btn_card_settings.pack(side=tk.LEFT)
 
         # Solo launch button
         btn_solo = tk.Button(
@@ -551,6 +592,13 @@ class ModeSelectWindow(tk.Tk):
 
     def _open_config_dialog(self):
         FirebaseConfigDialog(self, self.fb_manager, on_saved=self._update_footer_status)
+
+    def _open_settings_dialog(self):
+        from ui.settings_dialog import SettingsDialog
+        def on_temp_saved(new_temp: float):
+            if hasattr(self, "lbl_temp_info") and self.lbl_temp_info:
+                self.lbl_temp_info.config(text=f"⚙️ Temperature: {new_temp:.2f}x")
+        SettingsDialog(self, profile=self.profile, on_temp_changed=on_temp_saved)
 
     def _open_shop(self):
         ShopDialog(self, on_profile_updated=self._update_vault_display)

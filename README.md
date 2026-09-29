@@ -2,7 +2,7 @@
 
 <div align="center">
 
-[![Download Windows Installer](https://img.shields.io/badge/Installer-TradeGPT--Setup--v2.0.6.exe-00E676?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/isaiah-sudo/tradegpt/releases/latest/download/TradeGPT-Setup-v2.0.6.exe)
+[![Download Windows Installer](https://img.shields.io/badge/Installer-TradeGPT--Setup--v2.1.0.exe-00E676?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/isaiah-sudo/tradegpt/releases/latest/download/TradeGPT-Setup-v2.1.0.exe)
 [![Download Portable EXE](https://img.shields.io/badge/Portable-TradeGPT.exe-00B0FF?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/isaiah-sudo/tradegpt/releases/latest/download/TradeGPT.exe)
 [![GitHub Release](https://img.shields.io/github/v/release/isaiah-sudo/tradegpt?style=for-the-badge&color=2962FF)](https://github.com/isaiah-sudo/tradegpt/releases/latest)
 [![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero%20External-FF9800?style=for-the-badge)](requirements.txt)
@@ -32,6 +32,7 @@ Prices move continuously using stochastic jump-diffusion and momentum dynamics. 
 
 ### 🎯 Solo Sandbox
 Classic single-player trading terminal designed for mastery:
+- **⚙️ Trading Engine Temperature**: Tune market volatility and realism live with the new Settings Menu (0.2x Calm & Realistic, 1.0x Standard, 1.5x Spicy, 2.5x Extreme Chaos).
 - **Adjustable Speeds**: Seamlessly switch between **1x Relaxed**, **3x Day Trader**, **8x HFT**, and **20x Turbo Insane**.
 - **Pause & Resume**: Stop the market at any moment (`Space`) to analyze setups.
 - **Unlimited Resets**: Reset your portfolio and market dynamics back to $25k at will.

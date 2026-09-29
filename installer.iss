@@ -1,6 +1,6 @@
 ; Script generated for Inno Setup Compiler
 #define MyAppName "TradeGPT"
-#define MyAppVersion "2.0.6"
+#define MyAppVersion "2.1.0"
 #define MyAppPublisher "Isaiah"
 #define MyAppURL "https://github.com/isaiah-sudo/tradegpt"
 #define MyAppExeName "TradeGPT.exe"
@@ -19,7 +19,7 @@ DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
 LicenseFile=LICENSE
 OutputDir=dist
-OutputBaseFilename=TradeGPT-Setup-v2.0.6
+OutputBaseFilename=TradeGPT-Setup-v2.1.0
 SetupIconFile=assets\icon.ico
 Compression=lzma2/ultra64
 SolidCompression=yes

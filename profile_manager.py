@@ -99,6 +99,7 @@ class UserProfile:
         self.equipped_animation: str = "money_rain"
         self.equipped_theme: str = "default"
         self.duels_won: int = 0
+        self.trading_temperature: float = 1.0
         # Cloud Authentication Info
         self.auth_uid: str = ""
         self.auth_email: str = ""
@@ -144,6 +145,7 @@ class UserProfile:
                 self.equipped_animation = str(data.get("equipped_animation", "money_rain"))
                 self.equipped_theme = str(data.get("equipped_theme", "default"))
                 self.duels_won = int(data.get("duels_won", 0))
+                self.trading_temperature = float(data.get("trading_temperature", 1.0))
                 self.auth_uid = str(data.get("auth_uid", "") or "")
                 self.auth_email = str(data.get("auth_email", "") or "")
                 self.auth_display_name = str(data.get("auth_display_name", "") or "")
@@ -162,6 +164,7 @@ class UserProfile:
             "equipped_animation": self.equipped_animation,
             "equipped_theme": self.equipped_theme,
             "duels_won": self.duels_won,
+            "trading_temperature": round(self.trading_temperature, 2),
             "auth_uid": self.auth_uid,
             "auth_email": self.auth_email,
             "auth_display_name": self.auth_display_name,
@@ -176,6 +179,11 @@ class UserProfile:
 
         if sync_cloud and self.is_authenticated():
             self.sync_to_cloud()
+
+    def set_trading_temperature(self, temp: float) -> None:
+        """Sets solo market engine temperature and persists it."""
+        self.trading_temperature = round(max(0.1, min(5.0, float(temp))), 2)
+        self.save(sync_cloud=False)
 
     def set_player_name(self, name: str) -> None:
         """Sets trader nickname and persists it."""
