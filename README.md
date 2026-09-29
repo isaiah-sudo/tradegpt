@@ -2,7 +2,7 @@
 
 <div align="center">
 
-[![Download Windows Installer](https://img.shields.io/badge/Installer-TradeGPT--Setup--v2.1.0.exe-00E676?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/isaiah-sudo/tradegpt/releases/latest/download/TradeGPT-Setup-v2.1.0.exe)
+[![Download Windows Installer](https://img.shields.io/badge/Installer-TradeGPT--Setup--v2.1.1.exe-00E676?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/isaiah-sudo/tradegpt/releases/latest/download/TradeGPT-Setup-v2.1.1.exe)
 [![Download Portable EXE](https://img.shields.io/badge/Portable-TradeGPT.exe-00B0FF?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/isaiah-sudo/tradegpt/releases/latest/download/TradeGPT.exe)
 [![GitHub Release](https://img.shields.io/github/v/release/isaiah-sudo/tradegpt?style=for-the-badge&color=2962FF)](https://github.com/isaiah-sudo/tradegpt/releases/latest)
 [![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero%20External-FF9800?style=for-the-badge)](requirements.txt)
