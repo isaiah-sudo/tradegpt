@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TradeGPT • Pro Trader Web Terminal v2.0.6</title>
+    <title>TradeGPT • Pro Trader Web Terminal v2.1.0</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="icon" type="image/x-icon" href="favicon.ico">
 </head>
@@ -50,6 +50,7 @@
             <button class="btn-ctrl" id="btn-pause">⏸ Pause</button>
             <button class="btn-ctrl btn-bank-profit" id="btn-bank-profit" disabled>💰 Bank Profit</button>
             <button class="btn-ctrl" id="btn-reset">↺ Reset</button>
+            <button class="btn-ctrl" id="btn-settings-open">⚙️ Settings</button>
             <button class="btn-ctrl" id="btn-shop-open" style="color:var(--gold);font-weight:700;">🛒 Shop</button>
             <button class="btn-ctrl" id="btn-menu">🏠 Menu</button>
             <a href="/" class="btn-ctrl" style="text-decoration:none;display:inline-flex;align-items:center;" title="Return to Homepage">🌐 Home</a>
@@ -275,7 +276,7 @@
             <!-- Top Right Home & Downloads Link -->
             <a href="/" style="position:absolute;top:18px;right:20px;display:flex;align-items:center;gap:6px;color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:600;padding:6px 12px;border-radius:6px;border:1px solid #2a2e39;background:#161a25;transition:all 0.2s;" onmouseover="this.style.borderColor='#3d4454';this.style.color='#fff'" onmouseout="this.style.borderColor='#2a2e39';this.style.color='var(--text-muted)'">🏠 Home & Downloads</a>
             <div style="font-size:36px;margin-bottom:8px;">⚡</div>
-            <h2 class="modal-title">TRADEGPT <span style="font-size:14px;color:var(--text-muted);">v2.0.6</span></h2>
+            <h2 class="modal-title">TRADEGPT <span style="font-size:14px;color:var(--text-muted);">v2.1.0</span></h2>
             <p class="modal-sub">Choose your game mode to enter the trading floor</p>
 
             <div class="menu-vault-pill" id="menu-vault-pill">
@@ -290,6 +291,10 @@
                     <span class="icon">🎮</span>
                     <span class="title">Solo Sandbox</span>
                     <span class="desc">Unlimited practice, multiple speeds (1x to 20x), breaking catalysts & margin scalping.</span>
+                    <div style="margin-top:10px;display:flex;align-items:center;gap:6px;" onclick="event.stopPropagation();">
+                        <span class="badge-tag" id="mode-temp-tag" style="background:#1a2e22;color:#00e676;border-color:rgba(0,230,118,0.3);font-size:10px;">⚙️ Temp: 1.00x</span>
+                        <button type="button" class="btn-ctrl" id="btn-modal-settings" style="font-size:10px;padding:2px 8px;border-radius:4px;">Tune Temp</button>
+                    </div>
                 </div>
                 <div class="mode-card" id="mode-online" style="border-color:rgba(229,57,53,0.4);">
                     <span class="icon">⚔️</span>
@@ -440,6 +445,71 @@
                     <button type="button" class="btn-ctrl" id="btn-auth-sync" style="background:#1e222d;color:#fff;border:1px solid #2a2e39;padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px;">🔄 Sync Now</button>
                     <button type="button" class="btn-ctrl" id="btn-auth-signout" style="background:#ff5252;color:#fff;border:none;padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px;">Sign Out</button>
                     <button type="button" class="btn-ctrl" id="btn-close-auth-view" style="background:#161a25;color:var(--text-muted);border:1px solid #2a2e39;padding:8px 14px;border-radius:6px;cursor:pointer;font-size:12px;">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. Trading Engine Settings Modal (Solo Mode Temperature) -->
+    <div class="modal-overlay" id="modal-settings" style="display:none;">
+        <div class="modal-card settings-modal-card">
+            <div style="font-size:32px;margin-bottom:6px;">⚙️</div>
+            <h2 class="modal-title" style="font-size:20px;">Trading Engine Settings</h2>
+            <p class="modal-sub" style="margin-bottom:16px;">Customize Solo Sandbox temperature to control market volatility and realism.</p>
+
+            <div class="settings-gauge-card">
+                <div class="gauge-header">
+                    <span class="gauge-title">SIMULATION TEMPERATURE</span>
+                    <span class="badge-tag" id="settings-temp-badge" style="background:#1a2e22;color:#00e676;border-color:rgba(0,230,118,0.3);">⚖️ Standard Engine (Balanced)</span>
+                </div>
+                <div class="gauge-value" id="settings-temp-val">1.00x</div>
+                <div class="slider-wrap">
+                    <input type="range" id="settings-temp-slider" min="0.20" max="3.00" step="0.05" value="1.00" class="temp-slider">
+                </div>
+                <div class="slider-endpoints">
+                    <span>0.20x (Calm & Realistic)</span>
+                    <span>1.00x (Standard)</span>
+                    <span>3.00x (Extreme Chaos)</span>
+                </div>
+            </div>
+
+            <div class="settings-presets-row">
+                <span class="presets-label">QUICK PRESETS:</span>
+                <button type="button" class="btn-preset" data-temp="0.5">0.5x Calm</button>
+                <button type="button" class="btn-preset active" data-temp="1.0">1.0x Standard</button>
+                <button type="button" class="btn-preset" data-temp="1.5">1.5x Spicy</button>
+                <button type="button" class="btn-preset" data-temp="2.5">2.5x Chaos</button>
+            </div>
+
+            <div class="settings-metrics-box">
+                <div class="metric-row">
+                    <span class="m-label">Volatility Multiplier:</span>
+                    <strong class="m-val" id="metric-vol-val">100% of baseline</strong>
+                </div>
+                <div class="metric-row">
+                    <span class="m-label">Micro-Spikes & Spreads:</span>
+                    <strong class="m-val" id="metric-spikes-val" style="color:#00e676;">Standard intraday noise</strong>
+                </div>
+                <div class="metric-row">
+                    <span class="m-label">Breaking News Catalyst Impact:</span>
+                    <strong class="m-val" id="metric-news-val" style="color:#00e676;">Standard market catalyst shocks</strong>
+                </div>
+                <div class="metric-row">
+                    <span class="m-label">Market Style & Dynamic:</span>
+                    <strong class="m-val" id="metric-realism-val" style="color:#00e676;">Authentic Day Trading Sim</strong>
+                </div>
+            </div>
+
+            <div class="settings-fairplay-notice">
+                <div class="notice-title">⚔️ 1v1 PvP DUELS FAIR-PLAY NOTICE</div>
+                <div class="notice-desc">Online 1v1 PvP Duels always enforce the standardized 1.0x temperature engine. This guarantees deterministic price synchronization and fair competitive balance between players.</div>
+            </div>
+
+            <div class="settings-modal-actions">
+                <button type="button" class="btn-ctrl" id="btn-reset-temp">↺ Reset to 1.0x</button>
+                <div style="display:flex;gap:8px;">
+                    <button type="button" class="btn-ctrl" id="btn-close-settings">Close</button>
+                    <button type="button" class="btn-duel" id="btn-save-settings" style="background:#2962ff;box-shadow:0 4px 12px rgba(41,98,255,0.3);">💾 Save & Apply</button>
                 </div>
             </div>
         </div>

@@ -1,3 +1,4 @@
+import math
 import time
 import random
 from typing import Dict, List, Optional
@@ -59,7 +60,7 @@ class MarketEngine:
         "TURBO INSANE (20x)": {"tick_ms": 50, "news_prob": 0.12, "label": "Adrenaline Junkie (20 ticks/sec)"},
     }
 
-    def __init__(self, initial_cash: float = 25000.0, seed: Optional[int] = None):
+    def __init__(self, initial_cash: float = 25000.0, seed: Optional[int] = None, temperature: float = 1.0):
         self.seed = seed
         if seed is not None:
             random.seed(seed)
@@ -68,6 +69,9 @@ class MarketEngine:
         self.realized_pnl = 0.0
         self.positions: Dict[str, Position] = {}
         self.trades: List[TradeLog] = []
+
+        # Engine temperature (volatility & realism tuning for solo mode)
+        self.temperature = max(0.1, min(5.0, float(temperature)))
 
         # News engine
         self.news_gen = NewsGenerator()
@@ -85,7 +89,7 @@ class MarketEngine:
         # Initialize 100 volatile stocks across all sectors
         self.stocks: Dict[str, Stock] = {}
         for ticker, name, sector, init_p, vol in STOCK_DEFINITIONS:
-            self.stocks[ticker] = Stock(ticker, name, sector, initial_price=init_p, volatility=vol)
+            self.stocks[ticker] = Stock(ticker, name, sector, initial_price=init_p, volatility=vol, temperature=self.temperature)
 
         for ticker in self.stocks:
             self.positions[ticker] = Position(ticker)
@@ -104,6 +108,15 @@ class MarketEngine:
         )
         self.news_feed.append(welcome_news)
         self.latest_news = welcome_news
+
+    def set_temperature(self, temp: float):
+        """Set simulation engine temperature and update all active stocks."""
+        self.temperature = max(0.1, min(5.0, float(temp)))
+        for stock in self.stocks.values():
+            stock.set_temperature(self.temperature)
+
+    def get_temperature(self) -> float:
+        return self.temperature
 
     @property
     def total_equity(self) -> float:
@@ -132,8 +145,8 @@ class MarketEngine:
         if self.is_paused:
             return None
 
-        # Macro trend fluctuation
-        self.macro_trend += random.gauss(0, 0.003)
+        # Macro trend fluctuation (scaled by engine temperature)
+        self.macro_trend += random.gauss(0, 0.003 * math.sqrt(self.temperature))
         self.macro_trend *= 0.96
 
         # News event check
@@ -342,11 +355,13 @@ class MarketEngine:
             self.realized_pnl = 0.0
         return profit
 
-    def reset_account(self, seed: Optional[int] = None):
+    def reset_account(self, seed: Optional[int] = None, temperature: Optional[float] = None):
         """Reset game state."""
         if seed is not None:
             self.seed = seed
             random.seed(seed)
+        if temperature is not None:
+            self.set_temperature(temperature)
         self.cash = self.initial_cash
         self.realized_pnl = 0.0
         self.trades.clear()
@@ -356,7 +371,7 @@ class MarketEngine:
             st = self.stocks[ticker]
             st.price = st.initial_price
             st.drift = 0.0
-            st.volatility = st.base_volatility
+            st.volatility = st.base_volatility * self.temperature
             st.trade_markers.clear()
             st.candles.clear()
             st._seed_history(50)

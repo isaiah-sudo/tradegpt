@@ -255,8 +255,9 @@ class TradingApp {
         this.syncMetricsInterval = null;
         this.searchAbortCtrl = null;
 
-        // Init engine
-        this.engine = new MarketEngine(25000.0);
+        // Init engine with saved solo temperature
+        const initialTemp = (this.profile && typeof this.profile.trading_temperature === "number") ? this.profile.trading_temperature : 1.0;
+        this.engine = new MarketEngine(25000.0, null, initialTemp);
         this.chart = null;
         this.loopTimer = null;
 
@@ -268,6 +269,7 @@ class TradingApp {
         this._renderScanner();
         this._selectTicker("NVXP");
         this._updateVaultDisplay();
+        this._updateModeTempDisplay();
         this._updateAuthUi();
         this._initAuthSession();
 
@@ -283,6 +285,7 @@ class TradingApp {
             player_name: "",
             menu_balance: 0.0,
             total_profit_banked: 0.0,
+            trading_temperature: 1.0,
             inventory: ["money_rain", "theme_default", "sfx_standard", "title_trader"],
             equipped_animation: "money_rain",
             equipped_theme: "theme_default",
@@ -306,6 +309,7 @@ class TradingApp {
                 p.player_name = typeof p.player_name === "string" ? p.player_name : "";
                 p.menu_balance = typeof p.menu_balance === "number" ? p.menu_balance : 0.0;
                 p.total_profit_banked = typeof p.total_profit_banked === "number" ? p.total_profit_banked : 0.0;
+                p.trading_temperature = typeof p.trading_temperature === "number" ? p.trading_temperature : 1.0;
                 p.equipped_animation = p.equipped_animation || "money_rain";
                 p.equipped_theme = p.equipped_theme || "theme_default";
                 p.equipped_sfx = p.equipped_sfx || "sfx_standard";
@@ -484,6 +488,22 @@ class TradingApp {
         this.elBtnAuthSync = document.getElementById("btn-auth-sync");
         this.elBtnAuthSignout = document.getElementById("btn-auth-signout");
         this.authMode = "signin";
+
+        // Settings Elements
+        this.elBtnSettingsOpen = document.getElementById("btn-settings-open");
+        this.elBtnModalSettings = document.getElementById("btn-modal-settings");
+        this.elModeTempTag = document.getElementById("mode-temp-tag");
+        this.elModalSettings = document.getElementById("modal-settings");
+        this.elTempSlider = document.getElementById("settings-temp-slider");
+        this.elTempVal = document.getElementById("settings-temp-val");
+        this.elTempBadge = document.getElementById("settings-temp-badge");
+        this.elMetricVol = document.getElementById("metric-vol-val");
+        this.elMetricSpikes = document.getElementById("metric-spikes-val");
+        this.elMetricNews = document.getElementById("metric-news-val");
+        this.elMetricRealism = document.getElementById("metric-realism-val");
+        this.elBtnResetTemp = document.getElementById("btn-reset-temp");
+        this.elBtnSaveSettings = document.getElementById("btn-save-settings");
+        this.elBtnCloseSettings = document.getElementById("btn-close-settings");
     }
 
 
@@ -565,7 +585,8 @@ class TradingApp {
         // Reset
         document.getElementById("btn-reset").addEventListener("click", () => {
             if (confirm("Reset account equity to $25,000.00 and wipe current positions?")) {
-                this.engine.resetAccount();
+                const temp = this.mode === "solo" ? (this.profile.trading_temperature || 1.0) : 1.0;
+                this.engine.resetAccount(null, temp);
                 this._updateAllUi();
             }
         });
@@ -740,6 +761,45 @@ class TradingApp {
             this._startSoloMode();
             this.showModeModal();
         });
+
+        // Settings Modal Triggers & Controls
+        if (this.elBtnSettingsOpen) {
+            this.elBtnSettingsOpen.addEventListener("click", () => this._openSettingsModal());
+        }
+        if (this.elBtnModalSettings) {
+            this.elBtnModalSettings.addEventListener("click", (e) => {
+                e.stopPropagation();
+                this._openSettingsModal();
+            });
+        }
+        if (this.elBtnCloseSettings) {
+            this.elBtnCloseSettings.addEventListener("click", () => {
+                if (this.elModalSettings) this.elModalSettings.style.display = "none";
+            });
+        }
+        if (this.elBtnResetTemp) {
+            this.elBtnResetTemp.addEventListener("click", () => this._applyTempPreset(1.0));
+        }
+        if (this.elBtnSaveSettings) {
+            this.elBtnSaveSettings.addEventListener("click", () => this._saveSettings());
+        }
+        if (this.elTempSlider) {
+            this.elTempSlider.addEventListener("input", (e) => {
+                this._onTempSliderInput(parseFloat(e.target.value));
+            });
+        }
+        if (this.elModalSettings) {
+            this.elModalSettings.addEventListener("click", (e) => {
+                if (e.target === this.elModalSettings) this.elModalSettings.style.display = "none";
+            });
+            const presetBtns = this.elModalSettings.querySelectorAll(".btn-preset");
+            presetBtns.forEach(btn => {
+                btn.addEventListener("click", () => {
+                    const t = parseFloat(btn.dataset.temp);
+                    this._applyTempPreset(t);
+                });
+            });
+        }
     }
 
     _setPresetQty(val) {
@@ -1066,6 +1126,11 @@ class TradingApp {
 
         if (this.matchTimerInterval) clearInterval(this.matchTimerInterval);
         if (this.syncMetricsInterval) clearInterval(this.syncMetricsInterval);
+
+        // Apply solo trading temperature
+        const soloTemp = (this.profile && typeof this.profile.trading_temperature === "number") ? this.profile.trading_temperature : 1.0;
+        this.engine.setTemperature(soloTemp);
+        this._updateModeTempDisplay();
     }
 
     async _startOnlineMatchmaking() {
@@ -1101,8 +1166,9 @@ class TradingApp {
         this.matchData = matchData;
         this.matchTimeLeft = matchData.durationSeconds || 180;
 
-        // Reset account to initial $25,000 and seed engine
-        this.engine.resetAccount(matchData.seed);
+        // Reset account to initial $25,000 and seed engine with standard 1.0x temperature
+        this.engine.resetAccount(matchData.seed, 1.0);
+        this.engine.setTemperature(1.0);
         this.engine.currentDifficulty = "Day Trader (3x)"; // 330ms
 
         // Switch headers
@@ -1767,6 +1833,132 @@ class TradingApp {
         await this.syncToCloud();
         this._updateVaultDisplay();
         alert("All progress has been synchronized with the cloud!");
+    }
+
+    // --- Trading Engine Settings & Temperature ---
+    _openSettingsModal() {
+        const temp = (this.profile && typeof this.profile.trading_temperature === "number") ? this.profile.trading_temperature : 1.0;
+        if (this.elTempSlider) this.elTempSlider.value = temp;
+        this._updateSettingsMetrics(temp);
+        if (this.elModalSettings) this.elModalSettings.style.display = "flex";
+    }
+
+    _onTempSliderInput(temp) {
+        const val = Math.max(0.2, Math.min(3.0, Number(temp) || 1.0));
+        if (this.elTempSlider) this.elTempSlider.value = val;
+        this._updateSettingsMetrics(val);
+        if (this.mode === "solo") {
+            this.engine.setTemperature(val);
+        }
+    }
+
+    _applyTempPreset(temp) {
+        if (this.elTempSlider) this.elTempSlider.value = temp;
+        this._onTempSliderInput(temp);
+    }
+
+    _updateSettingsMetrics(temp) {
+        const t = Number(temp);
+        if (this.elTempVal) this.elTempVal.textContent = `${t.toFixed(2)}x`;
+
+        // Update active preset button highlight
+        if (this.elModalSettings) {
+            const presetBtns = this.elModalSettings.querySelectorAll(".btn-preset");
+            presetBtns.forEach(btn => {
+                const bTemp = parseFloat(btn.dataset.temp);
+                if (Math.abs(bTemp - t) < 0.03) {
+                    btn.classList.add("active");
+                } else {
+                    btn.classList.remove("active");
+                }
+            });
+        }
+
+        let badgeTxt = "⚖️ Standard Engine (Balanced)";
+        let badgeColor = "#00e676";
+        let badgeBg = "#1a2e22";
+        let spikesTxt = "Standard intraday noise";
+        let newsTxt = "Standard market catalyst shocks";
+        let realismTxt = "Authentic Day Trading Sim";
+
+        if (t < 0.60) {
+            badgeTxt = "🥶 Ultra Calm & Realistic (Low Vol)";
+            badgeColor = "#3d72ff";
+            badgeBg = "#132347";
+            spikesTxt = "Minimal & tight spreads";
+            newsTxt = "Subdued & orderly reactions";
+            realismTxt = "Maximum Realism (Blue-Chip Institutional)";
+        } else if (t < 0.90) {
+            badgeTxt = "😌 Smooth Trending (Institutional)";
+            badgeColor = "#00e676";
+            badgeBg = "#143324";
+            spikesTxt = "Gentle spreads & calm noise";
+            newsTxt = "Moderate catalyst drift";
+            realismTxt = "Orderly Institutional Market";
+        } else if (t <= 1.20) {
+            badgeTxt = "⚖️ Standard Engine (Balanced Day Trading)";
+            badgeColor = "#00e676";
+            badgeBg = "#1a2e22";
+            spikesTxt = "Standard intraday noise";
+            newsTxt = "Standard market catalyst shocks";
+            realismTxt = "Authentic Day Trading Sim";
+        } else if (t <= 1.80) {
+            badgeTxt = "🔥 High Volatility (Sharp Swings)";
+            badgeColor = "#ff9100";
+            badgeBg = "#3d2700";
+            spikesTxt = "Frequent momentum spikes";
+            newsTxt = "Spicy amplified breakouts";
+            realismTxt = "High Adrenaline Action";
+        } else {
+            badgeTxt = "⚡ Maximum Chaos (Extreme Degenerate)";
+            badgeColor = "#ff5252";
+            badgeBg = "#3d1419";
+            spikesTxt = "Violent erratic micro-jumps";
+            newsTxt = "Wild supernova catalyst shocks";
+            realismTxt = "Extreme Chaos / Crypto Arena";
+        }
+
+        if (this.elTempVal) this.elTempVal.style.color = badgeColor;
+        if (this.elTempBadge) {
+            this.elTempBadge.textContent = badgeTxt;
+            this.elTempBadge.style.color = badgeColor;
+            this.elTempBadge.style.background = badgeBg;
+            this.elTempBadge.style.borderColor = badgeColor;
+        }
+
+        const volPct = Math.round(t * 100);
+        if (this.elMetricVol) this.elMetricVol.textContent = `${volPct}% of baseline`;
+        if (this.elMetricSpikes) {
+            this.elMetricSpikes.textContent = spikesTxt;
+            this.elMetricSpikes.style.color = badgeColor;
+        }
+        if (this.elMetricNews) {
+            this.elMetricNews.textContent = newsTxt;
+            this.elMetricNews.style.color = badgeColor;
+        }
+        if (this.elMetricRealism) {
+            this.elMetricRealism.textContent = realismTxt;
+            this.elMetricRealism.style.color = badgeColor;
+        }
+    }
+
+    _saveSettings() {
+        const sliderVal = this.elTempSlider ? parseFloat(this.elTempSlider.value) : this.engine.getTemperature();
+        const val = Math.max(0.2, Math.min(3.0, sliderVal || 1.0));
+        this.profile.trading_temperature = Number(val.toFixed(2));
+        this._saveProfile();
+        if (this.mode === "solo") {
+            this.engine.setTemperature(this.profile.trading_temperature);
+        }
+        this._updateModeTempDisplay();
+        if (this.elModalSettings) this.elModalSettings.style.display = "none";
+    }
+
+    _updateModeTempDisplay() {
+        const temp = (this.profile && typeof this.profile.trading_temperature === "number") ? this.profile.trading_temperature : 1.0;
+        if (this.elModeTempTag) {
+            this.elModeTempTag.textContent = `⚙️ Temp: ${temp.toFixed(2)}x`;
+        }
     }
 }
 

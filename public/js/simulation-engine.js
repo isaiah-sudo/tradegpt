@@ -56,7 +56,7 @@ class Candle {
 
 // --- Stock Model ---
 class Stock {
-    constructor(ticker, name, sector, initialPrice, volatility, prng, tickPerCandle = 5) {
+    constructor(ticker, name, sector, initialPrice, volatility, prng, tickPerCandle = 5, temperature = 1.0) {
         this.ticker = ticker;
         this.name = name;
         this.sector = sector;
@@ -64,7 +64,8 @@ class Stock {
         this.prevClose = initialPrice;
         this.price = initialPrice;
         this.baseVolatility = volatility;
-        this.volatility = volatility;
+        this.temperature = Math.max(0.1, Math.min(5.0, Number(temperature) || 1.0));
+        this.volatility = volatility * this.temperature;
         this.drift = 0.0;
         this.driftDecay = 0.958;
         this.tickPerCandle = tickPerCandle;
@@ -134,34 +135,43 @@ class Stock {
         this.currentTickCount = 0;
     }
 
+    setTemperature(temp) {
+        this.temperature = Math.max(0.1, Math.min(5.0, Number(temp) || 1.0));
+        this.volatility = this.baseVolatility * this.temperature;
+    }
+
     applyShock(priceMultiplier, extraDrift, extraVolatility = 0.015) {
-        this.price = Math.max(0.10, Number((this.price * priceMultiplier).toFixed(2)));
-        this.drift = Math.max(-0.045, Math.min(0.045, this.drift + extraDrift));
-        this.volatility = Math.min(0.05, this.volatility + extraVolatility);
+        const scaledMult = 1.0 + (priceMultiplier - 1.0) * this.temperature;
+        this.price = Math.max(0.10, Number((this.price * scaledMult).toFixed(2)));
+        const maxDrift = 0.045 * Math.max(1.0, this.temperature);
+        this.drift = Math.max(-maxDrift, Math.min(maxDrift, this.drift + (extraDrift * this.temperature)));
+        this.volatility = Math.min(0.15, this.volatility + (extraVolatility * this.temperature));
 
         if (this.currentCandle) {
             this.currentCandle.high = Math.max(this.currentCandle.high, this.price);
             this.currentCandle.low = Math.min(this.currentCandle.low, this.price);
             this.currentCandle.close = this.price;
-            this.currentCandle.volume += Math.floor(Math.abs(extraDrift) * 150000) + 10000;
+            this.currentCandle.volume += Math.floor(Math.abs(extraDrift) * 150000 * Math.sqrt(this.temperature)) + 10000;
         }
     }
 
     step(marketTrend = 0.0) {
         // Drift decay
         this.drift *= this.driftDecay;
-        this.volatility += (this.baseVolatility - this.volatility) * 0.05;
+        const effectiveBaseVol = this.baseVolatility * this.temperature;
+        this.volatility += (effectiveBaseVol - this.volatility) * 0.05;
 
         let microSpike = 0.0;
-        if (this.prng.random() < 0.03) {
-            microSpike = this.prng.choice([-1, 1]) * this.prng.uniform(0.005, 0.02);
+        const spikeProb = 0.03 * this.temperature;
+        if (this.prng.random() < spikeProb) {
+            microSpike = this.prng.choice([-1, 1]) * this.prng.uniform(0.005, 0.02) * Math.sqrt(this.temperature);
         }
 
         const shock = this.prng.gauss(0, this.volatility) + this.drift + (marketTrend * 0.5) + microSpike;
         let delta = this.price * shock;
 
-        // Hard bound per-tick moves to avoid violent single-tick spikes
-        const maxDelta = this.price * 0.06;
+        // Hard bound per-tick moves to avoid violent single-tick spikes (scales gracefully with temp)
+        const maxDelta = this.price * 0.06 * Math.max(0.4, Math.sqrt(this.temperature));
         delta = Math.max(-maxDelta, Math.min(maxDelta, delta));
 
         this.price = Math.max(0.10, Number((this.price + delta).toFixed(2)));
@@ -258,7 +268,7 @@ class MarketEngine {
         "TURBO INSANE (20x)": { tickMs: 50, newsProb: 0.12, label: "Adrenaline Junkie (20 ticks/sec)" }
     };
 
-    constructor(initialCash = 25000.0, seed = null) {
+    constructor(initialCash = 25000.0, seed = null, temperature = 1.0) {
         this.seed = seed;
         this.prng = new SeededRandom(seed);
         this.initialCash = initialCash;
@@ -266,6 +276,7 @@ class MarketEngine {
         this.realizedPnL = 0.0;
         this.positions = {};
         this.trades = [];
+        this.temperature = Math.max(0.1, Math.min(5.0, Number(temperature) || 1.0));
 
         this.newsGen = new NewsGenerator(() => this.prng.random());
         this.newsFeed = [];
@@ -284,7 +295,9 @@ class MarketEngine {
                 item.sector,
                 item.price,
                 item.volatility,
-                this.prng
+                this.prng,
+                5,
+                this.temperature
             );
             this.positions[item.ticker] = new Position(item.ticker);
         }
@@ -310,6 +323,17 @@ class MarketEngine {
         };
         this.newsFeed.push(welcomeNews);
         this.latestNews = welcomeNews;
+    }
+
+    setTemperature(temp) {
+        this.temperature = Math.max(0.1, Math.min(5.0, Number(temp) || 1.0));
+        for (const st of Object.values(this.stocks)) {
+            st.setTemperature(this.temperature);
+        }
+    }
+
+    getTemperature() {
+        return this.temperature;
     }
 
     get totalEquity() {
@@ -343,8 +367,8 @@ class MarketEngine {
     step() {
         if (this.isPaused) return null;
 
-        // Macro trend drift
-        this.macroTrend += this.prng.gauss(0, 0.003);
+        // Macro trend drift (scaled by engine temperature)
+        this.macroTrend += this.prng.gauss(0, 0.003 * Math.sqrt(this.temperature));
         this.macroTrend *= 0.96;
 
         const diffCfg = MarketEngine.DIFFICULTIES[this.currentDifficulty] || MarketEngine.DIFFICULTIES["Day Trader (3x)"];
@@ -537,10 +561,13 @@ class MarketEngine {
         return profit;
     }
 
-    resetAccount(seed = null) {
+    resetAccount(seed = null, temperature = null) {
         if (seed !== null) {
             this.seed = seed;
             this.prng.setSeed(seed);
+        }
+        if (temperature !== null) {
+            this.setTemperature(temperature);
         }
         this.cash = this.initialCash;
         this.realizedPnL = 0.0;
@@ -550,7 +577,7 @@ class MarketEngine {
             const st = this.stocks[ticker];
             st.price = st.initialPrice;
             st.drift = 0.0;
-            st.volatility = st.baseVolatility;
+            st.volatility = st.baseVolatility * this.temperature;
             st.tradeMarkers = [];
             st.candles = [];
             st._seedHistory(50);

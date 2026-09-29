@@ -59,7 +59,9 @@ function makeMockElement(id = "") {
             beginPath: () => {}, closePath: () => {}, moveTo: () => {}, lineTo: () => {},
             arc: () => {}, stroke: () => {}, fill: () => {}, fillRect: () => {},
             clearRect: () => {}, roundRect: () => {}, fillText: () => {},
-            setTransform: () => {}, scale: () => {}, setLineDash: () => {}
+            setTransform: () => {}, scale: () => {}, setLineDash: () => {},
+            createRadialGradient: () => ({ addColorStop: () => {} }),
+            createLinearGradient: () => ({ addColorStop: () => {} })
         }),
         getBoundingClientRect: () => ({ width: 800, height: 400, left: 0, top: 0 }),
         get parentElement() {
@@ -248,6 +250,38 @@ it("flattens positions and accurately banks profit above initial $25,000 into Va
     assert.strictEqual(engine.realizedPnL, 0.0);
 });
 
+it("tunes trading engine temperature and scales stock volatility correctly", () => {
+    const engine = new MarketEngine(25000.0, null, 1.0);
+    assert.strictEqual(engine.getTemperature(), 1.0);
+
+    // Warm up / high volatility
+    engine.setTemperature(2.0);
+    assert.strictEqual(engine.getTemperature(), 2.0);
+    for (const ticker in engine.stocks) {
+        const st = engine.stocks[ticker];
+        assert.strictEqual(st.temperature, 2.0);
+        assert.ok(Math.abs(st.volatility - (st.baseVolatility * 2.0)) < 1e-5);
+    }
+
+    // Cool down / calm & realistic
+    engine.setTemperature(0.5);
+    assert.strictEqual(engine.getTemperature(), 0.5);
+    for (const ticker in engine.stocks) {
+        const st = engine.stocks[ticker];
+        assert.strictEqual(st.temperature, 0.5);
+        assert.ok(Math.abs(st.volatility - (st.baseVolatility * 0.5)) < 1e-5);
+    }
+
+    // Resetting for competitive duel locks to 1.0
+    engine.resetAccount(12345, 1.0);
+    assert.strictEqual(engine.getTemperature(), 1.0);
+    for (const ticker in engine.stocks) {
+        const st = engine.stocks[ticker];
+        assert.strictEqual(st.temperature, 1.0);
+        assert.ok(Math.abs(st.volatility - st.baseVolatility) < 1e-5);
+    }
+});
+
 // 3. Load UI and Controllers
 load("public/js/chart.js");
 load("public/js/firebase-matchmaker.js");
@@ -283,6 +317,25 @@ it("UserProfile initializes with free defaults and manages persistent localStora
     assert.strictEqual(p.equipped_theme, "theme_default");
     assert.strictEqual(p.equipped_sfx, "sfx_standard");
     assert.strictEqual(p.equipped_title, "title_trader");
+    assert.strictEqual(p.trading_temperature, 1.0);
+});
+
+it("persists trading_temperature in localStorage and applies to solo engine", () => {
+    localStorage.clear();
+    const appInstance = new TradingApp();
+    appInstance._onTempSliderInput(1.75);
+    appInstance._saveSettings();
+    assert.strictEqual(appInstance.profile.trading_temperature, 1.75);
+    assert.strictEqual(appInstance.engine.getTemperature(), 1.75);
+
+    // Verify localStorage has it
+    const stored = JSON.parse(localStorage.getItem("tradegpt_profile"));
+    assert.strictEqual(stored.trading_temperature, 1.75);
+
+    // Reload new app instance
+    const reloadedApp = new TradingApp();
+    assert.strictEqual(reloadedApp.profile.trading_temperature, 1.75);
+    assert.strictEqual(reloadedApp.engine.getTemperature(), 1.75);
 });
 
 it("banks profit into menu vault and updates total banked profits", () => {
@@ -359,7 +412,11 @@ it("WinAnimationEngine handles all 5 animation presets without errors", () => {
         clearRect: () => {},
         roundRect: () => {},
         fillText: () => {},
-        scale: () => {}
+        scale: () => {},
+        quadraticCurveTo: () => {},
+        bezierCurveTo: () => {},
+        createRadialGradient: () => ({ addColorStop: () => {} }),
+        createLinearGradient: () => ({ addColorStop: () => {} })
     };
     const mockCanvas = {
         getContext: () => mockCtx,

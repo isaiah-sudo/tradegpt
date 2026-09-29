@@ -23,7 +23,7 @@ class TradeMarker:
     time_str: str
 
 class Stock:
-    def __init__(self, ticker: str, name: str, sector: str, initial_price: float, volatility: float, tick_per_candle: int = 5):
+    def __init__(self, ticker: str, name: str, sector: str, initial_price: float, volatility: float, tick_per_candle: int = 5, temperature: float = 1.0):
         self.ticker = ticker
         self.name = name
         self.sector = sector
@@ -31,7 +31,8 @@ class Stock:
         self.prev_close = initial_price
         self.price = initial_price
         self.base_volatility = volatility  # Typical standard deviation per step (e.g. 0.015 = 1.5%)
-        self.volatility = volatility
+        self.temperature = max(0.1, min(5.0, float(temperature)))
+        self.volatility = volatility * self.temperature
         self.drift = 0.0                   # Current momentum / directional pressure
         self.drift_decay = 0.958           # Drift decays smoothly over more time
         self.tick_per_candle = tick_per_candle
@@ -84,39 +85,49 @@ class Stock:
         )
         self.current_tick_count = 0
 
+    def set_temperature(self, temp: float):
+        """Update trading engine temperature dynamically."""
+        self.temperature = max(0.1, min(5.0, float(temp)))
+        self.volatility = self.base_volatility * self.temperature
+
     def apply_shock(self, price_multiplier: float, extra_drift: float, extra_volatility: float = 0.015):
         """Called when news catalyst hits this stock."""
-        self.price = max(0.10, round(self.price * price_multiplier, 2))
-        self.drift = max(-0.045, min(0.045, self.drift + extra_drift))
-        self.volatility = min(0.05, self.volatility + extra_volatility)
+        # Scale shock intensity by engine temperature
+        scaled_mult = 1.0 + (price_multiplier - 1.0) * self.temperature
+        self.price = max(0.10, round(self.price * scaled_mult, 2))
+        max_drift_bound = 0.045 * max(1.0, self.temperature)
+        self.drift = max(-max_drift_bound, min(max_drift_bound, self.drift + (extra_drift * self.temperature)))
+        self.volatility = min(0.15, self.volatility + (extra_volatility * self.temperature))
         if self.current_candle:
             self.current_candle.high = max(self.current_candle.high, self.price)
             self.current_candle.low = min(self.current_candle.low, self.price)
             self.current_candle.close = self.price
-            self.current_candle.volume += int(abs(extra_drift) * 150000) + 10000
+            self.current_candle.volume += int(abs(extra_drift) * 150000 * math.sqrt(self.temperature)) + 10000
 
     def step(self, market_trend: float = 0.0) -> float:
         """Simulate one tick of price movement."""
         # Decay temporary news drift and volatility back toward baseline smoothly
         self.drift *= self.drift_decay
-        self.volatility += (self.base_volatility - self.volatility) * 0.05
+        effective_base_vol = self.base_volatility * self.temperature
+        self.volatility += (effective_base_vol - self.volatility) * 0.05
 
         # Price movement: drift + random shock + market trend
         micro_spike = 0.0
-        if random.random() < 0.03:
-            micro_spike = random.choice([-1, 1]) * random.uniform(0.005, 0.02)
+        spike_prob = 0.03 * self.temperature
+        if random.random() < spike_prob:
+            micro_spike = random.choice([-1, 1]) * random.uniform(0.005, 0.02) * math.sqrt(self.temperature)
 
         shock = random.gauss(0, self.volatility) + self.drift + (market_trend * 0.5) + micro_spike
 
-        # Bound per-tick moves to avoid violent single-tick spikes
-        max_tick_delta = 0.06
+        # Bound per-tick moves to avoid violent single-tick spikes (scales gracefully with temp)
+        max_tick_delta = 0.06 * max(0.4, math.sqrt(self.temperature))
         shock = max(-max_tick_delta, min(max_tick_delta, shock))
 
         new_price = max(0.10, self.price * (1.0 + shock))
         self.price = round(new_price, 2)
 
         # Volume for this tick
-        tick_vol = int(random.uniform(500, 15000) * (1.0 + abs(shock) * 20))
+        tick_vol = int(random.uniform(500, 15000) * (1.0 + abs(shock) * 20 * math.sqrt(self.temperature)))
 
         # Update active candle
         if self.current_candle is None:
