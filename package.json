@@ -1,10 +1,27 @@
 {
   "name": "tradegpt-web",
   "version": "2.1.0",
-  "description": "TradeGPT Web Terminal and Landing Page",
+  "description": "TradeGPT Web Terminal and 1v1 Live Trading Engine",
   "scripts": {
+    "build": "tsc -p tsconfig.server.json",
+    "start": "node dist-server/index.js",
+    "dev": "tsx watch server/index.ts",
+    "test": "node test_web_suite.js",
     "update-release": "python update_release.py",
     "predeploy": "python update_release.py",
     "deploy": "firebase deploy --only hosting"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.13.4",
+    "@types/ws": "^8.5.14",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
   }
 }

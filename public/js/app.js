@@ -264,6 +264,7 @@ class TradingApp {
         this._bindDom();
         this._initChart();
         this._bindEvents();
+        this._initBottomPanelResizable();
         this._applyTheme();
         this._updateTitleBadge();
         this._renderScanner();
@@ -448,7 +449,13 @@ class TradingApp {
         this.elPosVal = document.getElementById("pos-val");
         this.elPosPnl = document.getElementById("pos-pnl");
 
-        // Bottom Tabs
+        // Bottom Tabs & Resizer
+        this.elBottomPanel = document.getElementById("bottom-panel");
+        this.elBottomResizer = document.getElementById("bottom-resizer");
+        this.elBtnBottomReset = document.getElementById("btn-bottom-reset");
+        this.elBtnBottomToggle = document.getElementById("btn-bottom-toggle");
+        this.elBtnResizerReset = document.getElementById("btn-resizer-reset");
+        this.elResizerBanner = document.getElementById("resizer-collapsed-banner");
         this.elTablePositions = document.getElementById("table-positions-body");
         this.elTableTrades = document.getElementById("table-trades-body");
         this.elNewsList = document.getElementById("news-feed-list");
@@ -690,7 +697,11 @@ class TradingApp {
                 document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
                 btn.classList.add("active");
                 const target = btn.getAttribute("data-tab");
-                document.getElementById(`tab-${target}`).classList.add("active");
+                const targetTab = document.getElementById(`tab-${target}`);
+                if (targetTab) targetTab.classList.add("active");
+                if (this.elBottomPanel && this.elBottomPanel.classList && this.elBottomPanel.classList.contains("is-collapsed")) {
+                    this.setBottomPanelHeight(this.bottomPanelLastHeight || 210, { animate: true, save: true });
+                }
             });
         });
 
@@ -1133,11 +1144,26 @@ class TradingApp {
         this._updateModeTempDisplay();
     }
 
-    async _startOnlineMatchmaking() {
+    async _startOnlineMatchmaking(duration = null) {
+        const dur = duration || this.selectedDuelDuration || 60;
+        this.selectedDuelDuration = dur;
         this.elModalMode.style.display = "none";
         this.elModalMatchmaking.style.display = "flex";
-        this.elMatchStatusTxt.textContent = "Connecting to Firebase PvP Matchmaker...";
 
+        const durLabel = dur === 60 ? "60s Blitz" : dur === 120 ? "2m Tactical" : "5m Marathon";
+        this.elMatchStatusTxt.textContent = `Searching for active ${durLabel} trader...`;
+
+        if (this.wsClient && this.wsClient.isConnected) {
+            this.wsClient.joinQueue(
+                this.nickname,
+                (this.profile && this.profile.equipped_title) ? this.profile.equipped_title : "title_trader",
+                (this.profile && this.profile.equipped_animation) ? this.profile.equipped_animation : "money_rain",
+                dur
+            );
+            return;
+        }
+
+        // Fallback to Firestore / simulated rival bot if WebSocket server not running
         this.searchAbortCtrl = new AbortController();
 
         try {
@@ -1152,12 +1178,283 @@ class TradingApp {
 
             if (!matchData) return;
 
+            matchData.durationSeconds = dur;
             this.elModalMatchmaking.style.display = "none";
             this._enterOnlineMatch(matchData);
         } catch (e) {
             console.error("Matchmaking error:", e);
             this.elMatchStatusTxt.textContent = "Error during matchmaking. Retrying...";
             setTimeout(() => this.showModeModal(), 1500);
+        }
+    }
+
+    _setupWsListeners() {
+        if (!this.wsClient) return;
+
+        this.wsClient.onQueueStatus = (data) => {
+            if (this.elMatchStatusTxt) {
+                this.elMatchStatusTxt.textContent = data.status || `Searching for 1v1 rival... (Queue: ${data.queueLength})`;
+            }
+        };
+
+        this.wsClient.onMatchCountdown = (data) => {
+            if (this.elModalMatchmaking) this.elModalMatchmaking.style.display = "none";
+            if (this.elModalCountdown) {
+                this.elModalCountdown.style.display = "flex";
+                if (this.elCountdownNum) this.elCountdownNum.textContent = String(data.countdown);
+                if (this.elCdPlayerA) this.elCdPlayerA.textContent = this.nickname;
+                if (this.elCdPlayerB) this.elCdPlayerB.textContent = data.opponent ? data.opponent.nickname : "Opponent";
+                if (this.elCdStockName) this.elCdStockName.textContent = `${data.symbol} • Volatile Live Arena`;
+                if (this.elCdDuelFormatPill) {
+                    const dur = data.matchDuration || 60;
+                    const formatText = dur === 60 ? "60S BLITZ SHOWDOWN" : dur === 120 ? "2M TACTICAL SHOWDOWN" : "5M MARATHON SHOWDOWN";
+                    this.elCdDuelFormatPill.textContent = `1V1 LIVE DUEL • ${formatText}`;
+                }
+            }
+            this.sfx.playTick();
+        };
+
+        this.wsClient.onMatchStart = (data) => {
+            if (this.elModalCountdown) this.elModalCountdown.style.display = "none";
+            this.sfx.playBell();
+            this._enterWsOnlineMatch(data);
+        };
+
+        this.wsClient.onMarketTick = (data) => {
+            if (this.mode !== "online" || !this.wsClient || !this.wsClient.inMatch) return;
+            this._handleWsMarketTick(data);
+        };
+
+        this.wsClient.onPortfolioUpdate = (data) => {
+            if (this.mode !== "online" || !this.wsClient || !this.wsClient.inMatch) return;
+            this._handleWsPortfolioUpdate(data);
+        };
+
+        this.wsClient.onOrderAck = (data) => {
+            if (data.success) {
+                if (data.side === "BUY" || data.side === "COVER") this.sfx.playBuy();
+                else if (data.side === "SELL" || data.side === "SHORT") this.sfx.playSell();
+                else this.sfx.playWin();
+
+                if (this.chart) {
+                    this.chart.showTradeNotification(data.side, data.shares, data.price, this.activeTicker);
+                }
+            } else {
+                if (this.elEstCost) {
+                    this.elEstCost.style.color = "var(--red)";
+                    setTimeout(() => { if (this.elEstCost) this.elEstCost.style.color = "var(--text-muted)"; }, 400);
+                }
+            }
+        };
+
+        this.wsClient.onMatchEnd = (data) => {
+            if (this.mode === "online") {
+                this._finishWsMatch(data);
+            }
+        };
+    }
+
+    _enterWsOnlineMatch(data) {
+        this.mode = "online";
+        const dur = data.matchDuration || this.selectedDuelDuration || 60;
+        this.selectedDuelDuration = dur;
+        this.matchData = {
+            roomId: data.roomId,
+            opponent: {
+                name: data.opponent.nickname,
+                equipped_title: data.opponent.title,
+                equipped_animation: data.opponent.animation
+            },
+            durationSeconds: dur
+        };
+        this.matchTimeLeft = dur;
+        this.activeTicker = data.symbol || "NVXP";
+
+        if (this.loopTimer) clearTimeout(this.loopTimer);
+
+        this.elTopHeader.style.display = "none";
+        this.elBattleHud.style.display = "flex";
+
+        this.elHudMyName.textContent = `YOU (${this.nickname})`;
+        this.elHudOppName.textContent = `OPPONENT (${data.opponent.nickname})`;
+
+        const oppTitleEl = document.getElementById("hud-opp-title");
+        if (oppTitleEl) {
+            oppTitleEl.textContent = (data.opponent.title || "RIVAL").replace("title_", "").toUpperCase();
+        }
+
+        if (this.elHudDuelFormat) {
+            this.elHudDuelFormat.textContent = dur === 60 ? "60S BLITZ" : dur === 120 ? "2M TACTICAL" : "5M MARATHON";
+        }
+
+        this.elHudMyScore.textContent = "$25,000.00 (+0.00%)";
+        this.elHudOppScore.textContent = "$25,000.00 (+0.00%)";
+        this.elHudLeaderBadge.textContent = "1v1 MATCH STARTED • TIED";
+        this.elHudLeaderBadge.className = "hud-leader-badge gold";
+
+        if (this.elHudTugYou) this.elHudTugYou.style.width = "50%";
+        if (this.elHudTugOpp) this.elHudTugOpp.style.width = "50%";
+
+        const mins = Math.floor(this.matchTimeLeft / 60);
+        const secs = this.matchTimeLeft % 60;
+        this.elHudTimer.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+        if (this.engine.stocks[this.activeTicker]) {
+            this.engine.stocks[this.activeTicker].price = data.initialPrice;
+            this._selectTicker(this.activeTicker);
+        }
+
+        this._updateDeskPosition();
+    }
+
+    _handleWsMarketTick(data) {
+        if (!data || data.ticker !== this.activeTicker) return;
+
+        const price = data.price;
+        const change = data.change;
+        const changePct = data.changePct;
+        const chgSign = change >= 0 ? "+" : "";
+        const chgClass = change >= 0 ? "up" : "down";
+
+        if (this.elActivePrice) this.elActivePrice.textContent = `${price.toFixed(2)}`;
+        if (this.elActiveChg) {
+            this.elActiveChg.textContent = `${chgSign}${change.toFixed(2)} (${chgSign}${changePct.toFixed(2)}%)`;
+            this.elActiveChg.className = `active-chg ${chgClass}`;
+        }
+        if (this.elDeskPrice) this.elDeskPrice.textContent = `${price.toFixed(2)}`;
+
+        const pEl = document.getElementById(`price-${data.ticker}`);
+        const pctEl = document.getElementById(`pct-${data.ticker}`);
+        if (pEl) pEl.textContent = `${price.toFixed(2)}`;
+        if (pctEl) {
+            pctEl.textContent = `${chgSign}${changePct.toFixed(2)}%`;
+            pctEl.className = `pct ${chgClass}`;
+        }
+
+        if (this.chart) {
+            this.chart.currentPrice = price;
+            if (data.candle) {
+                if (this.chart.candles && this.chart.candles.length > 0) {
+                    const last = this.chart.candles[this.chart.candles.length - 1];
+                    if (Math.abs(last.timestamp - data.candle.timestamp) < 2) {
+                        last.high = Math.max(last.high, data.candle.high);
+                        last.low = Math.min(last.low, data.candle.low);
+                        last.close = data.candle.close;
+                        last.volume = data.candle.volume;
+                    } else {
+                        this.chart.candles.push(data.candle);
+                        if (this.chart.candles.length > 80) this.chart.candles.shift();
+                    }
+                }
+            }
+            this.chart.render();
+        }
+
+        this._updateDeskEstimate();
+    }
+
+    _handleWsPortfolioUpdate(data) {
+        const you = data.you;
+        const opp = data.opponent;
+        const timeLeft = data.timeLeft;
+
+        const mins = Math.floor(Math.max(0, timeLeft) / 60);
+        const secs = Math.max(0, timeLeft) % 60;
+        this.elHudTimer.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+        const mySign = you.totalPnL >= 0 ? "+" : "";
+        this.elHudMyScore.textContent = `${you.equity.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (${mySign}${you.totalPnLPct.toFixed(2)}%)`;
+
+        const oppSign = opp.totalPnL >= 0 ? "+" : "";
+        this.elHudOppScore.textContent = `${opp.equity.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (${oppSign}${opp.totalPnLPct.toFixed(2)}%)`;
+
+        if (this.elHudTugYou && this.elHudTugOpp) {
+            const totalEq = Math.max(1, you.equity + opp.equity);
+            const youPct = Math.max(10, Math.min(90, (you.equity / totalEq) * 100));
+            const oppPct = 100 - youPct;
+            this.elHudTugYou.style.width = `${youPct}%`;
+            this.elHudTugOpp.style.width = `${oppPct}%`;
+        }
+
+        const diff = data.leadDiff;
+        if (Math.abs(diff) < 2.0) {
+            this.elHudLeaderBadge.textContent = "1v1 MATCH • TIED";
+            this.elHudLeaderBadge.className = "hud-leader-badge gold";
+        } else if (diff > 0) {
+            this.elHudLeaderBadge.textContent = `YOU LEAD BY ${diff.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            this.elHudLeaderBadge.className = "hud-leader-badge up";
+        } else {
+            const oppName = opp.nickname || "OPPONENT";
+            this.elHudLeaderBadge.textContent = `${oppName} LEADS BY ${Math.abs(diff).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            this.elHudLeaderBadge.className = "hud-leader-badge down";
+        }
+
+        if (you.position && you.position.shares !== 0) {
+            const pos = you.position;
+            const sideStr = pos.shares > 0 ? `LONG ${pos.shares}` : `SHORT ${Math.abs(pos.shares)}`;
+            const pnlSign = pos.unrealizedPnL >= 0 ? "+" : "";
+            const pnlClass = pos.unrealizedPnL >= 0 ? "up" : "down";
+
+            if (this.elPosShares) this.elPosShares.textContent = sideStr;
+            if (this.elPosAvg) this.elPosAvg.textContent = `${pos.avgEntry.toFixed(2)}`;
+            if (this.elPosVal) this.elPosVal.textContent = `${pos.marketValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            if (this.elPosPnl) {
+                this.elPosPnl.textContent = `${pnlSign}${pos.unrealizedPnL.toFixed(2)} (${pnlSign}${pos.unrealizedPnLPct.toFixed(2)}%)`;
+                this.elPosPnl.className = `val ${pnlClass}`;
+            }
+
+            if (this.chart) {
+                this.chart.setPosition({
+                    shares: pos.shares,
+                    avgPrice: pos.avgEntry,
+                    unrealizedPnL: () => pos.unrealizedPnL,
+                    unrealizedPnLPct: () => pos.unrealizedPnLPct
+                });
+            }
+        } else {
+            if (this.elPosShares) this.elPosShares.textContent = "0 (FLAT)";
+            if (this.elPosAvg) this.elPosAvg.textContent = "$0.00";
+            if (this.elPosVal) this.elPosVal.textContent = "$0.00";
+            if (this.elPosPnl) {
+                this.elPosPnl.textContent = "$0.00 (+0.00%)";
+                this.elPosPnl.className = "val";
+            }
+            if (this.chart) {
+                this.chart.setPosition(null);
+            }
+        }
+    }
+
+    _finishWsMatch(data) {
+        const won = data.winner === "you";
+        const tied = data.winner === "tie";
+        const myEq = data.yourFinalEquity;
+        const oppEq = data.oppFinalEquity;
+
+        if (myEq > 25000.0) {
+            this._bankProfit(myEq - 25000.0);
+        }
+
+        let title = tied ? "MATCH COMPLETE: TIED!" : won ? "VICTORY! DEFEATED OPPONENT" : "DEFEAT! OPPONENT WON ROUND";
+        if (won) {
+            this.profile.duels_won = (this.profile.duels_won || 0) + 1;
+            this._saveProfile();
+            this.sfx.playWin(this.profile.equipped_sfx);
+        }
+
+        this._showMatchEndModal(title, myEq, oppEq);
+    }
+
+    startNextOpponent() {
+        if (this.wsClient && this.wsClient.isConnected) {
+            if (this.elModalMatchEnd) this.elModalMatchEnd.style.display = "none";
+            this.elModalMatchmaking.style.display = "flex";
+            const dur = this.selectedDuelDuration || 60;
+            const durLabel = dur === 60 ? "60s Blitz" : dur === 120 ? "2m Tactical" : "5m Marathon";
+            this.elMatchStatusTxt.textContent = `Omegle Skip: Pairing with next ${durLabel} rival...`;
+            this.wsClient.nextOpponent(dur);
+        } else {
+            this._handleNextOpponent();
         }
     }
 
@@ -1960,6 +2257,212 @@ class TradingApp {
             this.elModeTempTag.textContent = `⚙️ Temp: ${temp.toFixed(2)}x`;
         }
     }
+
+    _initBottomPanelResizable() {
+        if (!this.elBottomPanel || !this.elBottomResizer) return;
+
+        const DEFAULT_HEIGHT = 210;
+        this.bottomPanelDefaultHeight = DEFAULT_HEIGHT;
+        this.bottomPanelLastHeight = DEFAULT_HEIGHT;
+
+        // Apply saved preference if any; default remains 210px
+        let savedHeight = null;
+        let savedCollapsed = null;
+        try {
+            savedHeight = localStorage.getItem("tradesim_bottom_height");
+            savedCollapsed = localStorage.getItem("tradesim_bottom_collapsed");
+        } catch (_) {}
+
+        if (savedCollapsed === "1") {
+            if (savedHeight && !isNaN(Number(savedHeight)) && Number(savedHeight) > 30) {
+                this.bottomPanelLastHeight = Number(savedHeight);
+            }
+            this.setBottomPanelHeight(0, { animate: false, save: false });
+        } else if (savedHeight && !isNaN(Number(savedHeight))) {
+            const h = Number(savedHeight);
+            const winH = (typeof window !== "undefined" && window.innerHeight) ? window.innerHeight : 800;
+            const maxH = Math.max(100, winH - 180);
+            const clamped = Math.min(Math.max(0, h), maxH);
+            this.bottomPanelLastHeight = clamped > 30 ? clamped : DEFAULT_HEIGHT;
+            this.setBottomPanelHeight(clamped, { animate: false, save: false });
+        } else {
+            // Keep default 210px
+            this.setBottomPanelHeight(DEFAULT_HEIGHT, { animate: false, save: false });
+        }
+
+        // Pointer drag event listeners on bottom resizer
+        let isDragging = false;
+        let startY = 0;
+        let startHeight = 0;
+        let hasMoved = false;
+
+        const onPointerDown = (e) => {
+            if (e.target && (e.target.id === "btn-resizer-reset" || (e.target.closest && e.target.closest("#btn-resizer-reset")))) {
+                return;
+            }
+
+            isDragging = true;
+            hasMoved = false;
+            startY = e.clientY;
+            const rect = this.elBottomPanel.getBoundingClientRect ? this.elBottomPanel.getBoundingClientRect() : { height: DEFAULT_HEIGHT };
+            startHeight = rect.height;
+
+            if (this.elBottomResizer.setPointerCapture && e.pointerId !== undefined) {
+                try { this.elBottomResizer.setPointerCapture(e.pointerId); } catch (_) {}
+            }
+            if (this.elBottomResizer.classList) this.elBottomResizer.classList.add("is-dragging");
+            if (document.body && document.body.classList) {
+                document.body.classList.add("resizing-bottom-panel");
+            }
+        };
+
+        const onPointerMove = (e) => {
+            if (!isDragging) return;
+
+            const deltaY = e.clientY - startY;
+            if (Math.abs(deltaY) > 3) {
+                hasMoved = true;
+            }
+
+            const winH = (typeof window !== "undefined" && window.innerHeight) ? window.innerHeight : 800;
+            const maxHeight = Math.max(100, winH - 180);
+            const newHeight = startHeight - deltaY;
+
+            if (newHeight <= 25) {
+                // Shrink completely
+                this.setBottomPanelHeight(0, { animate: false, save: false });
+            } else {
+                const clamped = Math.min(newHeight, maxHeight);
+                this.setBottomPanelHeight(clamped, { animate: false, save: false });
+            }
+        };
+
+        const onPointerUp = (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+
+            if (this.elBottomResizer.classList) this.elBottomResizer.classList.remove("is-dragging");
+            if (document.body && document.body.classList) {
+                document.body.classList.remove("resizing-bottom-panel");
+            }
+
+            if (this.elBottomResizer.releasePointerCapture && e.pointerId !== undefined) {
+                try { this.elBottomResizer.releasePointerCapture(e.pointerId); } catch (_) {}
+            }
+
+            // If user clicked the collapsed bar without dragging, restore it
+            if (!hasMoved) {
+                if (this.elBottomPanel.classList && this.elBottomPanel.classList.contains("is-collapsed")) {
+                    this.setBottomPanelHeight(this.bottomPanelLastHeight || DEFAULT_HEIGHT, { animate: true, save: true });
+                    return;
+                }
+            }
+
+            // Save final height
+            const rect = this.elBottomPanel.getBoundingClientRect ? this.elBottomPanel.getBoundingClientRect() : { height: DEFAULT_HEIGHT };
+            const finalHeight = rect.height;
+            if (finalHeight <= 25) {
+                this.setBottomPanelHeight(0, { animate: false, save: true });
+            } else {
+                this.setBottomPanelHeight(finalHeight, { animate: false, save: true });
+            }
+        };
+
+        if (this.elBottomResizer.addEventListener) {
+            this.elBottomResizer.addEventListener("pointerdown", onPointerDown);
+            this.elBottomResizer.addEventListener("pointermove", onPointerMove);
+            this.elBottomResizer.addEventListener("pointerup", onPointerUp);
+            this.elBottomResizer.addEventListener("pointercancel", onPointerUp);
+
+            // Double-click on resizer resets to 210px default
+            this.elBottomResizer.addEventListener("dblclick", (e) => {
+                if (e.target && (e.target.id === "btn-resizer-reset" || (e.target.closest && e.target.closest("#btn-resizer-reset")))) return;
+                this.setBottomPanelHeight(DEFAULT_HEIGHT, { animate: true, save: true });
+            });
+        }
+
+        // Toggle button in tab nav
+        if (this.elBtnBottomToggle && this.elBtnBottomToggle.addEventListener) {
+            this.elBtnBottomToggle.addEventListener("click", () => {
+                const isCollapsed = this.elBottomPanel.classList && this.elBottomPanel.classList.contains("is-collapsed");
+                if (isCollapsed) {
+                    this.setBottomPanelHeight(this.bottomPanelLastHeight || DEFAULT_HEIGHT, { animate: true, save: true });
+                } else {
+                    this.setBottomPanelHeight(0, { animate: true, save: true });
+                }
+            });
+        }
+
+        // Reset button in tab nav
+        if (this.elBtnBottomReset && this.elBtnBottomReset.addEventListener) {
+            this.elBtnBottomReset.addEventListener("click", () => {
+                this.setBottomPanelHeight(DEFAULT_HEIGHT, { animate: true, save: true });
+            });
+        }
+
+        // Reset button in collapsed banner
+        if (this.elBtnResizerReset && this.elBtnResizerReset.addEventListener) {
+            this.elBtnResizerReset.addEventListener("click", (e) => {
+                if (e.stopPropagation) e.stopPropagation();
+                this.setBottomPanelHeight(DEFAULT_HEIGHT, { animate: true, save: true });
+            });
+        }
+    }
+
+    setBottomPanelHeight(height, { animate = false, save = true } = {}) {
+        if (!this.elBottomPanel || !this.elBottomResizer) return;
+
+        const DEFAULT_HEIGHT = 210;
+        const isShrunkCompletely = height <= 25;
+
+        if (animate && this.elBottomPanel.classList) {
+            this.elBottomPanel.classList.add("transitioning");
+            setTimeout(() => {
+                if (this.elBottomPanel.classList) {
+                    this.elBottomPanel.classList.remove("transitioning");
+                }
+                if (this.chart && typeof this.chart.resize === "function") {
+                    this.chart.resize();
+                }
+            }, 220);
+        }
+
+        if (isShrunkCompletely) {
+            this.elBottomPanel.style.height = "0px";
+            if (this.elBottomPanel.classList) this.elBottomPanel.classList.add("is-collapsed");
+            if (this.elBottomResizer.classList) this.elBottomResizer.classList.add("is-collapsed");
+            if (this.elBtnBottomToggle) {
+                this.elBtnBottomToggle.innerHTML = "▲";
+                this.elBtnBottomToggle.title = "Expand bottom panel";
+            }
+            if (save) {
+                try {
+                    localStorage.setItem("tradesim_bottom_collapsed", "1");
+                } catch (_) {}
+            }
+        } else {
+            const h = Math.round(height);
+            this.bottomPanelLastHeight = h;
+            this.elBottomPanel.style.height = `${h}px`;
+            if (this.elBottomPanel.classList) this.elBottomPanel.classList.remove("is-collapsed");
+            if (this.elBottomResizer.classList) this.elBottomResizer.classList.remove("is-collapsed");
+            if (this.elBtnBottomToggle) {
+                this.elBtnBottomToggle.innerHTML = "▼";
+                this.elBtnBottomToggle.title = "Minimize / Shrink bottom panel completely";
+            }
+            if (save) {
+                try {
+                    localStorage.setItem("tradesim_bottom_height", String(h));
+                    localStorage.removeItem("tradesim_bottom_collapsed");
+                } catch (_) {}
+            }
+        }
+
+        if (this.chart && typeof this.chart.resize === "function") {
+            this.chart.resize();
+        }
+    }
+
 }
 
 // Global initialization

@@ -497,6 +497,173 @@ it("FirebaseMatchmaker manages authenticated sessions and profile methods", () =
     assert.strictEqual(fb.isAnonymous, true);
 });
 
+console.log("\n6. HIGH-FREQUENCY NODE/TYPESCRIPT GAME SERVER & WEBSOCKET ENGINE VERIFICATION");
+
+const { VolatilePriceEngine } = require("./dist-server/price-engine");
+const { OrderEngine } = require("./dist-server/order-engine");
+const { MatchRoom } = require("./dist-server/room");
+const { Matchmaker } = require("./dist-server/matchmaker");
+const { LiveTradeWsClient } = require("./public/js/ws-client");
+
+it("VolatilePriceEngine generates authoritative ticks with Merton Jump Diffusion and aggregates candles", () => {
+    const engine = new VolatilePriceEngine("NVXP", "NovaX AI Tech", 85.0);
+    assert.strictEqual(engine.ticker, "NVXP");
+    assert.strictEqual(engine.initialPrice, 85.0);
+    assert.ok(engine.candles.length >= 40, "Pre-seeds at least 40 candles");
+
+    for (let i = 0; i < 30; i++) {
+        const tick = engine.tick(0.1);
+        assert.ok(tick.price > 0, "Price must be positive");
+        assert.strictEqual(typeof tick.change, "number");
+        assert.strictEqual(typeof tick.changePct, "number");
+        assert.ok(tick.candle.high >= tick.candle.low);
+    }
+});
+
+it("OrderEngine executes leveraged BUY and SHORT orders and calculates margin maintenance", () => {
+    const player = OrderEngine.createPlayerState("p1", "WallStShark");
+    assert.strictEqual(player.cash, 25000.0);
+    assert.strictEqual(player.equity, 25000.0);
+
+    // 10x Leveraged BUY
+    const buyRes = OrderEngine.executeOrder(player, "BUY", "NVXP", 100, 100.0, 10);
+    assert.strictEqual(buyRes.success, true);
+    assert.strictEqual(player.position.shares, 100);
+    assert.strictEqual(player.position.leverage, 10);
+    assert.strictEqual(player.position.marginUsed, 1000.0); // 100 * 100 / 10 = 1000
+
+    // Price rises to 105: +$500 unrealized gain
+    OrderEngine.updatePortfolio(player, 105.0);
+    assert.strictEqual(player.unrealizedPnL, 500.0);
+    assert.strictEqual(player.equity, 25500.0);
+
+    // Flatten
+    const flatRes = OrderEngine.executeOrder(player, "FLATTEN", "NVXP", 0, 105.0);
+    assert.strictEqual(flatRes.success, true);
+    assert.strictEqual(player.position, null);
+    assert.strictEqual(player.realizedPnL, 500.0);
+    assert.strictEqual(player.cash, 25500.0);
+});
+
+it("OrderEngine auto-liquidates position when margin maintenance falls below safety threshold", () => {
+    const player = OrderEngine.createPlayerState("p_degen", "YoloTrader", "title_ape", "money_rain", 1000.0);
+    // 50x Leveraged BUY with almost all cash
+    const buyRes = OrderEngine.executeOrder(player, "BUY", "NVXP", 500, 100.0, 50); // $50,000 notional, $1,000 margin
+    assert.strictEqual(buyRes.success, true);
+
+    // Price drops by 2.5% -> loses $1,250 on a $1,000 account -> Liquidation!
+    OrderEngine.updatePortfolio(player, 97.5);
+    assert.strictEqual(player.status, "liquidated");
+    assert.strictEqual(player.position, null);
+    assert.strictEqual(player.cash, 0);
+});
+
+it("MatchRoom conducts 1v1 authoritative match, calculates dual PnL, and handles forfeit", () => {
+    const pA = { id: "pA", nickname: "TraderA", title: "title_trader", animation: "money_rain" };
+    const pB = { id: "pB", nickname: "TraderB", title: "title_whale", animation: "golden_bull", isBot: true };
+
+    const room = new MatchRoom("test_room_1", pA, pB, "NVXP", 60);
+    assert.strictEqual(room.state, "countdown");
+    assert.strictEqual(room.durationSeconds, 60);
+
+    // Start match
+    room.startMatch();
+    assert.strictEqual(room.state, "in_progress");
+
+    // Execute order for Player A
+    room.handleOrder("pA", "BUY", "NVXP", 50, 5);
+    assert.ok(room.stateA.position);
+    assert.strictEqual(room.stateA.position.shares, 50);
+
+    // Forfeit
+    room.handleForfeit("pA", "skipped");
+    assert.strictEqual(room.state, "ended");
+    assert.strictEqual(room.stateA.status, "forfeited");
+    room.stopTimers();
+});
+
+it("Matchmaker manages FIFO queues, auto-pairs players, and handles Omegle skips", () => {
+    const matchmaker = new Matchmaker();
+    const mockWs1 = { readyState: 1, send: () => {} };
+    const mockWs2 = { readyState: 1, send: () => {} };
+
+    matchmaker.enqueue("user_1", mockWs1, "AlphaTrader");
+    matchmaker.enqueue("user_2", mockWs2, "BetaTrader");
+
+    const room1 = matchmaker.getRoomForPlayer("user_1");
+    const room2 = matchmaker.getRoomForPlayer("user_2");
+    assert.ok(room1, "Player 1 was matched into a room");
+    assert.ok(room2, "Player 2 was matched into the same room");
+    assert.strictEqual(room1.id, room2.id);
+
+    // Omegle Skip: Player 1 clicks Next Opponent
+    matchmaker.enqueue("user_1", mockWs1, "AlphaTrader");
+    // Previous room concluded, user_1 is queued
+    assert.strictEqual(room1.state, "ended");
+    room1.stopTimers();
+    matchmaker.dequeue("user_1");
+    matchmaker.dequeue("user_2");
+});
+
+it("LiveTradeWsClient initializes with protocol handlers", () => {
+    const client = new LiveTradeWsClient();
+    assert.strictEqual(typeof client.joinQueue, "function");
+    assert.strictEqual(typeof client.cancelQueue, "function");
+    assert.strictEqual(typeof client.sendOrder, "function");
+    assert.strictEqual(typeof client.nextOpponent, "function");
+    assert.strictEqual(typeof client.leaveMatch, "function");
+    client._stopPing();
+});
+
+console.log("\n7. RESIZABLE & SHRINKABLE BOTTOM BAR INTEGRITY VERIFICATION");
+it("initializes bottom panel with 210px default height", () => {
+    localStorage.clear();
+    const testApp = new TradingApp();
+    assert.strictEqual(testApp.bottomPanelDefaultHeight, 210);
+    assert.strictEqual(testApp.elBottomPanel.style.height, "210px");
+    assert.strictEqual(testApp.elBottomPanel.classList.contains("is-collapsed"), false);
+});
+
+it("resizes bottom panel dynamically to user-defined height", () => {
+    const testApp = new TradingApp();
+    testApp.setBottomPanelHeight(340);
+    assert.strictEqual(testApp.elBottomPanel.style.height, "340px");
+    assert.strictEqual(testApp.bottomPanelLastHeight, 340);
+    assert.strictEqual(testApp.elBottomPanel.classList.contains("is-collapsed"), false);
+    assert.strictEqual(testApp.elBottomResizer.classList.contains("is-collapsed"), false);
+    assert.strictEqual(localStorage.getItem("tradesim_bottom_height"), "340");
+});
+
+it("shrinks bottom panel completely to 0px when collapsed", () => {
+    const testApp = new TradingApp();
+    testApp.setBottomPanelHeight(340);
+    // Shrink completely
+    testApp.setBottomPanelHeight(0);
+    assert.strictEqual(testApp.elBottomPanel.style.height, "0px");
+    assert.strictEqual(testApp.elBottomPanel.classList.contains("is-collapsed"), true);
+    assert.strictEqual(testApp.elBottomResizer.classList.contains("is-collapsed"), true);
+    assert.strictEqual(testApp.elBtnBottomToggle.innerHTML, "▲");
+    assert.strictEqual(localStorage.getItem("tradesim_bottom_collapsed"), "1");
+
+    // Uncollapse restores previous 340px height
+    testApp.setBottomPanelHeight(testApp.bottomPanelLastHeight);
+    assert.strictEqual(testApp.elBottomPanel.style.height, "340px");
+    assert.strictEqual(testApp.elBottomPanel.classList.contains("is-collapsed"), false);
+    assert.strictEqual(testApp.elBottomResizer.classList.contains("is-collapsed"), false);
+    assert.strictEqual(testApp.elBtnBottomToggle.innerHTML, "▼");
+});
+
+it("resets height to 210px default on reset action", () => {
+    const testApp = new TradingApp();
+    testApp.setBottomPanelHeight(450);
+    assert.strictEqual(testApp.elBottomPanel.style.height, "450px");
+
+    // Reset to default
+    testApp.setBottomPanelHeight(testApp.bottomPanelDefaultHeight);
+    assert.strictEqual(testApp.elBottomPanel.style.height, "210px");
+    assert.strictEqual(localStorage.getItem("tradesim_bottom_height"), "210");
+});
+
 console.log("\n=================================================");
 console.log(`   TEST RESULTS: ${passedTests}/${totalTests} PASSED (100%)`);
 console.log("=================================================");

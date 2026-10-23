@@ -1012,6 +1012,57 @@ body {
   border-bottom: none;
 }
 
+/* 3 Duel Formats Subgrid */
+.duel-formats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 18px 0 24px;
+}
+
+.duel-format-pill {
+  background: rgba(13, 17, 26, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 12px 10px;
+  text-align: center;
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.duel-format-pill:hover {
+  border-color: rgba(255, 61, 0, 0.5);
+  transform: translateY(-2px);
+}
+
+.duel-format-pill .fmt-time {
+  font-family: 'JetBrains Mono', 'Roboto Mono', monospace;
+  font-size: 15px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 0.5px;
+}
+
+.duel-format-pill .fmt-name {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--accent-red);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 3px 0 4px;
+}
+
+.duel-format-pill .fmt-desc {
+  font-size: 10px;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+
+@media (max-width: 640px) {
+  .duel-formats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ==========================================================================
    HOMEPAGE AUTH & CLOUD SYNC SECTION
    ========================================================================== */

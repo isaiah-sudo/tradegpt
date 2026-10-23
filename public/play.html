@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TradeGPT • Pro Trader Web Terminal v2.1.1</title>
+    <title>DayTradeSim Pro • Institutional Web Terminal</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="icon" type="image/x-icon" href="favicon.ico">
 </head>
@@ -13,48 +13,59 @@
          TOP APP HEADER (Solo Sandbox Mode)
          ========================================================= -->
     <header id="top-header">
-        <div class="brand">
-            <img src="assets/icon.png" alt="Logo" style="width:24px;height:24px;border-radius:4px;"> TRADEGPT
-        </div>
+        <div class="header-left">
+            <div class="brand">
+                <img src="assets/icon.png" alt="Logo" style="width:22px;height:22px;border-radius:4px;">
+                <span class="brand-name">TRADEGPT</span>
+            </div>
 
-        <div class="header-metrics">
-            <div class="metric-pill">
-                <span class="label">Total Equity</span>
-                <span class="value" id="hdr-balance">$25,000.00</span>
-            </div>
-            <div class="metric-pill">
-                <span class="label">Buying Power</span>
-                <span class="value" id="hdr-bp">$100,000.00</span>
-            </div>
-            <div class="metric-pill">
-                <span class="label">Unrealized P&L</span>
-                <span class="value" id="hdr-unrealized">$0.00</span>
-            </div>
-            <div class="metric-pill">
-                <span class="label">Realized P&L</span>
-                <span class="value" id="hdr-realized">$0.00</span>
-            </div>
-            <div class="metric-pill">
-                <span class="label">Total Return</span>
-                <span class="value" id="hdr-total-pnl">+0.00%</span>
+            <div class="header-v-divider"></div>
+
+            <div class="header-metrics">
+                <div class="metric-pill hero-metric">
+                    <span class="label">Total Equity</span>
+                    <span class="value" id="hdr-balance">$25,000.00</span>
+                </div>
+                <div class="metric-pill">
+                    <span class="label">Unrealized P&L</span>
+                    <span class="value" id="hdr-unrealized">+$0.00</span>
+                </div>
+                <div class="metric-pill">
+                    <span class="label">Realized P&L</span>
+                    <span class="value" id="hdr-realized">+$0.00</span>
+                </div>
+                <div class="metric-pill">
+                    <span class="label">Total Return</span>
+                    <span class="value" id="hdr-total-pnl">+0.00%</span>
+                </div>
             </div>
         </div>
 
         <div class="header-controls">
-            <select class="speed-select" id="speed-select">
-                <option value="Relaxed (1x)">Casual (1x)</option>
-                <option value="Day Trader (3x)" selected>Day Trader (3x)</option>
-                <option value="High Frequency (8x)">HFT Scalper (8x)</option>
-                <option value="TURBO INSANE (20x)">TURBO (20x)</option>
-            </select>
-            <button class="btn-ctrl" id="btn-pause">⏸ Pause</button>
-            <button class="btn-ctrl btn-bank-profit" id="btn-bank-profit" disabled>💰 Bank Profit</button>
-            <button class="btn-ctrl" id="btn-reset">↺ Reset</button>
-            <button class="btn-ctrl" id="btn-settings-open">⚙️ Settings</button>
-            <button class="btn-ctrl" id="btn-shop-open" style="color:var(--gold);font-weight:700;">🛒 Shop</button>
-            <button class="btn-ctrl" id="btn-menu">🏠 Menu</button>
-            <a href="/" class="btn-ctrl" style="text-decoration:none;display:inline-flex;align-items:center;" title="Return to Homepage">🌐 Home</a>
-            <button class="btn-duel" id="btn-switch-duel">⚔️ 1v1 Online Duel</button>
+            <!-- Simulation Controls -->
+            <div class="ctrl-group">
+                <select class="speed-select" id="speed-select" title="Simulation Speed">
+                    <option value="Relaxed (1x)">1x Casual</option>
+                    <option value="Day Trader (3x)" selected>3x Day Trader</option>
+                    <option value="High Frequency (8x)">8x Scalper</option>
+                    <option value="TURBO INSANE (20x)">20x TURBO</option>
+                </select>
+                <button class="btn-ctrl" id="btn-pause" title="Pause simulation">⏸ Pause</button>
+                <button class="btn-ctrl" id="btn-reset" title="Reset account equity">↺ Reset</button>
+            </div>
+
+            <!-- Dynamic Bank Profit CTA (only visible when in profit) -->
+            <button class="btn-ctrl btn-bank-profit" id="btn-bank-profit" disabled title="Lock in profits into vault">💰 Bank Profit</button>
+
+            <!-- Navigation & System -->
+            <div class="ctrl-group">
+                <button class="btn-ctrl btn-shop" id="btn-shop-open" title="Open Trader Shop">🛒 Shop</button>
+                <button class="btn-ctrl" id="btn-settings-open" title="Settings">⚙️ Settings</button>
+                <button class="btn-ctrl" id="btn-menu" title="Game Modes">🏠 Menu</button>
+                <a href="/" class="btn-ctrl" title="Homepage">🌐 Home</a>
+            </div>
+
+            <button class="btn-duel" id="btn-switch-duel" title="1v1 Online PvP Duel">⚔️ 1v1 Duel</button>
         </div>
     </header>
 
@@ -63,26 +74,40 @@
          ========================================================= -->
     <div id="battle-hud">
         <div class="player-box you">
-            <span class="p-tag" id="hud-my-name">YOU (Trader)</span>
+            <div style="display:flex;align-items:center;gap:6px;">
+                <span class="p-tag" id="hud-my-name">YOU (Trader)</span>
+                <span class="hud-badge-title" id="hud-my-title">TRADER</span>
+            </div>
             <span class="p-score" id="hud-my-score">$25,000.00 (+0.00%)</span>
         </div>
 
         <div class="hud-center">
-            <div class="hud-leader-badge gold" id="hud-leader-badge">⚔️ 1v1 MATCH STARTED • TIED</div>
+            <div style="display:flex;align-items:center;gap:6px;">
+                <span class="hud-duel-format-badge" id="hud-duel-format-badge">60S BLITZ</span>
+                <div class="hud-leader-badge gold" id="hud-leader-badge">1v1 MATCH STARTED • TIED</div>
+            </div>
+            <div class="hud-tug-gauge-container">
+                <div class="hud-tug-bar you" id="hud-tug-you" style="width:50%;"></div>
+                <div class="hud-tug-center-pin"></div>
+                <div class="hud-tug-bar opp" id="hud-tug-opp" style="width:50%;"></div>
+            </div>
             <div class="hud-timer-wrap">
-                <span>TIME REMAINING:</span>
+                <span>MATCH CLOCK:</span>
                 <span class="hud-timer" id="hud-timer">03:00</span>
             </div>
         </div>
 
         <div class="player-box opponent" style="align-items:flex-end;">
-            <span class="p-tag" id="hud-opp-name">OPPONENT</span>
+            <div style="display:flex;align-items:center;gap:6px;">
+                <span class="hud-badge-title opp" id="hud-opp-title">RIVAL</span>
+                <span class="p-tag" id="hud-opp-name">OPPONENT</span>
+            </div>
             <span class="p-score" id="hud-opp-score">$25,000.00 (+0.00%)</span>
         </div>
 
         <div class="hud-actions">
-            <button class="btn-ctrl" id="btn-hud-shop" style="color:var(--gold);font-weight:700;margin-right:4px;">🛒 Shop</button>
-            <button class="btn-next-opp" id="btn-next-opp">⏭ Next Opponent</button>
+            <button class="btn-ctrl" id="btn-hud-shop" style="color:var(--gold);font-weight:700;margin-right:4px;">Shop</button>
+            <button class="btn-next-opp" id="btn-next-opp" title="Omegle skip: immediately find next rival (Hotkey: N)">Next Opponent <kbd style="font-size:10px;padding:1px 4px;background:rgba(0,0,0,0.3);border-radius:3px;margin-left:4px;">N</kbd></button>
             <button class="btn-leave" id="btn-leave-duel">Leave Duel</button>
         </div>
     </div>
@@ -177,6 +202,20 @@
                 </div>
             </div>
 
+            <div class="leverage-cluster">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                    <span class="panel-sec-title" style="margin-bottom:0;">Margin Leverage</span>
+                    <span class="leverage-multiplier-badge" id="leverage-badge">1x Spot Cash</span>
+                </div>
+                <div class="leverage-presets" id="leverage-presets">
+                    <button class="btn-lev active" data-lev="1">1x</button>
+                    <button class="btn-lev" data-lev="5">5x</button>
+                    <button class="btn-lev" data-lev="10">10x</button>
+                    <button class="btn-lev" data-lev="25">25x</button>
+                    <button class="btn-lev" data-lev="50">50x</button>
+                </div>
+            </div>
+
             <div class="position-card">
                 <div class="panel-sec-title" style="margin-bottom:4px;">Current Position</div>
                 <div class="pos-row">
@@ -207,13 +246,31 @@
     </main>
 
     <!-- =========================================================
-         BOTTOM TABS: Positions, Trade Log, News Feed
+         BOTTOM RESIZER & BOTTOM TABS: Positions, Trade Log, News Feed
          ========================================================= -->
+    <div id="bottom-resizer" class="bottom-resizer" role="separator" aria-orientation="horizontal" title="Drag up/down to resize bottom panel. Double-click to reset to 210px default.">
+        <div class="resizer-handle-grip">
+            <span class="grip-line"></span>
+        </div>
+        <div class="resizer-collapsed-banner" id="resizer-collapsed-banner">
+            <span class="resizer-collapsed-icon">▲</span>
+            <span class="resizer-collapsed-title">Positions &amp; Trades</span>
+            <span class="resizer-collapsed-hint">Click or drag up to expand</span>
+            <button class="resizer-btn-reset" id="btn-resizer-reset" title="Reset to default height (210px)">↺ Default (210px)</button>
+        </div>
+    </div>
+
     <footer id="bottom-panel">
         <div class="tab-nav">
-            <button class="tab-btn active" data-tab="positions">Open Positions</button>
-            <button class="tab-btn" data-tab="trades">Trade History</button>
-            <button class="tab-btn" data-tab="news">Breaking News Feed</button>
+            <div class="tab-nav-tabs">
+                <button class="tab-btn active" data-tab="positions">Open Positions</button>
+                <button class="tab-btn" data-tab="trades">Trade History</button>
+                <button class="tab-btn" data-tab="news">Breaking News Feed</button>
+            </div>
+            <div class="tab-nav-actions">
+                <button class="tab-action-btn" id="btn-bottom-reset" title="Reset height to default (210px)">↺ 210px</button>
+                <button class="tab-action-btn" id="btn-bottom-toggle" title="Minimize / Shrink bottom panel completely">▼</button>
+            </div>
         </div>
 
         <div class="tab-content active" id="tab-positions">
@@ -268,43 +325,82 @@
          ========================================================= -->
     <!-- 1. Mode Select Modal -->
     <div class="modal-overlay" id="modal-mode">
-        <div class="modal-card" style="position:relative;">
+        <div class="modal-card mode-dispatch-card" style="position:relative;max-width:660px;">
             <!-- Top Left Sign-In Button -->
             <div id="modal-top-left-auth" style="position:absolute;top:18px;left:20px;display:flex;align-items:center;gap:8px;">
-                <button class="btn-ctrl" id="btn-top-auth" style="background:#2962ff;color:#fff;font-weight:700;padding:6px 12px;border-radius:6px;cursor:pointer;border:none;">👤 Sign In</button>
+                <button class="btn-ctrl" id="btn-top-auth" style="background:#2962ff;color:#fff;font-weight:700;padding:6px 12px;border-radius:4px;cursor:pointer;border:none;">Sign In</button>
             </div>
             <!-- Top Right Home & Downloads Link -->
-            <a href="/" style="position:absolute;top:18px;right:20px;display:flex;align-items:center;gap:6px;color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:600;padding:6px 12px;border-radius:6px;border:1px solid #2a2e39;background:#161a25;transition:all 0.2s;" onmouseover="this.style.borderColor='#3d4454';this.style.color='#fff'" onmouseout="this.style.borderColor='#2a2e39';this.style.color='var(--text-muted)'">🏠 Home & Downloads</a>
-            <div style="font-size:36px;margin-bottom:8px;">⚡</div>
-            <h2 class="modal-title">TRADEGPT <span style="font-size:14px;color:var(--text-muted);">v2.1.1</span></h2>
-            <p class="modal-sub">Choose your game mode to enter the trading floor</p>
+            <a href="/" style="position:absolute;top:18px;right:20px;display:flex;align-items:center;gap:6px;color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:600;padding:6px 12px;border-radius:4px;border:1px solid #2a2e39;background:#161a25;transition:all 0.2s;">Home & Downloads</a>
+            
+            <div class="terminal-dispatch-header" style="margin-top:14px;margin-bottom:14px;">
+                <div class="modal-badge-chip">INSTITUTIONAL SIMULATION & 1V1 PVP ARENA</div>
+                <h2 class="modal-title" style="margin-top:6px;">DAYTRADESIM <span style="font-size:14px;color:var(--accent-blue);font-weight:700;">PRO v2.2</span></h2>
+                <p class="modal-sub">Deploy capital in solo market sandbox or compete in real-time 1v1 trader duels</p>
+            </div>
 
             <div class="menu-vault-pill" id="menu-vault-pill">
-                <span>💰 Menu Vault Balance: <strong id="modal-vault-bal" class="up">$0.00</strong></span>
-                <button class="btn-shop-badge" id="btn-modal-shop">🛒 Trader Shop</button>
+                <span>Vault Balance: <strong id="modal-vault-bal" class="up">$0.00</strong></span>
+                <button class="btn-shop-badge" id="btn-modal-shop">Trader Shop</button>
             </div>
 
-            <input type="text" class="nickname-input" id="nickname-input" placeholder="Enter Trader Nickname">
+            <div style="margin-bottom:14px;text-align:left;">
+                <label style="font-size:11px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;">Trader Callsign / Nickname</label>
+                <input type="text" class="nickname-input" id="nickname-input" placeholder="e.g. ApexTrader_X" style="margin-bottom:0;">
+            </div>
 
-            <div class="mode-cards-grid">
-                <div class="mode-card" id="mode-solo">
-                    <span class="icon">🎮</span>
-                    <span class="title">Solo Sandbox</span>
-                    <span class="desc">Unlimited practice, multiple speeds (1x to 20x), breaking catalysts & margin scalping.</span>
-                    <div style="margin-top:10px;display:flex;align-items:center;gap:6px;" onclick="event.stopPropagation();">
-                        <span class="badge-tag" id="mode-temp-tag" style="background:#1a2e22;color:#00e676;border-color:rgba(0,230,118,0.3);font-size:10px;">⚙️ Temp: 1.00x</span>
-                        <button type="button" class="btn-ctrl" id="btn-modal-settings" style="font-size:10px;padding:2px 8px;border-radius:4px;">Tune Temp</button>
+            <!-- Mode Selection Grid -->
+            <div class="mode-cards-grid" style="grid-template-columns: 1fr; gap: 14px;">
+                <!-- 1. Solo Sandbox Mode -->
+                <div class="mode-card solo-box" id="mode-solo" style="cursor:pointer;text-align:left;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <span class="mode-pill-tag">SOLO SANDBOX</span>
+                        <div style="display:flex;align-items:center;gap:6px;" onclick="event.stopPropagation();">
+                            <span class="badge-tag" id="mode-temp-tag" style="background:#1a2e22;color:#00e676;border-color:rgba(0,230,118,0.3);font-size:10px;">Temp: 1.00x</span>
+                            <button type="button" class="btn-ctrl" id="btn-modal-settings" style="font-size:10px;padding:2px 8px;border-radius:4px;">Tune Temp</button>
+                        </div>
                     </div>
+                    <div style="font-size:15px;font-weight:800;color:#fff;margin:6px 0 2px 0;">Solo Paper Trading Environment</div>
+                    <span class="desc">Unlimited practice, customizable market speeds (1x to 20x), breaking catalyst shocks, and leveraged margin execution.</span>
                 </div>
-                <div class="mode-card" id="mode-online" style="border-color:rgba(229,57,53,0.4);">
-                    <span class="icon">⚔️</span>
-                    <span class="title">1v1 Online Duel</span>
-                    <span class="desc">Omegle-style pairing with desktop & web traders! 3-minute high-stakes showdown.</span>
+
+                <!-- 2. 1v1 Online PvP Duels with 3 Format Options -->
+                <div class="pvp-dispatch-section" id="mode-online" style="text-align:left;background:#11151f;border:1px solid #283042;border-radius:8px;padding:14px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                        <span class="mode-pill-tag pvp">1V1 LIVE PVP ARENA</span>
+                        <span style="font-size:10px;font-weight:800;color:#00e676;background:rgba(0,230,118,0.1);padding:2px 6px;border-radius:3px;">SUB-SECOND ORDER BOOK</span>
+                    </div>
+                    <div style="font-size:14px;font-weight:800;color:#fff;margin-bottom:2px;">Select Duel Format & Match Clock</div>
+                    <p style="font-size:11px;color:var(--text-muted);margin-bottom:10px;">Compete against active online traders with synchronized prices, authoritative order matching, and real-time dual PnL tug-of-war.</p>
+
+                    <!-- The 3 Duel Duration Cards -->
+                    <div class="duel-duration-selector" id="duel-duration-selector">
+                        <div class="duel-dur-card active" data-duration="60">
+                            <div class="dur-badge">⚡ BLITZ</div>
+                            <div class="dur-time">60 SEC</div>
+                            <div class="dur-desc">Fast reflex scalping & volatile bursts</div>
+                        </div>
+                        <div class="duel-dur-card" data-duration="120">
+                            <div class="dur-badge">🎯 TACTICAL</div>
+                            <div class="dur-time">2 MIN</div>
+                            <div class="dur-desc">Momentum setups & pullback swings</div>
+                        </div>
+                        <div class="duel-dur-card" data-duration="300">
+                            <div class="dur-badge">📈 MARATHON</div>
+                            <div class="dur-time">5 MIN</div>
+                            <div class="dur-desc">Full trend cycles & risk-reward discipline</div>
+                        </div>
+                    </div>
+
+                    <button class="btn-launch-duel" id="btn-launch-duel">
+                        <span class="duel-btn-title">FIND 1v1 DUEL OPPONENT</span>
+                        <span class="duel-btn-sub" id="duel-btn-sub">Format: 60-Second Blitz Duel</span>
+                    </button>
                 </div>
             </div>
 
-            <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted);">
-                <span style="color:#00e676;">●</span> Connected to Firebase Cloud Matchmaker (tradisim-188a6)
+            <div style="display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:var(--text-muted);margin-top:14px;">
+                <span style="color:#00e676;">●</span> Authoritative High-Frequency Game Server • Sub-Millisecond WebSocket Tick Tape
             </div>
         </div>
     </div>
@@ -312,7 +408,7 @@
     <!-- 2. Matchmaking Radar Modal -->
     <div class="modal-overlay" id="modal-matchmaking" style="display:none;">
         <div class="modal-card">
-            <h2 class="modal-title">⚔️ 1v1 PvP MATCHMAKER</h2>
+            <h2 class="modal-title">1v1 LIVE MATCHMAKING</h2>
             <p class="modal-sub">Searching for an active desktop or web opponent...</p>
 
             <div class="radar-wrap">
@@ -325,6 +421,36 @@
             <div class="status-txt" id="match-status-txt">Broadcasting queue ticket to cloud...</div>
 
             <button class="btn-ctrl" id="btn-cancel-match" style="padding:8px 24px;">Cancel Search</button>
+        </div>
+    </div>
+
+    <!-- 2b. 3-2-1 Match Countdown Overlay Modal -->
+    <div class="modal-overlay" id="modal-countdown" style="display:none;z-index:99999;">
+        <div class="modal-card countdown-modal-card">
+            <div class="countdown-badge-pill" id="cd-duel-format-pill">1v1 LIVE SHOWDOWN • 60S BLITZ</div>
+            <div class="countdown-matchup-grid">
+                <div class="cd-col you">
+                    <div class="cd-avatar">👤</div>
+                    <div class="cd-name" id="cd-player-a">Trader</div>
+                    <div class="cd-title-pill" id="cd-title-a">PRO TRADER</div>
+                </div>
+                <div class="cd-vs-badge">VS</div>
+                <div class="cd-col opp">
+                    <div class="cd-avatar">🤖</div>
+                    <div class="cd-name" id="cd-player-b">WallSt_Titan</div>
+                    <div class="cd-title-pill opp" id="cd-title-b">QUANT ALGO</div>
+                </div>
+            </div>
+
+            <div class="cd-stock-box">
+                <div style="font-size:11px;color:var(--text-muted);font-weight:700;text-transform:uppercase;">BATTLE ASSET</div>
+                <div style="font-size:18px;font-weight:800;color:var(--text-white);" id="cd-stock-name">NVXP • NovaX AI Tech</div>
+            </div>
+
+            <div class="cd-big-number-wrap">
+                <span class="cd-number-pulse" id="countdown-num">3</span>
+            </div>
+            <p class="modal-sub" style="margin-bottom:0;">Authoritative Price Engine Initializing...</p>
         </div>
     </div>
 
@@ -532,6 +658,7 @@
     <script src="js/chart.js"></script>
     <script src="js/firebase-matchmaker.js"></script>
     <script src="js/win-animations.js"></script>
+    <script src="js/ws-client.js"></script>
     <script src="js/app.js"></script>
 
 </body>

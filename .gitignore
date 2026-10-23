@@ -43,3 +43,8 @@ Thumbs.db
 
 # Firebase cache
 .firebase/
+
+# Node dependencies & compilation
+node_modules/
+dist-server/
+package-lock.json

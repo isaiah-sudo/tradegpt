@@ -61,6 +61,13 @@ class CandlestickChart {
     _setupListeners() {
         window.addEventListener('resize', () => this.resize());
 
+        if (typeof ResizeObserver !== "undefined" && this.canvas && this.canvas.parentElement) {
+            try {
+                this._ro = new ResizeObserver(() => this.resize());
+                this._ro.observe(this.canvas.parentElement);
+            } catch (_) {}
+        }
+
         this.canvas.addEventListener('mousemove', (e) => {
             const rect = this.canvas.getBoundingClientRect();
             this.mousePos = {
@@ -81,7 +88,7 @@ class CandlestickChart {
         const dpr = window.devicePixelRatio || 1;
 
         this.width = rect.width;
-        this.height = Math.max(300, rect.height);
+        this.height = Math.max(150, rect.height);
 
         this.canvas.width = this.width * dpr;
         this.canvas.height = this.height * dpr;
@@ -501,6 +508,16 @@ class CandlestickChart {
             ctx.moveTo(0, curY);
             ctx.lineTo(chartW, curY);
             ctx.stroke();
+            ctx.restore();
+
+            // Glowing pulse marker at current price
+            ctx.save();
+            ctx.fillStyle = this.colors.priceLine;
+            ctx.shadowColor = this.colors.priceLine;
+            ctx.shadowBlur = 8;
+            ctx.beginPath();
+            ctx.arc(chartW, curY, 3.5, 0, Math.PI * 2);
+            ctx.fill();
             ctx.restore();
 
             // Badge
