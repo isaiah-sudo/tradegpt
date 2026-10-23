@@ -1,7 +1,8 @@
 import { WebSocket } from 'ws';
 import { VolatilePriceEngine } from './price-engine';
 import { OrderEngine } from './order-engine';
-import { OrderSide, PlayerState, ServerMessage } from './types';
+import { OrderSide, PlayerState, ServerMessage, StockTick } from './types';
+import { STOCK_DEFINITIONS } from './stock-universe';
 
 export interface RoomParticipant {
   id: string;
@@ -20,13 +21,24 @@ export class MatchRoom {
   public stateB: PlayerState;
 
   public priceEngine: VolatilePriceEngine;
+  public priceEngines: Map<string, VolatilePriceEngine> = new Map();
+  public watchedTickerA: string = 'NVXP';
+  public watchedTickerB: string = 'NVXP';
+
   public durationSeconds: number = 60;
   public timeLeft: number = 60;
+  public get timeRemaining(): number {
+    return this.timeLeft;
+  }
+  public set timeRemaining(val: number) {
+    this.timeLeft = val;
+  }
   public state: 'countdown' | 'in_progress' | 'ended' = 'countdown';
 
   private tickTimer?: NodeJS.Timeout;
   private clockTimer?: NodeJS.Timeout;
   private countdownTimer?: NodeJS.Timeout;
+  private batchCounter: number = 0;
   private onMatchEndCallback?: (room: MatchRoom, winnerId: string | 'tie', reason: string) => void;
 
   constructor(
@@ -42,7 +54,21 @@ export class MatchRoom {
     this.durationSeconds = durationSeconds;
     this.timeLeft = durationSeconds;
 
-    this.priceEngine = new VolatilePriceEngine(symbol, 'NovaX AI Tech', 85.00);
+    // Initialize all 100 stocks with their unique logic and parameters
+    for (const def of STOCK_DEFINITIONS) {
+      this.priceEngines.set(
+        def.ticker,
+        new VolatilePriceEngine(def.ticker, def.name, def.price, def.volatility, def.sector)
+      );
+    }
+
+    if (!this.priceEngines.has(symbol)) {
+      this.priceEngines.set(symbol, new VolatilePriceEngine(symbol, 'NovaX AI Tech', 85.00));
+    }
+
+    this.priceEngine = this.priceEngines.get(symbol)!;
+    this.watchedTickerA = symbol;
+    this.watchedTickerB = symbol;
 
     this.stateA = OrderEngine.createPlayerState(playerA.id, playerA.nickname, playerA.title, playerA.animation);
     this.stateB = OrderEngine.createPlayerState(playerB.id, playerB.nickname, playerB.title, playerB.animation);
@@ -50,6 +76,30 @@ export class MatchRoom {
 
   public setOnMatchEnd(cb: (room: MatchRoom, winnerId: string | 'tie', reason: string) => void) {
     this.onMatchEndCallback = cb;
+  }
+
+  public handleWatchTicker(playerId: string, ticker: string): void {
+    const pe = this.priceEngines.get(ticker);
+    if (!pe) return;
+
+    const isPlayerA = playerId === this.playerA.id;
+    if (isPlayerA) {
+      this.watchedTickerA = ticker;
+    } else {
+      this.watchedTickerB = ticker;
+    }
+
+    const participant = isPlayerA ? this.playerA : this.playerB;
+    this._sendTo(participant, {
+      type: 'stock_data',
+      roomId: this.id,
+      ticker: pe.ticker,
+      price: pe.price,
+      change: pe.change,
+      changePct: pe.changePct,
+      candles: pe.candles,
+      currentCandle: pe.currentCandle
+    });
   }
 
   public startCountdown() {
@@ -93,14 +143,16 @@ export class MatchRoom {
   public startMatch() {
     this.state = 'in_progress';
 
-    // Broadcast match_start
+    // Broadcast match_start with initial candles
     this._sendTo(this.playerA, {
       type: 'match_start',
       roomId: this.id,
       opponent: { nickname: this.playerB.nickname, title: this.playerB.title, animation: this.playerB.animation },
       symbol: this.priceEngine.ticker,
       initialPrice: this.priceEngine.price,
-      matchDuration: this.durationSeconds
+      matchDuration: this.durationSeconds,
+      candles: this.priceEngine.candles,
+      currentCandle: this.priceEngine.currentCandle
     });
 
     this._sendTo(this.playerB, {
@@ -109,7 +161,9 @@ export class MatchRoom {
       opponent: { nickname: this.playerA.nickname, title: this.playerA.title, animation: this.playerA.animation },
       symbol: this.priceEngine.ticker,
       initialPrice: this.priceEngine.price,
-      matchDuration: this.durationSeconds
+      matchDuration: this.durationSeconds,
+      candles: this.priceEngine.candles,
+      currentCandle: this.priceEngine.currentCandle
     });
 
     // 10 Hz Market Ticks & PnL Sync Engine (100ms updates)
@@ -130,17 +184,26 @@ export class MatchRoom {
   }
 
   private _onTick() {
-    // 1. Generate authoritative price tick via GBM Jump Diffusion
-    const tick = this.priceEngine.tick(0.1);
+    // 1. Advance all 100 stocks with their own unique Merton Jump Diffusion logic
+    const ticks: Map<string, StockTick> = new Map();
+    for (const [t, pe] of this.priceEngines.entries()) {
+      ticks.set(t, pe.tick(0.1));
+    }
 
     // 2. If player B is simulated bot, execute bot trading decisions
     if (this.playerB.isBot) {
-      this._simulateBotAction(tick.price);
+      const botStock = this.priceEngines.get(this.watchedTickerB) || this.priceEngine;
+      this._simulateBotAction(botStock.price, botStock.ticker);
     }
 
-    // 3. Update player portfolios and evaluate margin / liquidations
-    OrderEngine.updatePortfolio(this.stateA, tick.price);
-    OrderEngine.updatePortfolio(this.stateB, tick.price);
+    // 3. Update player portfolios based on the exact stock they currently hold
+    const posA = this.stateA.position;
+    const priceA = posA ? (this.priceEngines.get(posA.ticker)?.price ?? this.priceEngine.price) : this.priceEngine.price;
+    OrderEngine.updatePortfolio(this.stateA, priceA);
+
+    const posB = this.stateB.position;
+    const priceB = posB ? (this.priceEngines.get(posB.ticker)?.price ?? this.priceEngine.price) : this.priceEngine.price;
+    OrderEngine.updatePortfolio(this.stateB, priceB);
 
     // 4. Check for liquidations
     if (this.stateA.status === 'liquidated') {
@@ -152,18 +215,30 @@ export class MatchRoom {
       return;
     }
 
-    // 5. Broadcast market tick
-    const tickMsg: ServerMessage = {
+    // 5. Broadcast targeted high-frequency 10 Hz market ticks to each player for their watched stock
+    const tickA = ticks.get(this.watchedTickerA) || ticks.get(this.priceEngine.ticker)!;
+    this._sendTo(this.playerA, {
       type: 'market_tick',
       roomId: this.id,
-      ticker: tick.ticker,
-      price: tick.price,
-      change: tick.change,
-      changePct: tick.changePct,
-      candle: tick.candle,
-      timestamp: tick.timestamp
-    };
-    this._broadcast(tickMsg);
+      ticker: tickA.ticker,
+      price: tickA.price,
+      change: tickA.change,
+      changePct: tickA.changePct,
+      candle: tickA.candle,
+      timestamp: tickA.timestamp
+    });
+
+    const tickB = ticks.get(this.watchedTickerB) || ticks.get(this.priceEngine.ticker)!;
+    this._sendTo(this.playerB, {
+      type: 'market_tick',
+      roomId: this.id,
+      ticker: tickB.ticker,
+      price: tickB.price,
+      change: tickB.change,
+      changePct: tickB.changePct,
+      candle: tickB.candle,
+      timestamp: tickB.timestamp
+    });
 
     // 6. Broadcast dual PnL updates
     const leadDiffA = Number((this.stateA.equity - this.stateB.equity).toFixed(2));
@@ -205,9 +280,28 @@ export class MatchRoom {
       timeLeft: this.timeLeft,
       leadDiff: leadDiffB
     });
+
+    // 7. Every 3 ticks (300ms), broadcast batch scanner prices for all 100 stocks
+    this.batchCounter++;
+    if (this.batchCounter % 3 === 0) {
+      const summary: Record<string, { price: number; change: number; changePct: number }> = {};
+      for (const [ticker, pe] of this.priceEngines.entries()) {
+        summary[ticker] = {
+          price: pe.price,
+          change: pe.change,
+          changePct: pe.changePct
+        };
+      }
+      this._broadcast({
+        type: 'market_batch',
+        roomId: this.id,
+        timestamp: Math.floor(Date.now() / 1000),
+        stocks: summary
+      });
+    }
   }
 
-  private _simulateBotAction(price: number) {
+  private _simulateBotAction(price: number, ticker: string = this.priceEngine.ticker) {
     // 5% chance per tick to take action
     if (Math.random() < 0.06) {
       const rand = Math.random();
@@ -216,14 +310,16 @@ export class MatchRoom {
         const side: OrderSide = rand > 0.48 ? 'BUY' : 'SHORT';
         const shares = Math.floor(20 + Math.random() * 80);
         const lev = Math.random() > 0.5 ? 5 : 2;
-        OrderEngine.executeOrder(this.stateB, side, this.priceEngine.ticker, shares, price, lev);
+        OrderEngine.executeOrder(this.stateB, side, ticker, shares, price, lev);
       } else {
         // Manage active position
         const pnl = this.stateB.position.unrealizedPnL;
+        const posTicker = this.stateB.position.ticker;
+        const curPrice = this.priceEngines.get(posTicker)?.price ?? price;
         if (pnl > 300 || pnl < -400 || rand < 0.2) {
-          OrderEngine.executeOrder(this.stateB, 'FLATTEN', this.priceEngine.ticker, 0, price);
+          OrderEngine.executeOrder(this.stateB, 'FLATTEN', posTicker, 0, curPrice);
         } else if (rand < 0.1) {
-          OrderEngine.executeOrder(this.stateB, 'REVERSE', this.priceEngine.ticker, 0, price);
+          OrderEngine.executeOrder(this.stateB, 'REVERSE', posTicker, 0, curPrice);
         }
       }
     }
@@ -236,7 +332,10 @@ export class MatchRoom {
     const player = isPlayerA ? this.stateA : this.stateB;
     const participant = isPlayerA ? this.playerA : this.playerB;
 
-    const res = OrderEngine.executeOrder(player, side, ticker, qty, this.priceEngine.price, leverage);
+    const targetEngine = this.priceEngines.get(ticker) || this.priceEngine;
+    const curPrice = targetEngine.price;
+
+    const res = OrderEngine.executeOrder(player, side, ticker, qty, curPrice, leverage);
 
     this._sendTo(participant, {
       type: 'order_ack',

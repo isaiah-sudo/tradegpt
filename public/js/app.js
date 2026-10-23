@@ -677,17 +677,7 @@ class TradingApp {
         const btnRev = document.getElementById("btn-reverse");
         if (btnRev) btnRev.addEventListener("click", () => this._executeOrder("REVERSE"));
         document.getElementById("btn-flatten").addEventListener("click", () => {
-            const pos = this.engine.positions[this.activeTicker];
-            if (pos && pos.shares !== 0) {
-                const oldRealized = this.engine.realizedPnL;
-                const shares = Math.abs(pos.shares);
-                const act = pos.shares > 0 ? "SELL" : "COVER";
-                this.engine.closePosition(this.activeTicker);
-                this.sfx.playSell();
-                const diff = this.engine.realizedPnL - oldRealized;
-                this.chart.showTradeNotification(act, shares, this.engine.stocks[this.activeTicker].price, this.activeTicker, diff);
-                this._updateAllUi();
-            }
+            this._executeOrder("FLATTEN");
         });
 
         // Bottom tab navigation
@@ -717,17 +707,7 @@ class TradingApp {
             else if (key === "R") this._executeOrder("REVERSE");
             else if (key === " ") {
                 e.preventDefault();
-                const pos = this.engine.positions[this.activeTicker];
-                if (pos && pos.shares !== 0) {
-                    const oldRealized = this.engine.realizedPnL;
-                    const shares = Math.abs(pos.shares);
-                    const act = pos.shares > 0 ? "SELL" : "COVER";
-                    this.engine.closePosition(this.activeTicker);
-                    this.sfx.playSell();
-                    const diff = this.engine.realizedPnL - oldRealized;
-                    this.chart.showTradeNotification(act, shares, this.engine.stocks[this.activeTicker].price, this.activeTicker, diff);
-                    this._updateAllUi();
-                }
+                this._executeOrder("FLATTEN");
             } else if (key === "1") this._setPresetQty(10);
             else if (key === "2") this._setPresetQty(50);
             else if (key === "3") this._setPresetQty(100);
@@ -887,9 +867,18 @@ class TradingApp {
         this.chart.setPosition(this.engine.positions[ticker] || null);
         this._updateDeskEstimate();
         this._updateDeskPosition();
+
+        if (this.mode === "online" && this.wsClient && this.wsClient.inMatch) {
+            this.wsClient.watchTicker(ticker);
+        }
     }
 
     _executeOrder(action) {
+        if (this.mode === "online" && this.wsClient && this.wsClient.inMatch) {
+            this.wsClient.sendOrder(action, this.activeTicker, this.selectedQty, this.selectedLeverage || 1);
+            return;
+        }
+
         let ok = false;
         const curPrice = this.engine.stocks[this.activeTicker].price;
         const oldRealized = this.engine.realizedPnL;
@@ -929,12 +918,22 @@ class TradingApp {
                 const diff = this.engine.realizedPnL - oldRealized;
                 this.chart.showTradeNotification("REVERSE", revShares, curPrice, this.activeTicker, diff);
             }
+        } else if (action === "FLATTEN") {
+            const pos = this.engine.positions[this.activeTicker];
+            if (pos && pos.shares !== 0) {
+                const shares = Math.abs(pos.shares);
+                const act = pos.shares > 0 ? "SELL" : "COVER";
+                this.engine.closePosition(this.activeTicker);
+                this.sfx.playSell();
+                const diff = this.engine.realizedPnL - oldRealized;
+                this.chart.showTradeNotification(act, shares, curPrice, this.activeTicker, diff);
+                ok = true;
+            }
         }
 
         if (ok) {
             this._updateAllUi();
         } else {
-            // Flash red on order reject
             this.elEstCost.style.color = "var(--red)";
             setTimeout(() => this.elEstCost.style.color = "var(--text-muted)", 300);
         }
@@ -1225,6 +1224,53 @@ class TradingApp {
             this._handleWsMarketTick(data);
         };
 
+        this.wsClient.onStockData = (data) => {
+            if (this.mode !== "online" || !data) return;
+            const st = this.engine.stocks[data.ticker];
+            if (st) {
+                st.price = data.price;
+                if (data.candles && data.candles.length > 0) {
+                    st.candles = data.candles;
+                }
+                if (data.currentCandle) {
+                    st.currentCandle = data.currentCandle;
+                }
+                if (data.ticker === this.activeTicker) {
+                    this.chart.setData(st);
+                    const chgSign = data.change >= 0 ? "+" : "";
+                    const chgClass = data.change >= 0 ? "up" : "down";
+                    if (this.elActivePrice) this.elActivePrice.textContent = `${data.price.toFixed(2)}`;
+                    if (this.elActiveChg) {
+                        this.elActiveChg.textContent = `${chgSign}${data.change.toFixed(2)} (${chgSign}${data.changePct.toFixed(2)}%)`;
+                        this.elActiveChg.className = `active-chg ${chgClass}`;
+                    }
+                    if (this.elDeskPrice) this.elDeskPrice.textContent = `${data.price.toFixed(2)}`;
+                    this._updateDeskEstimate();
+                }
+            }
+        };
+
+        this.wsClient.onMarketBatch = (data) => {
+            if (this.mode !== "online" || !data.stocks) return;
+            for (const [ticker, summary] of Object.entries(data.stocks)) {
+                const st = this.engine.stocks[ticker];
+                if (st) {
+                    st.price = summary.price;
+                }
+                const pEl = document.getElementById(`price-${ticker}`);
+                const pctEl = document.getElementById(`pct-${ticker}`);
+                if (pEl) pEl.textContent = `${summary.price.toFixed(2)}`;
+                if (pctEl) {
+                    const sign = summary.changePct >= 0 ? "+" : "";
+                    pctEl.textContent = `${sign}${summary.changePct.toFixed(2)}%`;
+                    pctEl.className = `pct ${summary.changePct >= 0 ? 'up' : 'down'}`;
+                }
+            }
+            if (this.activeTicker && data.stocks[this.activeTicker]) {
+                this._updateDeskEstimate();
+            }
+        };
+
         this.wsClient.onPortfolioUpdate = (data) => {
             if (this.mode !== "online" || !this.wsClient || !this.wsClient.inMatch) return;
             this._handleWsPortfolioUpdate(data);
@@ -1236,8 +1282,15 @@ class TradingApp {
                 else if (data.side === "SELL" || data.side === "SHORT") this.sfx.playSell();
                 else this.sfx.playWin();
 
+                const tradeTicker = this.activeTicker;
+                const targetStock = this.engine.stocks[tradeTicker];
+                if (targetStock) {
+                    const timeStr = new Date().toTimeString().split(" ")[0];
+                    targetStock.addTradeMarker(data.side, data.shares, data.price, timeStr);
+                }
+
                 if (this.chart) {
-                    this.chart.showTradeNotification(data.side, data.shares, data.price, this.activeTicker);
+                    this.chart.showTradeNotification(data.side, data.shares, data.price, tradeTicker);
                 }
             } else {
                 if (this.elEstCost) {
@@ -1297,18 +1350,47 @@ class TradingApp {
 
         const mins = Math.floor(this.matchTimeLeft / 60);
         const secs = this.matchTimeLeft % 60;
-        this.elHudTimer.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        this.elHudTimer.textContent = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
 
         if (this.engine.stocks[this.activeTicker]) {
             this.engine.stocks[this.activeTicker].price = data.initialPrice;
+            if (data.candles && data.candles.length > 0) {
+                this.engine.stocks[this.activeTicker].candles = data.candles;
+            }
+            if (data.currentCandle) {
+                this.engine.stocks[this.activeTicker].currentCandle = data.currentCandle;
+            }
             this._selectTicker(this.activeTicker);
+        }
+
+        if (this.wsClient) {
+            this.wsClient.watchTicker(this.activeTicker);
         }
 
         this._updateDeskPosition();
     }
 
     _handleWsMarketTick(data) {
-        if (!data || data.ticker !== this.activeTicker) return;
+        if (!data || !data.ticker) return;
+
+        const st = this.engine.stocks[data.ticker];
+        if (st) {
+            st.price = data.price;
+            if (data.candle) {
+                if (!st.currentCandle || Math.abs(st.currentCandle.timestamp - data.candle.timestamp) >= 2) {
+                    if (st.currentCandle) {
+                        st.candles.push(st.currentCandle);
+                        if (st.candles.length > 80) st.candles.shift();
+                    }
+                    st.currentCandle = { ...data.candle };
+                } else {
+                    st.currentCandle.high = Math.max(st.currentCandle.high, data.candle.high);
+                    st.currentCandle.low = Math.min(st.currentCandle.low, data.candle.low);
+                    st.currentCandle.close = data.candle.close;
+                    st.currentCandle.volume = data.candle.volume;
+                }
+            }
+        }
 
         const price = data.price;
         const change = data.change;
@@ -1316,12 +1398,24 @@ class TradingApp {
         const chgSign = change >= 0 ? "+" : "";
         const chgClass = change >= 0 ? "up" : "down";
 
-        if (this.elActivePrice) this.elActivePrice.textContent = `${price.toFixed(2)}`;
-        if (this.elActiveChg) {
-            this.elActiveChg.textContent = `${chgSign}${change.toFixed(2)} (${chgSign}${changePct.toFixed(2)}%)`;
-            this.elActiveChg.className = `active-chg ${chgClass}`;
+        if (data.ticker === this.activeTicker) {
+            if (this.elActivePrice) this.elActivePrice.textContent = `${price.toFixed(2)}`;
+            if (this.elActiveChg) {
+                this.elActiveChg.textContent = `${chgSign}${change.toFixed(2)} (${chgSign}${changePct.toFixed(2)}%)`;
+                this.elActiveChg.className = `active-chg ${chgClass}`;
+            }
+            if (this.elDeskPrice) this.elDeskPrice.textContent = `${price.toFixed(2)}`;
+
+            if (this.chart) {
+                if (st) {
+                    this.chart.setData(st);
+                } else {
+                    this.chart.currentPrice = price;
+                    this.chart.render();
+                }
+            }
+            this._updateDeskEstimate();
         }
-        if (this.elDeskPrice) this.elDeskPrice.textContent = `${price.toFixed(2)}`;
 
         const pEl = document.getElementById(`price-${data.ticker}`);
         const pctEl = document.getElementById(`pct-${data.ticker}`);
@@ -1330,27 +1424,6 @@ class TradingApp {
             pctEl.textContent = `${chgSign}${changePct.toFixed(2)}%`;
             pctEl.className = `pct ${chgClass}`;
         }
-
-        if (this.chart) {
-            this.chart.currentPrice = price;
-            if (data.candle) {
-                if (this.chart.candles && this.chart.candles.length > 0) {
-                    const last = this.chart.candles[this.chart.candles.length - 1];
-                    if (Math.abs(last.timestamp - data.candle.timestamp) < 2) {
-                        last.high = Math.max(last.high, data.candle.high);
-                        last.low = Math.min(last.low, data.candle.low);
-                        last.close = data.candle.close;
-                        last.volume = data.candle.volume;
-                    } else {
-                        this.chart.candles.push(data.candle);
-                        if (this.chart.candles.length > 80) this.chart.candles.shift();
-                    }
-                }
-            }
-            this.chart.render();
-        }
-
-        this._updateDeskEstimate();
     }
 
     _handleWsPortfolioUpdate(data) {
@@ -1360,7 +1433,7 @@ class TradingApp {
 
         const mins = Math.floor(Math.max(0, timeLeft) / 60);
         const secs = Math.max(0, timeLeft) % 60;
-        this.elHudTimer.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        this.elHudTimer.textContent = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
 
         const mySign = you.totalPnL >= 0 ? "+" : "";
         this.elHudMyScore.textContent = `${you.equity.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (${mySign}${you.totalPnLPct.toFixed(2)}%)`;
@@ -1395,21 +1468,36 @@ class TradingApp {
             const pnlSign = pos.unrealizedPnL >= 0 ? "+" : "";
             const pnlClass = pos.unrealizedPnL >= 0 ? "up" : "down";
 
-            if (this.elPosShares) this.elPosShares.textContent = sideStr;
-            if (this.elPosAvg) this.elPosAvg.textContent = `${pos.avgEntry.toFixed(2)}`;
-            if (this.elPosVal) this.elPosVal.textContent = `${pos.marketValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-            if (this.elPosPnl) {
-                this.elPosPnl.textContent = `${pnlSign}${pos.unrealizedPnL.toFixed(2)} (${pnlSign}${pos.unrealizedPnLPct.toFixed(2)}%)`;
-                this.elPosPnl.className = `val ${pnlClass}`;
-            }
+            const isActiveStockPos = (pos.ticker === this.activeTicker);
 
-            if (this.chart) {
-                this.chart.setPosition({
-                    shares: pos.shares,
-                    avgPrice: pos.avgEntry,
-                    unrealizedPnL: () => pos.unrealizedPnL,
-                    unrealizedPnLPct: () => pos.unrealizedPnLPct
-                });
+            if (isActiveStockPos) {
+                if (this.elPosShares) this.elPosShares.textContent = sideStr;
+                if (this.elPosAvg) this.elPosAvg.textContent = `${pos.avgEntry.toFixed(2)}`;
+                if (this.elPosVal) this.elPosVal.textContent = `${pos.marketValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                if (this.elPosPnl) {
+                    this.elPosPnl.textContent = `${pnlSign}${pos.unrealizedPnL.toFixed(2)} (${pnlSign}${pos.unrealizedPnLPct.toFixed(2)}%)`;
+                    this.elPosPnl.className = `val ${pnlClass}`;
+                }
+
+                if (this.chart) {
+                    this.chart.setPosition({
+                        shares: pos.shares,
+                        avgPrice: pos.avgEntry,
+                        unrealizedPnL: () => pos.unrealizedPnL,
+                        unrealizedPnLPct: () => pos.unrealizedPnLPct
+                    });
+                }
+            } else {
+                if (this.elPosShares) this.elPosShares.textContent = `0 (FLAT) [Open: ${pos.ticker} ${sideStr}]`;
+                if (this.elPosAvg) this.elPosAvg.textContent = "$0.00";
+                if (this.elPosVal) this.elPosVal.textContent = "$0.00";
+                if (this.elPosPnl) {
+                    this.elPosPnl.textContent = "$0.00 (+0.00%)";
+                    this.elPosPnl.className = "val";
+                }
+                if (this.chart) {
+                    this.chart.setPosition(null);
+                }
             }
         } else {
             if (this.elPosShares) this.elPosShares.textContent = "0 (FLAT)";

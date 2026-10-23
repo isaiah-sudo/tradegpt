@@ -134,6 +134,14 @@ class LiveTradeWsClient {
                 if (this.onMarketTick) this.onMarketTick(msg);
                 break;
 
+            case 'stock_data':
+                if (this.onStockData) this.onStockData(msg);
+                break;
+
+            case 'market_batch':
+                if (this.onMarketBatch) this.onMarketBatch(msg);
+                break;
+
             case 'order_ack':
                 if (this.onOrderAck) this.onOrderAck(msg);
                 break;
@@ -157,15 +165,30 @@ class LiveTradeWsClient {
         return false;
     }
 
-    joinQueue(nickname, equippedTitle = "title_trader", equippedAnimation = "money_rain", duration = 60) {
+    joinQueue(nickname = "Trader", equippedTitle = "title_trader", equippedAnimation = "money_rain", duration = 60) {
+        let dur = duration;
+        let nick = nickname;
+        let title = equippedTitle;
+        let anim = equippedAnimation;
+
+        if (typeof nickname === 'number') {
+            dur = nickname;
+            nick = "Trader";
+        } else if (typeof nickname === 'object' && nickname !== null) {
+            nick = nickname.nickname || "Trader";
+            title = nickname.equippedTitle || "title_trader";
+            anim = nickname.equippedAnimation || "money_rain";
+            dur = nickname.duration || 60;
+        }
+
         this.isSearching = true;
-        this.selectedDuration = duration;
+        this.selectedDuration = dur;
         return this.send({
             type: 'join_queue',
-            nickname,
-            equippedTitle,
-            equippedAnimation,
-            duration
+            nickname: nick,
+            equippedTitle: title,
+            equippedAnimation: anim,
+            duration: dur
         });
     }
 
@@ -181,6 +204,14 @@ class LiveTradeWsClient {
             ticker,
             qty,
             leverage
+        });
+    }
+
+    watchTicker(ticker) {
+        if (!ticker) return false;
+        return this.send({
+            type: 'watch_ticker',
+            ticker
         });
     }
 

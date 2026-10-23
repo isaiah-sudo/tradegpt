@@ -58,6 +58,14 @@ wss.on('connection', (ws: WebSocket) => {
           matchmaker.dequeue(playerId);
           break;
 
+        case 'watch_ticker': {
+          const room = matchmaker.getRoomForPlayer(playerId);
+          if (room) {
+            room.handleWatchTicker(playerId, msg.ticker);
+          }
+          break;
+        }
+
         case 'order': {
           const room = matchmaker.getRoomForPlayer(playerId);
           if (room) {

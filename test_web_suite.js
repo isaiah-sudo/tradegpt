@@ -615,6 +615,91 @@ it("LiveTradeWsClient initializes with protocol handlers", () => {
     client._stopPing();
 });
 
+it("MatchRoom configures proper clock and duration for 60s Blitz, 120s Tactical, and 300s Marathon", () => {
+    const pA = { id: "p1", nickname: "TraderBlitz" };
+    const pB = { id: "p2", nickname: "TraderBlitz2" };
+
+    const room60 = new MatchRoom("room_60", pA, pB, "NVXP", 60);
+    assert.strictEqual(room60.durationSeconds, 60);
+    room60.startMatch();
+    assert.strictEqual(room60.timeLeft, 60);
+    room60.stopTimers();
+
+    const room120 = new MatchRoom("room_120", pA, pB, "NVXP", 120);
+    assert.strictEqual(room120.durationSeconds, 120);
+    room120.startMatch();
+    assert.strictEqual(room120.timeLeft, 120);
+    room120.stopTimers();
+
+    const room300 = new MatchRoom("room_300", pA, pB, "NVXP", 300);
+    assert.strictEqual(room300.durationSeconds, 300);
+    room300.startMatch();
+    assert.strictEqual(room300.timeLeft, 300);
+    room300.stopTimers();
+});
+
+it("Matchmaker separates matchmaking queues by duration (60s Blitz, 120s Tactical, 300s Marathon)", () => {
+    const matchmaker = new Matchmaker();
+    const ws60_1 = { readyState: 1, send: () => {} };
+    const ws60_2 = { readyState: 1, send: () => {} };
+    const ws120_1 = { readyState: 1, send: () => {} };
+    const ws120_2 = { readyState: 1, send: () => {} };
+
+    // Player 1 queues for 60s, Player 2 queues for 120s
+    matchmaker.enqueue("u60_1", ws60_1, "BlitzTrader1", undefined, undefined, 60);
+    matchmaker.enqueue("u120_1", ws120_1, "TacticalTrader1", undefined, undefined, 120);
+
+    // Neither should be matched yet (different duration buckets)
+    assert.strictEqual(matchmaker.getRoomForPlayer("u60_1"), undefined);
+    assert.strictEqual(matchmaker.getRoomForPlayer("u120_1"), undefined);
+
+    // Player 3 queues for 60s -> should immediately pair with u60_1 into a 60s room
+    matchmaker.enqueue("u60_2", ws60_2, "BlitzTrader2", undefined, undefined, 60);
+    const room60 = matchmaker.getRoomForPlayer("u60_1");
+    assert.ok(room60, "u60_1 was paired with u60_2");
+    assert.strictEqual(room60.durationSeconds, 60);
+    assert.strictEqual(matchmaker.getRoomForPlayer("u60_2")?.id, room60.id);
+
+    // Player 4 queues for 120s -> should immediately pair with u120_1 into a 120s room
+    matchmaker.enqueue("u120_2", ws120_2, "TacticalTrader2", undefined, undefined, 120);
+    const room120 = matchmaker.getRoomForPlayer("u120_1");
+    assert.ok(room120, "u120_1 was paired with u120_2");
+    assert.strictEqual(room120.durationSeconds, 120);
+    assert.strictEqual(matchmaker.getRoomForPlayer("u120_2")?.id, room120.id);
+
+    // Clean up
+    room60.stopTimers();
+    room120.stopTimers();
+    matchmaker.dequeue("u60_1");
+    matchmaker.dequeue("u60_2");
+    matchmaker.dequeue("u120_1");
+    matchmaker.dequeue("u120_2");
+});
+
+it("LiveTradeWsClient sends selected duration on joinQueue and nextOpponent", () => {
+    const client = new LiveTradeWsClient();
+    const sentMessages = [];
+    client.ws = {
+        readyState: 1, // OPEN
+        send: (msg) => { sentMessages.push(JSON.parse(msg)); }
+    };
+    client.isConnected = true;
+
+    // joinQueue with 120s
+    client.joinQueue(120);
+    assert.strictEqual(sentMessages.length, 1);
+    assert.strictEqual(sentMessages[0].type, "join_queue");
+    assert.strictEqual(sentMessages[0].duration, 120);
+
+    // nextOpponent with 300s
+    client.nextOpponent(300);
+    assert.strictEqual(sentMessages.length, 2);
+    assert.strictEqual(sentMessages[1].type, "next_opponent");
+    assert.strictEqual(sentMessages[1].duration, 300);
+
+    client._stopPing();
+});
+
 console.log("\n7. RESIZABLE & SHRINKABLE BOTTOM BAR INTEGRITY VERIFICATION");
 it("initializes bottom panel with 210px default height", () => {
     localStorage.clear();
@@ -662,6 +747,113 @@ it("resets height to 210px default on reset action", () => {
     testApp.setBottomPanelHeight(testApp.bottomPanelDefaultHeight);
     assert.strictEqual(testApp.elBottomPanel.style.height, "210px");
     assert.strictEqual(localStorage.getItem("tradesim_bottom_height"), "210");
+});
+
+console.log("\n8. LIVE MULTIPLAYER 100-STOCK UNIVERSE & REAL-TIME GRAPH INTEGRITY VERIFICATION");
+
+it("MatchRoom simulates all 100 universe stocks with individualized logic and jump diffusion", () => {
+    const pA = { id: "pA", nickname: "SharkA", title: "title_trader", animation: "money_rain" };
+    const pB = { id: "pB", nickname: "SharkB", title: "title_whale", animation: "golden_bull", isBot: true };
+
+    const room = new MatchRoom("room_universe_100", pA, pB, "NVXP", 60);
+    assert.strictEqual(room.priceEngines.size, 100, "Must initialize all 100 stocks");
+
+    // Sample distinct sectors
+    const nvxp = room.priceEngines.get("NVXP");
+    const moon = room.priceEngines.get("MOON");
+    const pump = room.priceEngines.get("PUMP");
+    const lock = room.priceEngines.get("LOCK");
+
+    assert.ok(nvxp && moon && pump && lock, "Diverse sector stocks must exist");
+    assert.strictEqual(nvxp.sector, "AI & Tech");
+    assert.strictEqual(moon.sector, "Meme & Retail");
+    assert.strictEqual(pump.sector, "Penny Wildcard");
+    assert.strictEqual(lock.sector, "Aerospace & Defense");
+
+    assert.ok(moon.baseVolatility > nvxp.baseVolatility, "Meme stock has higher volatility than AI tech");
+    assert.ok(pump.baseVolatility > moon.baseVolatility, "Penny stock has higher volatility than Meme stock");
+    assert.ok(nvxp.candles.length >= 40, "Stocks pre-seed at least 40 candles");
+    assert.ok(moon.candles.length >= 40);
+
+    room.startMatch();
+    room.stopTimers();
+});
+
+it("MatchRoom allows players to switch active watched stocks dynamically with full candlestick sync", () => {
+    const pA_messages = [];
+    const pA = {
+        id: "player_switch_a",
+        nickname: "TraderSwitch",
+        ws: { readyState: 1, send: (m) => pA_messages.push(JSON.parse(m)) }
+    };
+    const pB = { id: "bot_b", nickname: "BotB", isBot: true };
+
+    const room = new MatchRoom("room_switch_test", pA, pB, "NVXP", 60);
+    room.startMatch();
+
+    // Default watched ticker is initial NVXP
+    assert.strictEqual(room.watchedTickerA, "NVXP");
+
+    // Player switches to MOON
+    room.handleWatchTicker("player_switch_a", "MOON");
+    assert.strictEqual(room.watchedTickerA, "MOON");
+
+    // Check that player received stock_data for MOON
+    const stockDataMsg = pA_messages.find(m => m.type === "stock_data");
+    assert.ok(stockDataMsg, "Received stock_data payload");
+    assert.strictEqual(stockDataMsg.ticker, "MOON");
+    assert.ok(stockDataMsg.candles.length >= 40, "Full candle history delivered on switch");
+    assert.ok(stockDataMsg.currentCandle, "Current live candle delivered");
+
+    room.stopTimers();
+});
+
+it("MatchRoom executes orders against the exact live price of any traded stock and updates portfolio", () => {
+    const pA_messages = [];
+    const pA = {
+        id: "trader_orders_1",
+        nickname: "OrderTrader",
+        ws: { readyState: 1, send: (m) => pA_messages.push(JSON.parse(m)) }
+    };
+    const pB = { id: "bot_2", nickname: "Bot2", isBot: true };
+
+    const room = new MatchRoom("room_orders_test", pA, pB, "NVXP", 60);
+    room.startMatch();
+
+    const moonEngine = room.priceEngines.get("MOON");
+    const moonPrice = moonEngine.price;
+
+    // Execute order on MOON while room default symbol was NVXP
+    room.handleOrder("trader_orders_1", "BUY", "MOON", 100, 5);
+
+    assert.ok(room.stateA.position, "Position opened");
+    assert.strictEqual(room.stateA.position.ticker, "MOON");
+    assert.strictEqual(room.stateA.position.shares, 100);
+    assert.strictEqual(room.stateA.position.avgEntry, moonPrice);
+
+    const orderAck = pA_messages.find(m => m.type === "order_ack");
+    assert.ok(orderAck, "Order ACK sent");
+    assert.strictEqual(orderAck.price, moonPrice);
+
+    room.stopTimers();
+});
+
+it("CandlestickChart deduplicates candles sharing timestamps and renders without glitching", () => {
+    const chart = new CandlestickChart("chart-canvas");
+    const stockMock = {
+        ticker: "TEST",
+        price: 50.0,
+        tradeMarkers: [],
+        candles: [
+            { timestamp: 1000, open: 49, high: 51, low: 48, close: 50, volume: 100 },
+            { timestamp: 1005, open: 50, high: 52, low: 49, close: 51, volume: 120 }
+        ],
+        currentCandle: { timestamp: 1005, open: 50, high: 52, low: 49, close: 51, volume: 120 }
+    };
+
+    chart.setData(stockMock);
+    assert.strictEqual(chart.candles.length, 2, "Deduplicated timestamp");
+    assert.strictEqual(chart.candles[1].timestamp, 1005);
 });
 
 console.log("\n=================================================");

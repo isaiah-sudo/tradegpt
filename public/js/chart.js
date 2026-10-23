@@ -109,7 +109,10 @@ class CandlestickChart {
 
         const list = [...stock.candles];
         if (stock.currentCandle) {
-            list.push(stock.currentCandle);
+            const last = list[list.length - 1];
+            if (!last || Math.abs(last.timestamp - stock.currentCandle.timestamp) >= 1) {
+                list.push(stock.currentCandle);
+            }
         }
         this.candles = list;
         this.render();
@@ -148,6 +151,27 @@ class CandlestickChart {
     }
 
     render() {
+        if (typeof requestAnimationFrame !== 'undefined') {
+            if (this._rafPending) return;
+            this._rafPending = true;
+            requestAnimationFrame(() => {
+                this._rafPending = false;
+                this._draw();
+            });
+        } else {
+            this._draw();
+        }
+    }
+
+    renderImmediately() {
+        if (this._rafPending && typeof cancelAnimationFrame !== 'undefined') {
+            cancelAnimationFrame(this._rafPending);
+            this._rafPending = false;
+        }
+        this._draw();
+    }
+
+    _draw() {
         const ctx = this.ctx;
         const w = this.width;
         const h = this.height;
