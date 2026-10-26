@@ -53,10 +53,10 @@ export class Matchmaker {
       joinedAt: Date.now()
     };
 
-    // Set bot fallback timer: if no human joins within 3 seconds, pair with high-speed simulated rival bot
+    // Set bot fallback timer: if no human joins within 2.5 seconds, pair with high-speed simulated rival bot
     player.botFallbackTimer = setTimeout(() => {
       this._pairWithBot(player.id);
-    }, 3000);
+    }, 2500);
 
     this.queue.push(player);
 

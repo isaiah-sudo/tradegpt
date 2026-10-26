@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DayTradeSim Pro • Institutional Web Terminal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700;800&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <link rel="icon" type="image/x-icon" href="favicon.ico">
 </head>
@@ -25,6 +28,10 @@
                 <div class="metric-pill hero-metric">
                     <span class="label">Total Equity</span>
                     <span class="value" id="hdr-balance">$25,000.00</span>
+                </div>
+                <div class="metric-pill">
+                    <span class="label">Buying Power</span>
+                    <span class="value" id="hdr-bp">$25,000.00</span>
                 </div>
                 <div class="metric-pill">
                     <span class="label">Unrealized P&L</span>
@@ -325,82 +332,294 @@
          ========================================================= -->
     <!-- 1. Mode Select Modal -->
     <div class="modal-overlay" id="modal-mode">
-        <div class="modal-card mode-dispatch-card" style="position:relative;max-width:660px;">
-            <!-- Top Left Sign-In Button -->
-            <div id="modal-top-left-auth" style="position:absolute;top:18px;left:20px;display:flex;align-items:center;gap:8px;">
-                <button class="btn-ctrl" id="btn-top-auth" style="background:#2962ff;color:#fff;font-weight:700;padding:6px 12px;border-radius:4px;cursor:pointer;border:none;">Sign In</button>
-            </div>
-            <!-- Top Right Home & Downloads Link -->
-            <a href="/" style="position:absolute;top:18px;right:20px;display:flex;align-items:center;gap:6px;color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:600;padding:6px 12px;border-radius:4px;border:1px solid #2a2e39;background:#161a25;transition:all 0.2s;">Home & Downloads</a>
-            
-            <div class="terminal-dispatch-header" style="margin-top:14px;margin-bottom:14px;">
-                <div class="modal-badge-chip">INSTITUTIONAL SIMULATION & 1V1 PVP ARENA</div>
-                <h2 class="modal-title" style="margin-top:6px;">DAYTRADESIM <span style="font-size:14px;color:var(--accent-blue);font-weight:700;">PRO v2.2</span></h2>
-                <p class="modal-sub">Deploy capital in solo market sandbox or compete in real-time 1v1 trader duels</p>
-            </div>
-
-            <div class="menu-vault-pill" id="menu-vault-pill">
-                <span>Vault Balance: <strong id="modal-vault-bal" class="up">$0.00</strong></span>
-                <button class="btn-shop-badge" id="btn-modal-shop">Trader Shop</button>
-            </div>
-
-            <div style="margin-bottom:14px;text-align:left;">
-                <label style="font-size:11px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;">Trader Callsign / Nickname</label>
-                <input type="text" class="nickname-input" id="nickname-input" placeholder="e.g. ApexTrader_X" style="margin-bottom:0;">
-            </div>
-
-            <!-- Mode Selection Grid -->
-            <div class="mode-cards-grid" style="grid-template-columns: 1fr; gap: 14px;">
-                <!-- 1. Solo Sandbox Mode -->
-                <div class="mode-card solo-box" id="mode-solo" style="cursor:pointer;text-align:left;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;">
-                        <span class="mode-pill-tag">SOLO SANDBOX</span>
-                        <div style="display:flex;align-items:center;gap:6px;" onclick="event.stopPropagation();">
-                            <span class="badge-tag" id="mode-temp-tag" style="background:#1a2e22;color:#00e676;border-color:rgba(0,230,118,0.3);font-size:10px;">Temp: 1.00x</span>
-                            <button type="button" class="btn-ctrl" id="btn-modal-settings" style="font-size:10px;padding:2px 8px;border-radius:4px;">Tune Temp</button>
-                        </div>
+        <div class="modal-card mode-dispatch-card">
+            <!-- Simplified Top Header Bar: Brand on Left, Global Navigation & Profile on Top Right -->
+            <div class="modal-top-bar">
+                <div class="modal-brand-cluster">
+                    <div class="modal-brand-title-row">
+                        <h2 class="modal-title">DAYTRADESIM</h2>
+                        <span class="version-tag">PRO v2.2</span>
                     </div>
-                    <div style="font-size:15px;font-weight:800;color:#fff;margin:6px 0 2px 0;">Solo Paper Trading Environment</div>
-                    <span class="desc">Unlimited practice, customizable market speeds (1x to 20x), breaking catalyst shocks, and leveraged margin execution.</span>
+                    <p class="modal-sub">Institutional trading terminal &amp; real-time competitive arena</p>
                 </div>
 
-                <!-- 2. 1v1 Online PvP Duels with 3 Format Options -->
-                <div class="pvp-dispatch-section" id="mode-online" style="text-align:left;background:#11151f;border:1px solid #283042;border-radius:8px;padding:14px;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-                        <span class="mode-pill-tag pvp">1V1 LIVE PVP ARENA</span>
-                        <span style="font-size:10px;font-weight:800;color:#00e676;background:rgba(0,230,118,0.1);padding:2px 6px;border-radius:3px;">SUB-SECOND ORDER BOOK</span>
-                    </div>
-                    <div style="font-size:14px;font-weight:800;color:#fff;margin-bottom:2px;">Select Duel Format & Match Clock</div>
-                    <p style="font-size:11px;color:var(--text-muted);margin-bottom:10px;">Compete against active online traders with synchronized prices, authoritative order matching, and real-time dual PnL tug-of-war.</p>
-
-                    <!-- The 3 Duel Duration Cards -->
-                    <div class="duel-duration-selector" id="duel-duration-selector">
-                        <div class="duel-dur-card active" data-duration="60">
-                            <div class="dur-badge">⚡ BLITZ</div>
-                            <div class="dur-time">60 SEC</div>
-                            <div class="dur-desc">Fast reflex scalping & volatile bursts</div>
-                        </div>
-                        <div class="duel-dur-card" data-duration="120">
-                            <div class="dur-badge">🎯 TACTICAL</div>
-                            <div class="dur-time">2 MIN</div>
-                            <div class="dur-desc">Momentum setups & pullback swings</div>
-                        </div>
-                        <div class="duel-dur-card" data-duration="300">
-                            <div class="dur-badge">📈 MARATHON</div>
-                            <div class="dur-time">5 MIN</div>
-                            <div class="dur-desc">Full trend cycles & risk-reward discipline</div>
-                        </div>
+                <div class="modal-top-nav">
+                    <!-- Vault & Trader Shop -->
+                    <div class="menu-vault-box">
+                        <span class="vault-label">Vault</span>
+                        <strong id="modal-vault-bal" class="vault-amount up">$0.00</strong>
+                        <button type="button" class="btn-shop-badge" id="btn-modal-shop" title="Open Trader Shop">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                                <line x1="3" y1="6" x2="21" y2="6"></line>
+                                <path d="M16 10a4 4 0 0 1-8 0"></path>
+                            </svg>
+                            <span>Shop</span>
+                        </button>
                     </div>
 
-                    <button class="btn-launch-duel" id="btn-launch-duel">
-                        <span class="duel-btn-title">FIND 1v1 DUEL OPPONENT</span>
+                    <!-- Home & Downloads Link -->
+                    <a href="/" class="modal-nav-link" title="Home &amp; Downloads">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                        </svg>
+                        <span>Home &amp; Downloads</span>
+                    </a>
+
+                    <!-- Single Unified User Profile & Auth Control (Top Right) -->
+                    <div class="modal-profile-cluster">
+                        <div class="nickname-box" title="Trader Callsign (click to edit)">
+                            <svg class="profile-mono-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                            <input type="text" class="nickname-input-clean" id="nickname-input" placeholder="Callsign" aria-label="Trader Callsign">
+                        </div>
+                        <div id="modal-top-left-auth" class="modal-top-auth">
+                            <button class="btn-ctrl" id="btn-top-auth">Sign In</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2-Column Mode Selection Grid -->
+            <div class="mode-cards-grid-modern">
+                <!-- 1. Solo Sandbox Mode -->
+                <div class="mode-card-modern solo" id="card-mode-solo">
+                    <div class="mode-card-body">
+                        <div class="mode-card-title-row">
+                            <div class="mode-title-with-icon">
+                                <svg class="mode-header-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="9" cy="7" r="4"></circle>
+                                    <polyline points="16 11 18 13 22 9"></polyline>
+                                </svg>
+                                <h3 class="mode-card-title">Solo Market Sandbox</h3>
+                            </div>
+                            <svg class="mode-sparkline-icon" width="48" height="22" viewBox="0 0 48 22" fill="none" aria-hidden="true">
+                                <path d="M2 18L11 13L19 16L29 8L37 11L46 3" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <p class="mode-card-desc">Practice and hone your strategies in a risk-free environment across 100 simulated stocks with customizable market speeds and margin.</p>
+
+                        <!-- Inner Sandbox Specs & Candlestick Preview Box -->
+                        <div class="mode-inner-box solo-specs-box" onclick="event.stopPropagation();">
+                            <div class="solo-specs-list">
+                                <div class="solo-spec-row">
+                                    <span class="spec-label">Starting Balance:</span>
+                                    <strong class="spec-val mono-data">$25,000</strong>
+                                </div>
+                                <div class="solo-spec-row">
+                                    <span class="spec-label">Live Tape:</span>
+                                    <span class="live-ticker-pill" id="menu-live-ticker">
+                                        <span class="lt-sym">NVXP</span>
+                                        <span class="lt-price" id="menu-live-price">$84.50</span>
+                                        <span class="lt-chg up" id="menu-live-chg">+1.85%</span>
+                                    </span>
+                                </div>
+                                <div class="solo-spec-row temp-tuning-pill">
+                                    <span class="badge-tag" id="mode-temp-tag">Temp: 1.00x</span>
+                                    <button type="button" class="btn-tune-temp" id="btn-modal-settings" title="Customize market volatility temperature">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <line x1="4" y1="21" x2="4" y2="14"></line>
+                                            <line x1="4" y1="10" x2="4" y2="3"></line>
+                                            <line x1="12" y1="21" x2="12" y2="12"></line>
+                                            <line x1="12" y1="8" x2="12" y2="3"></line>
+                                            <line x1="20" y1="21" x2="20" y2="16"></line>
+                                            <line x1="20" y1="12" x2="20" y2="3"></line>
+                                            <line x1="1" y1="14" x2="7" y2="14"></line>
+                                            <line x1="9" y1="8" x2="15" y2="8"></line>
+                                            <line x1="17" y1="16" x2="23" y2="16"></line>
+                                        </svg>
+                                        <span>Tune Temp</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="solo-mini-chart" aria-hidden="true">
+                                <svg viewBox="0 0 124 72" width="122" height="70" fill="none">
+                                    <defs>
+                                        <linearGradient id="soloChartGrad" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stop-color="#00e676" stop-opacity="0.22"/>
+                                            <stop offset="100%" stop-color="#00e676" stop-opacity="0.0"/>
+                                        </linearGradient>
+                                    </defs>
+                                    <path d="M6 54 L22 45 L38 49 L54 35 L70 40 L86 24 L102 28 L116 12 L116 66 L6 66 Z" fill="url(#soloChartGrad)"/>
+                                    <!-- Cyber-terminal candlesticks -->
+                                    <line x1="12" y1="42" x2="12" y2="58" stroke="#f43f5e" stroke-width="1.3"/>
+                                    <rect x="9.5" y="46" width="5" height="8" rx="1" fill="#f43f5e" opacity="0.85"/>
+                                    <line x1="26" y1="35" x2="26" y2="52" stroke="#10b981" stroke-width="1.3"/>
+                                    <rect x="23.5" y="38" width="5" height="9" rx="1" fill="#10b981"/>
+                                    <line x1="40" y1="40" x2="40" y2="55" stroke="#f43f5e" stroke-width="1.3"/>
+                                    <rect x="37.5" y="44" width="5" height="7" rx="1" fill="#f43f5e" opacity="0.85"/>
+                                    <line x1="54" y1="27" x2="54" y2="46" stroke="#10b981" stroke-width="1.3"/>
+                                    <rect x="51.5" y="31" width="5" height="10" rx="1" fill="#10b981"/>
+                                    <line x1="68" y1="31" x2="68" y2="47" stroke="#f43f5e" stroke-width="1.3"/>
+                                    <rect x="65.5" y="35" width="5" height="7" rx="1" fill="#f43f5e" opacity="0.85"/>
+                                    <line x1="82" y1="17" x2="82" y2="38" stroke="#00e676" stroke-width="1.3"/>
+                                    <rect x="79.5" y="21" width="5" height="11" rx="1" fill="#00e676"/>
+                                    <line x1="96" y1="20" x2="96" y2="36" stroke="#f43f5e" stroke-width="1.3"/>
+                                    <rect x="93.5" y="25" width="5" height="7" rx="1" fill="#f43f5e" opacity="0.85"/>
+                                    <line class="candle-live-pulse" x1="110" y1="6" x2="110" y2="28" stroke="#00f0ff" stroke-width="1.5"/>
+                                    <rect class="candle-live-pulse" x="107.5" y="10" width="5" height="12" rx="1" fill="#00e676"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-mode-launch solo" id="btn-launch-solo">
+                        <span class="solo-btn-content">
+                            <span>START SOLO TRADING</span>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <polygon points="6 4 20 12 6 20 6 4"></polygon>
+                            </svg>
+                        </span>
+                    </button>
+                </div>
+
+                <!-- 2. 1v1 Online PvP Duels with Split-Screen HUD Clash & 3 Format Options -->
+                <div class="mode-card-modern pvp" id="card-mode-pvp">
+                    <div class="mode-card-body">
+                        <div class="mode-card-title-row">
+                            <div class="mode-title-with-icon">
+                                <h3 class="mode-card-title">1v1 Live PVP Arena</h3>
+                                <svg class="mode-header-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"></polyline>
+                                    <line x1="13" y1="19" x2="19" y2="13"></line>
+                                    <line x1="16" y1="16" x2="20" y2="20"></line>
+                                    <line x1="19" y1="21" x2="21" y2="19"></line>
+                                    <polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"></polyline>
+                                    <line x1="5" y1="14" x2="9" y2="18"></line>
+                                    <line x1="7" y1="17" x2="4" y2="20"></line>
+                                    <line x1="3" y1="19" x2="5" y2="21"></line>
+                                </svg>
+                            </div>
+                            <svg class="mode-sparkline-icon" width="48" height="22" viewBox="0 0 48 22" fill="none" aria-hidden="true">
+                                <path d="M2 16L9 12L15 17L23 6L30 13L38 4L46 9" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <p class="mode-card-desc">Challenge other traders in real-time market face-offs with synchronized prices and live PnL tug-of-war.</p>
+
+                        <!-- Inner Duel Format & Split-Screen HUD Clash Box -->
+                        <div class="mode-inner-box pvp-formats-box">
+                            <!-- Stylized Split-Screen 1v1 HUD Clash Graphic (Green vs Red) -->
+                            <div class="pvp-clash-visualizer" aria-hidden="true">
+                                <div class="clash-side you">
+                                    <span class="clash-tag">YOU</span>
+                                    <span class="clash-pnl" id="menu-clash-you">+$1,480</span>
+                                </div>
+                                <div class="clash-bar-track">
+                                    <div class="clash-bar-fill you"></div>
+                                    <div class="clash-spark">VS</div>
+                                    <div class="clash-bar-fill opp"></div>
+                                </div>
+                                <div class="clash-side opp">
+                                    <span class="clash-pnl" id="menu-clash-opp">-$620</span>
+                                    <span class="clash-tag">RIVAL</span>
+                                </div>
+                            </div>
+
+                            <div class="pvp-format-box-header">
+                                <span class="format-box-label">Select Duel Format</span>
+                                <span class="tape-badge">Sub-Second Book</span>
+                            </div>
+
+                            <!-- The 3 Duel Duration Toggle Cards -->
+                            <div class="duel-duration-selector" id="duel-duration-selector">
+                                <div class="duel-dur-card active" data-duration="60">
+                                    <div class="dur-badge">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                                        </svg>
+                                        <span>Blitz</span>
+                                    </div>
+                                    <div class="dur-time">1 MIN</div>
+                                    <div class="dur-desc">Fast scalping</div>
+                                </div>
+                                <div class="duel-dur-card" data-duration="120">
+                                    <div class="dur-badge">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <circle cx="12" cy="12" r="10"></circle>
+                                            <circle cx="12" cy="12" r="6"></circle>
+                                            <circle cx="12" cy="12" r="2"></circle>
+                                        </svg>
+                                        <span>Tactical</span>
+                                    </div>
+                                    <div class="dur-time">2 MIN</div>
+                                    <div class="dur-desc">Momentum swings</div>
+                                </div>
+                                <div class="duel-dur-card" data-duration="300">
+                                    <div class="dur-badge">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                                            <polyline points="17 6 23 6 23 12"></polyline>
+                                        </svg>
+                                        <span>Marathon</span>
+                                    </div>
+                                    <div class="dur-time">5 MIN</div>
+                                    <div class="dur-desc">Full trend cycles</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn-mode-launch pvp" id="btn-launch-duel">
+                        <span class="duel-btn-title">
+                            <span class="btn-radar-indicator" aria-hidden="true">
+                                <span class="btn-radar-ping"></span>
+                                <span class="btn-radar-core"></span>
+                            </span>
+                            <span>FIND OPPONENT</span>
+                        </span>
                         <span class="duel-btn-sub" id="duel-btn-sub">Format: 60-Second Blitz Duel</span>
                     </button>
                 </div>
             </div>
 
-            <div style="display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:var(--text-muted);margin-top:14px;">
-                <span style="color:#00e676;">●</span> Authoritative High-Frequency Game Server • Sub-Millisecond WebSocket Tick Tape
+            <!-- Player Progression & High-Roller Vault Showcase (Opens Trader Shop) -->
+            <div class="vault-progression-teaser" onclick="if(window.app) window.app.showShopModal();" title="Open Trader Shop to unlock victory celebrations &amp; titles">
+                <div class="vpt-left">
+                    <span class="vpt-eyebrow">VAULT PROGRESSION</span>
+                    <span class="vpt-headline">Bank profits above <strong class="mono-data">$25,000</strong> to unlock high-roller flexes</span>
+                </div>
+                <div class="vpt-items">
+                    <div class="vpt-reward-pill">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M5 17h14v-4l-2-5H7L5 13v4z"></path>
+                            <circle cx="7.5" cy="17.5" r="2.5"></circle>
+                            <circle cx="16.5" cy="17.5" r="2.5"></circle>
+                        </svg>
+                        <div class="vpt-reward-meta">
+                            <span class="vpt-r-name">Hypercar Drift</span>
+                            <span class="vpt-r-price">$350k</span>
+                        </div>
+                    </div>
+                    <div class="vpt-reward-pill">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00e676" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M2 18h20l-3 3H5l-3-3z"></path>
+                            <path d="M6 18V9l6-5 6 5v9"></path>
+                            <line x1="12" y1="4" x2="12" y2="18"></line>
+                        </svg>
+                        <div class="vpt-reward-meta">
+                            <span class="vpt-r-name">Monaco 300ft Yacht</span>
+                            <span class="vpt-r-price">$750k</span>
+                        </div>
+                    </div>
+                    <div class="vpt-reward-pill">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"></path>
+                        </svg>
+                        <div class="vpt-reward-meta">
+                            <span class="vpt-r-name">Gulfstream G700</span>
+                            <span class="vpt-r-price">$1.5M</span>
+                        </div>
+                    </div>
+                </div>
+                <span class="vpt-cta">Explore Shop →</span>
+            </div>
+
+            <!-- Footer Status -->
+            <div class="modal-footer-status">
+                <span class="live-dot">●</span> Authoritative High-Frequency Game Server • Sub-Millisecond WebSocket Tick Tape
             </div>
         </div>
     </div>
@@ -641,7 +860,8 @@
         </div>
     </div>
 
-    <!-- Fullscreen Win Animation Canvas Overlay -->
+    <!-- Fullscreen Win Animation Video & Canvas Overlay -->
+    <video id="anim-video" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;object-fit:cover;z-index:999998;pointer-events:none;" playsinline muted loop></video>
     <canvas id="anim-canvas" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:999999;pointer-events:all;background:rgba(6,9,14,0.92);"></canvas>
     <div id="anim-overlay-ui" style="display:none;position:fixed;top:20px;right:20px;z-index:1000000;">
         <button class="btn-ctrl" id="btn-skip-anim" style="background:#222631;border:1px solid #3d4454;color:#fff;font-weight:700;padding:6px 14px;border-radius:4px;cursor:pointer;">✕ Close</button>

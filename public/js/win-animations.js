@@ -23,7 +23,21 @@ class WinAnimationEngine {
         this.maxFrames = 260; // ~4.3 seconds at 60fps
         this.extraData = {};
 
+        this.videoEl = (typeof document !== "undefined") ? document.getElementById("anim-video") : null;
+        this.videoPlaying = false;
+        this.videoSources = {
+            supercar_drift: "assets/videos/supercar_drift.mp4",
+            mega_yacht: "assets/videos/mega_yacht.mp4",
+            private_jet: "assets/videos/private_jet.mp4"
+        };
+
         this._initEvents();
+    }
+
+    registerVideo(animationId, videoUrl) {
+        if (animationId && videoUrl) {
+            this.videoSources[animationId] = videoUrl;
+        }
     }
 
     _initEvents() {
@@ -33,14 +47,16 @@ class WinAnimationEngine {
         if (this.canvas) {
             this.canvas.addEventListener("click", () => this.stop());
         }
-        window.addEventListener("keydown", (e) => {
-            if (e.key === "Escape" && this.active) {
-                this.stop();
-            }
-        });
-        window.addEventListener("resize", () => {
-            if (this.active) this._resize();
-        });
+        if (typeof window !== "undefined" && typeof window.addEventListener === "function") {
+            window.addEventListener("keydown", (e) => {
+                if (e.key === "Escape" && this.active) {
+                    this.stop();
+                }
+            });
+            window.addEventListener("resize", () => {
+                if (this.active) this._resize();
+            });
+        }
     }
 
     _resize() {
@@ -49,7 +65,7 @@ class WinAnimationEngine {
         this.canvas.height = window.innerHeight;
     }
 
-    play(animationId = "money_rain", titleOverride = null) {
+    play(animationId = "money_rain", titleOverride = null, videoUrlOverride = null) {
         this.stop();
         if (!this.canvas || !this.ctx) {
             this.canvas = document.getElementById("anim-canvas");
@@ -68,6 +84,38 @@ class WinAnimationEngine {
         this.canvas.style.display = "block";
         if (this.ui) this.ui.style.display = "block";
 
+        if (!this.videoEl && typeof document !== "undefined") {
+            this.videoEl = document.getElementById("anim-video");
+        }
+
+        const vUrl = videoUrlOverride || this.videoSources[this.animationId];
+        this.videoPlaying = false;
+        if (vUrl && this.videoEl) {
+            try {
+                this.videoEl.src = vUrl;
+                this.videoEl.currentTime = 0;
+                this.videoEl.style.display = "block";
+                const p = this.videoEl.play();
+                if (p && typeof p.then === "function") {
+                    p.then(() => {
+                        this.videoPlaying = true;
+                        if (this.canvas) this.canvas.style.background = "transparent";
+                    }).catch(() => {
+                        this.videoPlaying = false;
+                        if (this.videoEl) this.videoEl.style.display = "none";
+                        if (this.canvas) this.canvas.style.background = "rgba(6,9,14,0.94)";
+                    });
+                }
+            } catch (e) {
+                this.videoPlaying = false;
+                if (this.videoEl) this.videoEl.style.display = "none";
+                if (this.canvas) this.canvas.style.background = "rgba(6,9,14,0.94)";
+            }
+        } else {
+            if (this.videoEl) this.videoEl.style.display = "none";
+            if (this.canvas) this.canvas.style.background = "rgba(6,9,14,0.94)";
+        }
+
         this._initParticles();
         this._loop();
     }
@@ -78,9 +126,19 @@ class WinAnimationEngine {
             cancelAnimationFrame(this.animFrameId);
             this.animFrameId = null;
         }
+        if (this.videoEl) {
+            try {
+                this.videoEl.pause();
+                this.videoEl.currentTime = 0;
+                this.videoEl.src = "";
+                this.videoEl.style.display = "none";
+            } catch (e) {}
+        }
+        this.videoPlaying = false;
         if (this.canvas) {
             this.canvas.style.display = "none";
             this.canvas.style.transform = "none";
+            this.canvas.style.background = "rgba(6,9,14,0.92)";
             if (this.ctx) this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         }
         if (this.ui) this.ui.style.display = "none";
@@ -173,6 +231,74 @@ class WinAnimationEngine {
                     vrot: (Math.random() - 0.5) * 8
                 });
             }
+        } else if (this.animationId === "supercar_drift") {
+            this.extraData.car = {
+                x: w * 0.44,
+                y: h * 0.58,
+                driftAngle: -0.28,
+                speed: 232,
+                rpm: 9350
+            };
+            this.extraData.roadLines = [];
+            for (let i = 0; i < 45; i++) {
+                this.extraData.roadLines.push({
+                    x: Math.random() * w,
+                    y: h * 0.42 + Math.random() * (h * 0.58),
+                    len: 50 + Math.random() * 140,
+                    spd: 24 + Math.random() * 30,
+                    width: 1.5 + Math.random() * 2.5,
+                    alpha: 0.15 + Math.random() * 0.4
+                });
+            }
+            this.extraData.smoke = [];
+            this.extraData.sparks = [];
+        } else if (this.animationId === "mega_yacht") {
+            this.extraData.yacht = {
+                x: w * 0.48,
+                y: h * 0.52,
+                bob: 0
+            };
+            this.extraData.waves = [];
+            for (let i = 0; i < 7; i++) {
+                this.extraData.waves.push({
+                    y: h * 0.48 + i * (h * 0.52 / 6),
+                    speed: 0.025 + i * 0.012,
+                    amp: 5 + i * 3.5,
+                    freq: 0.006 + i * 0.0025,
+                    phase: Math.random() * Math.PI * 2,
+                    color: `rgba(${6 + i * 4}, ${22 + i * 10}, ${48 + i * 16}, ${0.4 + i * 0.09})`
+                });
+            }
+            this.extraData.bubbles = [];
+            for (let i = 0; i < 50; i++) {
+                this.extraData.bubbles.push({
+                    x: Math.random() * w,
+                    y: h + Math.random() * 200,
+                    vy: 1.8 + Math.random() * 3.2,
+                    radius: 2 + Math.random() * 4.5,
+                    wobble: Math.random() * Math.PI * 2,
+                    wobbleSpd: 0.04 + Math.random() * 0.06,
+                    color: Math.random() > 0.4 ? "rgba(255, 215, 0, 0.75)" : "rgba(200, 240, 255, 0.75)"
+                });
+            }
+            this.extraData.skySparks = [];
+        } else if (this.animationId === "private_jet") {
+            this.extraData.jet = {
+                x: w * 0.50,
+                y: h * 0.42,
+                bankAngle: -0.09
+            };
+            this.extraData.clouds = [];
+            for (let i = 0; i < 35; i++) {
+                this.extraData.clouds.push({
+                    x: Math.random() * (w * 1.6),
+                    y: h * 0.52 + Math.random() * (h * 0.48),
+                    radius: 60 + Math.random() * 110,
+                    spd: 8 + Math.random() * 18,
+                    color: `rgba(${225 + Math.floor(Math.random() * 30)}, ${170 + Math.floor(Math.random() * 45)}, ${130 + Math.floor(Math.random() * 45)}, ${0.22 + Math.random() * 0.28})`
+                });
+            }
+            this.extraData.jetParticles = [];
         } else {
             // Money Rain (default)
             const emojis = ["💵", "💸", "💰", "$100", "🤑", "✨", "⭐", "🎉"];
@@ -200,7 +326,9 @@ class WinAnimationEngine {
         const h = this.canvas.height;
         this.ctx.clearRect(0, 0, w, h);
 
-        if (this.animationId === "rocket_moon") {
+        if (this.videoPlaying) {
+            this._drawVideoOverlay(w, h);
+        } else if (this.animationId === "rocket_moon") {
             this._drawRocket(w, h);
         } else if (this.animationId === "matrix_glitch") {
             this._drawMatrix(w, h);
@@ -208,6 +336,12 @@ class WinAnimationEngine {
             this._drawDiamondHands(w, h);
         } else if (this.animationId === "golden_bull") {
             this._drawGoldenBull(w, h);
+        } else if (this.animationId === "supercar_drift") {
+            this._drawSupercar(w, h);
+        } else if (this.animationId === "mega_yacht") {
+            this._drawMegaYacht(w, h);
+        } else if (this.animationId === "private_jet") {
+            this._drawPrivateJet(w, h);
         } else {
             this._drawMoneyRain(w, h);
         }
@@ -792,6 +926,852 @@ class WinAnimationEngine {
         this.ctx.fillStyle = "#ffd700";
         this.ctx.textAlign = "center";
         this.ctx.fillText(this.titleOverride || "👑 WALL STREET WHALE: BULL STAMPEDE! 👑", w / 2, 118);
+    }
+
+    // --- Video Overlay HUD & Widescreen Letterbox ---
+    _drawVideoOverlay(w, h) {
+        // Subtle cinematic letterbox bars (2.39:1 widescreen matte)
+        const barHeight = Math.min(65, Math.floor(h * 0.08));
+        this.ctx.fillStyle = "rgba(0, 0, 0, 0.88)";
+        this.ctx.fillRect(0, 0, w, barHeight);
+        this.ctx.fillRect(0, h - barHeight, w, barHeight);
+
+        // Gold & diamond celebration motes floating across video
+        if (Math.random() < 0.35 && this.particles.length < 50) {
+            this.particles.push({
+                x: Math.random() * w,
+                y: h + 10,
+                vy: 2 + Math.random() * 4,
+                vx: (Math.random() - 0.5) * 2,
+                char: ["✨", "💎", "⭐", "🪙", "🔥"][Math.floor(Math.random() * 5)],
+                size: 14 + Math.random() * 16,
+                alpha: 0.9,
+                life: 90
+            });
+        }
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+            const p = this.particles[i];
+            p.x += p.vx;
+            p.y -= p.vy;
+            p.life--;
+            this.ctx.font = `${p.size}px sans-serif`;
+            this.ctx.textAlign = "center";
+            this.ctx.fillText(p.char, p.x, p.y);
+            if (p.life <= 0 || p.y < -20) this.particles.splice(i, 1);
+        }
+
+        // Luxury Victory HUD Glass Card
+        this.ctx.save();
+        this.ctx.translate(w / 2, barHeight + 50);
+
+        this.ctx.fillStyle = "rgba(10, 14, 24, 0.92)";
+        this.ctx.strokeStyle = "#ffd700";
+        this.ctx.lineWidth = 3;
+        this.ctx.beginPath();
+        this.ctx.roundRect(-360, -38, 720, 76, 12);
+        this.ctx.fill();
+        this.ctx.stroke();
+
+        let title = this.titleOverride;
+        let subtitle = "HIGH-ROLLER LUXURY CELEBRATION • ULTRA-WEALTH UNLOCKED";
+        if (!title) {
+            if (this.animationId === "supercar_drift") {
+                title = "🏎️ 1,500 HP HYPERCAR DRIFT • MAXIMUM WEALTH FLEX 🏎️";
+                subtitle = "BUGATTI CHIRON PUR SPORT • QUAD-TURBO W16 • $4,500,000 FLEET";
+            } else if (this.animationId === "mega_yacht") {
+                title = "🛥️ 300FT MONACO SUPERYACHT • BILLIONAIRE PRESTIGE 🛥️";
+                subtitle = "PRIVATE HELIPAD • DEEP OCEAN LED GLOW • ANCHORED IN SAINT-TROPEZ";
+            } else if (this.animationId === "private_jet") {
+                title = "✈️ GULFSTREAM G700 STRATOSPHERE • MACH 0.925 TRANSATLANTIC ✈️";
+                subtitle = "51,000 FT CRUISING ALTITUDE • PRIVATE FLIGHT DECK • GLOBAL REACH";
+            } else {
+                title = "🏆 WALL STREET CHAMPION • ULTIMATE WEALTH FLEX 🏆";
+            }
+        }
+
+        this.ctx.font = "bold 24px 'Segoe UI', Roboto, sans-serif";
+        this.ctx.fillStyle = "#ffd700";
+        this.ctx.textAlign = "center";
+        this.ctx.textBaseline = "middle";
+        this.ctx.fillText(title, 0, -8);
+
+        this.ctx.font = "bold 12px 'Segoe UI', Roboto, sans-serif";
+        this.ctx.fillStyle = "#e0e6ed";
+        this.ctx.fillText(subtitle, 0, 18);
+        this.ctx.restore();
+    }
+
+    // --- 6. Supercar Drift Procedural 60fps Scene ---
+    _drawSupercar(w, h) {
+        const car = this.extraData.car;
+        if (!car) return;
+
+        // 1. Midnight Metropolis & Asphalt Backdrop
+        const skyGrad = this.ctx.createLinearGradient(0, 0, 0, h * 0.45);
+        skyGrad.addColorStop(0, "#040711");
+        skyGrad.addColorStop(1, "#0d1326");
+        this.ctx.fillStyle = skyGrad;
+        this.ctx.fillRect(0, 0, w, h * 0.45);
+
+        // Distant Cyber Skyline Silhouettes
+        this.ctx.fillStyle = "rgba(18, 25, 45, 0.75)";
+        for (let bx = 0; bx < w; bx += 70) {
+            const bh = 50 + ((bx * 37) % 110);
+            this.ctx.fillRect(bx, h * 0.45 - bh, 55, bh);
+        }
+
+        // Wet Tarmac Road
+        const roadGrad = this.ctx.createLinearGradient(0, h * 0.45, 0, h);
+        roadGrad.addColorStop(0, "#080c14");
+        roadGrad.addColorStop(0.5, "#0e1422");
+        roadGrad.addColorStop(1, "#141c2e");
+        this.ctx.fillStyle = roadGrad;
+        this.ctx.fillRect(0, h * 0.45, w, h * 0.55);
+
+        // Perspective Road Streaks (Speed Lines)
+        if (this.extraData.roadLines) {
+            for (const r of this.extraData.roadLines) {
+                r.x -= r.spd * 0.8;
+                r.y += r.spd * 0.35;
+                if (r.x < -150 || r.y > h + 50) {
+                    r.x = w + Math.random() * 100;
+                    r.y = h * 0.43 + Math.random() * (h * 0.5);
+                }
+                this.ctx.strokeStyle = `rgba(0, 229, 255, ${r.alpha})`;
+                this.ctx.lineWidth = r.width;
+                this.ctx.beginPath();
+                this.ctx.moveTo(r.x, r.y);
+                this.ctx.lineTo(r.x - r.len, r.y + r.len * 0.35);
+                this.ctx.stroke();
+            }
+        }
+
+        // Volumetric Headlight Beams illuminating the road
+        this.ctx.save();
+        const beamGrad = this.ctx.createLinearGradient(car.x + 80, car.y - 10, car.x + 480, car.y + 120);
+        beamGrad.addColorStop(0, "rgba(224, 247, 250, 0.65)");
+        beamGrad.addColorStop(0.4, "rgba(0, 229, 255, 0.3)");
+        beamGrad.addColorStop(1, "rgba(0, 229, 255, 0)");
+        this.ctx.fillStyle = beamGrad;
+        this.ctx.beginPath();
+        this.ctx.moveTo(car.x + 70, car.y - 12);
+        this.ctx.lineTo(car.x + 460, car.y - 20);
+        this.ctx.lineTo(car.x + 490, car.y + 140);
+        this.ctx.lineTo(car.x + 70, car.y + 18);
+        this.ctx.closePath();
+        this.ctx.fill();
+        this.ctx.restore();
+
+        // Underglow Neon Glow on Asphalt
+        this.ctx.save();
+        this.ctx.translate(car.x, car.y + 36);
+        this.ctx.scale(1.0, 0.35);
+        const underglow = this.ctx.createRadialGradient(0, 0, 10, 0, 0, 180);
+        underglow.addColorStop(0, "rgba(0, 240, 255, 0.85)");
+        underglow.addColorStop(0.5, "rgba(217, 70, 239, 0.45)");
+        underglow.addColorStop(1, "rgba(0, 0, 0, 0)");
+        this.ctx.fillStyle = underglow;
+        this.ctx.beginPath();
+        this.ctx.arc(0, 0, 180, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.restore();
+
+        // 2. High-Density Tire Smoke Particles
+        if (this.extraData.smoke) {
+            for (let s = 0; s < 4; s++) {
+                this.extraData.smoke.push({
+                    x: car.x - 110 + (Math.random() - 0.5) * 30,
+                    y: car.y + 24 + (Math.random() - 0.5) * 12,
+                    vx: -4 - Math.random() * 8,
+                    vy: -1 - Math.random() * 3,
+                    radius: 8 + Math.random() * 8,
+                    maxRadius: 45 + Math.random() * 35,
+                    alpha: 0.65,
+                    color: Math.random() > 0.4 ? "rgba(0, 229, 255, " : "rgba(200, 215, 230, "
+                });
+            }
+            for (let i = this.extraData.smoke.length - 1; i >= 0; i--) {
+                const sm = this.extraData.smoke[i];
+                sm.x += sm.vx;
+                sm.y += sm.vy;
+                sm.radius += 0.9;
+                sm.alpha -= 0.016;
+                if (sm.alpha <= 0) {
+                    this.extraData.smoke.splice(i, 1);
+                } else {
+                    this.ctx.fillStyle = sm.color + sm.alpha + ")";
+                    this.ctx.beginPath();
+                    this.ctx.arc(sm.x, sm.y, sm.radius, 0, Math.PI * 2);
+                    this.ctx.fill();
+                }
+            }
+        }
+
+        // 3. Render Vector Hypercar (Bugatti/Chiron-inspired carbon silhouette)
+        this.ctx.save();
+        const driftWobble = Math.sin(this.frameCount * 0.12) * 0.015;
+        this.ctx.translate(car.x, car.y);
+        this.ctx.rotate(car.driftAngle + driftWobble);
+
+        // Lower Chassis & Diffuser
+        this.ctx.fillStyle = "#0b0d14";
+        this.ctx.beginPath();
+        this.ctx.roundRect(-140, 16, 280, 18, 4);
+        this.ctx.fill();
+
+        // Aerodynamic Carbon Fiber Body
+        const carGrad = this.ctx.createLinearGradient(-150, -40, 150, 20);
+        carGrad.addColorStop(0, "#0369a1");
+        carGrad.addColorStop(0.3, "#0284c7");
+        carGrad.addColorStop(0.6, "#38bdf8");
+        carGrad.addColorStop(0.9, "#0f172a");
+        this.ctx.fillStyle = carGrad;
+        this.ctx.strokeStyle = "#38bdf8";
+        this.ctx.lineWidth = 2.5;
+
+        this.ctx.beginPath();
+        // Nose splitter
+        this.ctx.moveTo(135, 14);
+        this.ctx.lineTo(142, 6);
+        this.ctx.lineTo(110, -6);
+        // Front hood & wheel arch
+        this.ctx.bezierCurveTo(85, -16, 50, -18, 20, -18);
+        // Cockpit canopy
+        this.ctx.bezierCurveTo(0, -38, -50, -38, -75, -20);
+        // Rear deck & spoiler mount
+        this.ctx.lineTo(-120, -18);
+        this.ctx.lineTo(-145, -4);
+        this.ctx.lineTo(-145, 16);
+        this.ctx.closePath();
+        this.ctx.fill();
+        this.ctx.stroke();
+
+        // Cockpit Tinted Canopy Glass
+        this.ctx.fillStyle = "#060911";
+        this.ctx.strokeStyle = "#00f0ff";
+        this.ctx.lineWidth = 1.5;
+        this.ctx.beginPath();
+        this.ctx.moveTo(15, -16);
+        this.ctx.lineTo(-5, -32);
+        this.ctx.lineTo(-58, -32);
+        this.ctx.lineTo(-68, -16);
+        this.ctx.closePath();
+        this.ctx.fill();
+        this.ctx.stroke();
+
+        // Specular Windshield Glint
+        this.ctx.strokeStyle = "rgba(255, 255, 255, 0.75)";
+        this.ctx.lineWidth = 2;
+        this.ctx.beginPath();
+        this.ctx.moveTo(8, -18);
+        this.ctx.lineTo(-2, -30);
+        this.ctx.stroke();
+
+        // Carbon GT Rear Wing
+        this.ctx.fillStyle = "#020617";
+        this.ctx.strokeStyle = "#00f0ff";
+        this.ctx.lineWidth = 2;
+        // Pylons
+        this.ctx.fillRect(-136, -34, 5, 16);
+        this.ctx.fillRect(-118, -34, 5, 16);
+        // Wing blade
+        this.ctx.beginPath();
+        this.ctx.roundRect(-145, -38, 42, 6, 2);
+        this.ctx.fill();
+        this.ctx.stroke();
+
+        // Full-width Continuous Crimson LED Lightbar Taillight
+        this.ctx.strokeStyle = "#ff003c";
+        this.ctx.lineWidth = 4;
+        this.ctx.beginPath();
+        this.ctx.moveTo(-144, 2);
+        this.ctx.lineTo(-144, 12);
+        this.ctx.stroke();
+
+        // Quad-LED Projector Headlights
+        this.ctx.fillStyle = "#ffffff";
+        this.ctx.shadowColor = "#00f0ff";
+        this.ctx.shadowBlur = 14;
+        this.ctx.beginPath();
+        this.ctx.arc(130, 2, 4.5, 0, Math.PI * 2);
+        this.ctx.arc(120, -2, 4, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.shadowBlur = 0;
+
+        // Massive Racing Alloy Wheels & Brake Rotors
+        const wheels = [
+            { x: -95, y: 16, r: 21 },
+            { x: 80, y: 16, r: 21 }
+        ];
+        for (const w of wheels) {
+            // Tire rubber
+            this.ctx.fillStyle = "#090d16";
+            this.ctx.beginPath();
+            this.ctx.arc(w.x, w.y, w.r, 0, Math.PI * 2);
+            this.ctx.fill();
+            // Rim
+            this.ctx.fillStyle = "#1e293b";
+            this.ctx.strokeStyle = "#00e5ff";
+            this.ctx.lineWidth = 2;
+            this.ctx.beginPath();
+            this.ctx.arc(w.x, w.y, w.r * 0.72, 0, Math.PI * 2);
+            this.ctx.fill();
+            this.ctx.stroke();
+            // Red Brembo Caliper
+            this.ctx.fillStyle = "#ff1744";
+            this.ctx.fillRect(w.x + 4, w.y - 12, 6, 12);
+            // Center nut
+            this.ctx.fillStyle = "#ffd700";
+            this.ctx.beginPath();
+            this.ctx.arc(w.x, w.y, 3, 0, Math.PI * 2);
+            this.ctx.fill();
+        }
+
+        // 4. Twin-Turbo Exhaust Backfire Flames (Bursts of fire + sparks)
+        const flamePulse = (this.frameCount % 8 < 4);
+        if (flamePulse) {
+            // Dual exhaust tips
+            const exhausts = [-146];
+            for (const exX of exhausts) {
+                // Outer orange combustion flame
+                this.ctx.fillStyle = "rgba(255, 109, 0, 0.9)";
+                this.ctx.beginPath();
+                this.ctx.moveTo(exX, 10);
+                this.ctx.lineTo(exX - 35 - Math.random() * 25, 8 + (Math.random() - 0.5) * 8);
+                this.ctx.lineTo(exX, 16);
+                this.ctx.closePath();
+                this.ctx.fill();
+
+                // Inner high-temp cyan core
+                this.ctx.fillStyle = "rgba(0, 240, 255, 0.95)";
+                this.ctx.beginPath();
+                this.ctx.moveTo(exX, 11);
+                this.ctx.lineTo(exX - 18 - Math.random() * 12, 13);
+                this.ctx.lineTo(exX, 15);
+                this.ctx.closePath();
+                this.ctx.fill();
+            }
+        }
+        this.ctx.restore();
+
+        // 5. High-Tech Glass Racing HUD (Tachometer & Speedometer)
+        this.ctx.save();
+        this.ctx.translate(w - 230, 85);
+        this.ctx.fillStyle = "rgba(10, 15, 26, 0.88)";
+        this.ctx.strokeStyle = "#00f0ff";
+        this.ctx.lineWidth = 2;
+        this.ctx.beginPath();
+        this.ctx.roundRect(-90, -45, 180, 90, 10);
+        this.ctx.fill();
+        this.ctx.stroke();
+
+        this.ctx.font = "bold 11px Consolas, monospace";
+        this.ctx.fillStyle = "#00f0ff";
+        this.ctx.textAlign = "center";
+        this.ctx.fillText("TELEMETRY // V16 TURBO", 0, -25);
+
+        const currentSpeed = 230 + Math.floor(Math.sin(this.frameCount * 0.2) * 8);
+        this.ctx.font = "bold 28px Consolas, monospace";
+        this.ctx.fillStyle = "#ffffff";
+        this.ctx.fillText(`${currentSpeed} MPH`, 0, 4);
+
+        this.ctx.font = "bold 12px Consolas, monospace";
+        this.ctx.fillStyle = (this.frameCount % 6 < 3) ? "#ff1744" : "#ff9100";
+        this.ctx.fillText("9,500 RPM [REDLINE]", 0, 24);
+        this.ctx.restore();
+
+        // 6. Cinema Luxury Victory HUD Banner
+        this.ctx.save();
+        this.ctx.translate(w / 2, 75);
+        this.ctx.fillStyle = "rgba(6, 10, 18, 0.94)";
+        this.ctx.strokeStyle = "#00e5ff";
+        this.ctx.lineWidth = 3;
+        this.ctx.beginPath();
+        this.ctx.roundRect(-360, -40, 720, 80, 14);
+        this.ctx.fill();
+        this.ctx.stroke();
+
+        this.ctx.font = "bold 25px 'Segoe UI', Roboto, sans-serif";
+        this.ctx.fillStyle = "#00e5ff";
+        this.ctx.textAlign = "center";
+        this.ctx.textBaseline = "middle";
+        this.ctx.fillText(this.titleOverride || "🏎️ 1,500 HP HYPERCAR DRIFT • MAXIMUM WEALTH FLEX 🏎️", 0, -10);
+
+        this.ctx.font = "bold 12px 'Segoe UI', Roboto, sans-serif";
+        this.ctx.fillStyle = "#ffffff";
+        this.ctx.fillText("BUGATTI CHIRON PUR SPORT • QUAD-TURBO W16 • $4,500,000 FLEET", 0, 20);
+        this.ctx.restore();
+    }
+
+    // --- 7. Mega Yacht Procedural 60fps Scene ---
+    _drawMegaYacht(w, h) {
+        const yacht = this.extraData.yacht;
+        if (!yacht) return;
+
+        // 1. Monaco Twilight Ocean Gradient
+        const skyGrad = this.ctx.createLinearGradient(0, 0, 0, h * 0.5);
+        skyGrad.addColorStop(0, "#030612");
+        skyGrad.addColorStop(0.4, "#0b162e");
+        skyGrad.addColorStop(0.7, "#1d1a45");
+        skyGrad.addColorStop(1, "#c46a28"); // warm golden sunset rim
+        this.ctx.fillStyle = skyGrad;
+        this.ctx.fillRect(0, 0, w, h * 0.5);
+
+        // Golden Crescent Moon with Soft Radial Corona
+        this.ctx.save();
+        this.ctx.font = "60px sans-serif";
+        this.ctx.textAlign = "center";
+        this.ctx.fillText("🌙", w * 0.85, 90);
+        this.ctx.restore();
+
+        // Distant Monaco Harbor Shoreline Lights
+        this.ctx.fillStyle = "rgba(255, 215, 0, 0.75)";
+        for (let i = 0; i < 40; i++) {
+            const lx = (i * 48 + 20) % w;
+            const ly = h * 0.49 - ((i * 19) % 24);
+            this.ctx.fillRect(lx, ly, 3, 3);
+        }
+
+        // 2. Underwater Hull Cyan LED Radiance
+        const bobY = Math.sin(this.frameCount * 0.05) * 4;
+        const yachtY = yacht.y + bobY;
+        const yachtX = yacht.x;
+
+        this.ctx.save();
+        this.ctx.translate(yachtX, yachtY + 22);
+        this.ctx.scale(1.0, 0.35);
+        const hullGlow = this.ctx.createRadialGradient(0, 0, 20, 0, 0, 240);
+        hullGlow.addColorStop(0, "rgba(0, 240, 255, 0.85)");
+        hullGlow.addColorStop(0.5, "rgba(0, 150, 220, 0.45)");
+        hullGlow.addColorStop(1, "rgba(0, 0, 0, 0)");
+        this.ctx.fillStyle = hullGlow;
+        this.ctx.beginPath();
+        this.ctx.arc(0, 0, 240, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.restore();
+
+        // 3. Multi-tier 300ft Superyacht Naval Architecture
+        this.ctx.save();
+        const pitchAngle = Math.sin(this.frameCount * 0.04) * 0.012;
+        this.ctx.translate(yachtX, yachtY);
+        this.ctx.rotate(pitchAngle);
+
+        // Main Lower Hull (Midnight Navy & Platinum Waterline)
+        const hullGrad = this.ctx.createLinearGradient(-220, 0, 220, 30);
+        hullGrad.addColorStop(0, "#08101e");
+        hullGrad.addColorStop(0.5, "#0f1c34");
+        hullGrad.addColorStop(1, "#1e293b");
+        this.ctx.fillStyle = hullGrad;
+        this.ctx.strokeStyle = "#38bdf8";
+        this.ctx.lineWidth = 2;
+
+        this.ctx.beginPath();
+        this.ctx.moveTo(210, 10);   // Raked Bow
+        this.ctx.lineTo(235, -12);  // Sharp bow tip
+        this.ctx.lineTo(130, -12);  // Foredeck
+        this.ctx.lineTo(-210, -12); // Aft deck
+        this.ctx.lineTo(-215, 14);  // Stern transom
+        this.ctx.lineTo(160, 24);   // Lower keel
+        this.ctx.closePath();
+        this.ctx.fill();
+        this.ctx.stroke();
+
+        // Waterline Silver Pinstripe
+        this.ctx.strokeStyle = "#e2e8f0";
+        this.ctx.lineWidth = 2;
+        this.ctx.beginPath();
+        this.ctx.moveTo(-212, 10);
+        this.ctx.lineTo(195, 10);
+        this.ctx.stroke();
+
+        // Superstructure - Main Deck & Cabin Suites
+        this.ctx.fillStyle = "#ffffff";
+        this.ctx.strokeStyle = "#94a3b8";
+        this.ctx.lineWidth = 1.5;
+        this.ctx.beginPath();
+        this.ctx.roundRect(-180, -32, 280, 20, 3);
+        this.ctx.fill();
+        this.ctx.stroke();
+
+        // Glowing Panoramic Privacy Windows (Golden Warm Light)
+        this.ctx.fillStyle = "#fde047";
+        this.ctx.shadowColor = "#facc15";
+        this.ctx.shadowBlur = 8;
+        for (let gx = -165; gx < 85; gx += 22) {
+            this.ctx.fillRect(gx, -27, 14, 10);
+        }
+        this.ctx.shadowBlur = 0;
+
+        // Bridge Deck & Wheelhouse
+        this.ctx.fillStyle = "#f8fafc";
+        this.ctx.beginPath();
+        this.ctx.roundRect(-130, -50, 180, 18, 3);
+        this.ctx.fill();
+        this.ctx.stroke();
+
+        // Bridge Windows (Cyan Tinted Glass)
+        this.ctx.fillStyle = "#0284c7";
+        for (let bx = -115; bx < 40; bx += 20) {
+            this.ctx.fillRect(bx, -46, 12, 10);
+        }
+
+        // Top Sun Deck & Glowing Jacuzzi / Infinity Pool
+        this.ctx.fillStyle = "#ffffff";
+        this.ctx.fillRect(-70, -64, 90, 14);
+        // Jacuzzi Pool (glowing turquoise)
+        this.ctx.fillStyle = "#00f0ff";
+        this.ctx.fillRect(-60, -62, 28, 8);
+
+        // Communications Radar Mast with Spinning Beacon
+        this.ctx.strokeStyle = "#64748b";
+        this.ctx.lineWidth = 2;
+        this.ctx.beginPath();
+        this.ctx.moveTo(-10, -64);
+        this.ctx.lineTo(-10, -82);
+        this.ctx.lineTo(5, -78);
+        this.ctx.stroke();
+
+        // Foredeck Helipad [ H ]
+        this.ctx.fillStyle = "#1e293b";
+        this.ctx.strokeStyle = "#ffd700";
+        this.ctx.lineWidth = 1.5;
+        this.ctx.beginPath();
+        this.ctx.ellipse(170, -11, 26, 6, 0, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.stroke();
+
+        this.ctx.font = "bold 9px sans-serif";
+        this.ctx.fillStyle = "#ffffff";
+        this.ctx.textAlign = "center";
+        this.ctx.fillText("H", 170, -8);
+
+        // Private Helicopter Silhouette on Helipad
+        this.ctx.fillStyle = "#0f172a";
+        this.ctx.fillRect(162, -22, 16, 8); // Cabin
+        this.ctx.fillRect(152, -18, 12, 3); // Tail boom
+        // Rotor blades
+        this.ctx.strokeStyle = "rgba(255, 255, 255, 0.7)";
+        this.ctx.lineWidth = 1.5;
+        this.ctx.beginPath();
+        this.ctx.moveTo(148, -24);
+        this.ctx.lineTo(192, -24);
+        this.ctx.stroke();
+
+        // Bow Wave Splash Foam
+        this.ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+        this.ctx.beginPath();
+        this.ctx.arc(228, 14, 5 + Math.random() * 3, 0, Math.PI * 2);
+        this.ctx.arc(235, 18, 7 + Math.random() * 4, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.restore();
+
+        // 4. Dynamic Deep Ocean Waves (Rolling Mediterranean Sea)
+        if (this.extraData.waves) {
+            for (const wave of this.extraData.waves) {
+                wave.phase += wave.speed;
+                this.ctx.fillStyle = wave.color;
+                this.ctx.beginPath();
+                this.ctx.moveTo(0, h);
+                this.ctx.lineTo(0, wave.y);
+                for (let wx = 0; wx <= w; wx += 25) {
+                    const wy = wave.y + Math.sin(wx * wave.freq + wave.phase) * wave.amp;
+                    this.ctx.lineTo(wx, wy);
+                }
+                this.ctx.lineTo(w, h);
+                this.ctx.closePath();
+                this.ctx.fill();
+            }
+        }
+
+        // 5. Effervescent Golden Champagne Bubbles Floating Upward
+        if (this.extraData.bubbles) {
+            for (const b of this.extraData.bubbles) {
+                b.wobble += b.wobbleSpd;
+                b.x += Math.sin(b.wobble) * 1.5;
+                b.y -= b.vy;
+                if (b.y < -20) {
+                    b.y = h + Math.random() * 50;
+                    b.x = Math.random() * w;
+                }
+                this.ctx.fillStyle = b.color;
+                this.ctx.beginPath();
+                this.ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+                this.ctx.fill();
+            }
+        }
+
+        // 6. Sky Celebration Starbursts
+        if (Math.random() < 0.25 && (!this.extraData.skySparks || this.extraData.skySparks.length < 40)) {
+            if (!this.extraData.skySparks) this.extraData.skySparks = [];
+            const sx = Math.random() * w;
+            const sy = 60 + Math.random() * 120;
+            const sparkCol = ["#ffd700", "#38bdf8", "#f43f5e", "#a855f7"][Math.floor(Math.random() * 4)];
+            for (let k = 0; k < 6; k++) {
+                const angle = (k / 6) * Math.PI * 2;
+                this.extraData.skySparks.push({
+                    x: sx,
+                    y: sy,
+                    vx: Math.cos(angle) * (2 + Math.random() * 3),
+                    vy: Math.sin(angle) * (2 + Math.random() * 3),
+                    color: sparkCol,
+                    life: 25
+                });
+            }
+        }
+        if (this.extraData.skySparks) {
+            for (let i = this.extraData.skySparks.length - 1; i >= 0; i--) {
+                const sp = this.extraData.skySparks[i];
+                sp.x += sp.vx;
+                sp.y += sp.vy;
+                sp.life--;
+                this.ctx.fillStyle = sp.color;
+                this.ctx.beginPath();
+                this.ctx.arc(sp.x, sp.y, 2.5, 0, Math.PI * 2);
+                this.ctx.fill();
+                if (sp.life <= 0) this.extraData.skySparks.splice(i, 1);
+            }
+        }
+
+        // 7. Cinema Luxury Victory HUD Banner
+        this.ctx.save();
+        this.ctx.translate(w / 2, 75);
+        this.ctx.fillStyle = "rgba(6, 12, 24, 0.94)";
+        this.ctx.strokeStyle = "#ffd700";
+        this.ctx.lineWidth = 3;
+        this.ctx.beginPath();
+        this.ctx.roundRect(-360, -40, 720, 80, 14);
+        this.ctx.fill();
+        this.ctx.stroke();
+
+        this.ctx.font = "bold 25px 'Segoe UI', Roboto, sans-serif";
+        this.ctx.fillStyle = "#ffd700";
+        this.ctx.textAlign = "center";
+        this.ctx.textBaseline = "middle";
+        this.ctx.fillText(this.titleOverride || "🛥️ 300FT MONACO SUPERYACHT • BILLIONAIRE PRESTIGE 🛥️", 0, -10);
+
+        this.ctx.font = "bold 12px 'Segoe UI', Roboto, sans-serif";
+        this.ctx.fillStyle = "#e0e7ff";
+        this.ctx.fillText("PRIVATE HELIPAD • DEEP OCEAN LED GLOW • ANCHORED IN SAINT-TROPEZ", 0, 20);
+        this.ctx.restore();
+    }
+
+    // --- 8. Private Jet Procedural 60fps Scene ---
+    _drawPrivateJet(w, h) {
+        const jet = this.extraData.jet;
+        if (!jet) return;
+
+        // 1. Stratosphere High-Altitude Sunset Atmosphere
+        const skyGrad = this.ctx.createLinearGradient(0, 0, 0, h);
+        skyGrad.addColorStop(0, "#030412");   // Cosmic space navy
+        skyGrad.addColorStop(0.3, "#160f38"); // Royal violet
+        skyGrad.addColorStop(0.6, "#7c1d56"); // Magenta twilight
+        skyGrad.addColorStop(0.85, "#ea580c");// Molten sunset amber
+        skyGrad.addColorStop(1, "#facc15");   // Golden horizon
+        this.ctx.fillStyle = skyGrad;
+        this.ctx.fillRect(0, 0, w, h);
+
+        // Blinding High-Altitude Sun Corona on Horizon
+        this.ctx.save();
+        const sunX = w * 0.18;
+        const sunY = h * 0.58;
+        const sunGrad = this.ctx.createRadialGradient(sunX, sunY, 10, sunX, sunY, 220);
+        sunGrad.addColorStop(0, "rgba(255, 255, 255, 0.95)");
+        sunGrad.addColorStop(0.3, "rgba(254, 240, 138, 0.65)");
+        sunGrad.addColorStop(1, "rgba(255, 255, 255, 0)");
+        this.ctx.fillStyle = sunGrad;
+        this.ctx.beginPath();
+        this.ctx.arc(sunX, sunY, 220, 0, Math.PI * 2);
+        this.ctx.fill();
+
+        // Anamorphic Sun Flare Streak across screen
+        this.ctx.strokeStyle = "rgba(255, 245, 200, 0.45)";
+        this.ctx.lineWidth = 2.5;
+        this.ctx.beginPath();
+        this.ctx.moveTo(0, sunY + 8);
+        this.ctx.lineTo(w, sunY - 14);
+        this.ctx.stroke();
+        this.ctx.restore();
+
+        // 2. Supersonic Parallax Cloudscape Deck
+        if (this.extraData.clouds) {
+            for (const c of this.extraData.clouds) {
+                c.x -= c.spd;
+                if (c.x < -180) {
+                    c.x = w + 180;
+                    c.y = h * 0.52 + Math.random() * (h * 0.48);
+                }
+                this.ctx.fillStyle = c.color;
+                this.ctx.beginPath();
+                this.ctx.arc(c.x, c.y, c.radius, 0, Math.PI * 2);
+                this.ctx.fill();
+            }
+        }
+
+        // 3. Render High-Fidelity Gulfstream G700 Aircraft
+        this.ctx.save();
+        const climbAngle = jet.bankAngle + Math.sin(this.frameCount * 0.08) * 0.015;
+        this.ctx.translate(jet.x, jet.y);
+        this.ctx.rotate(climbAngle);
+
+        // Swept Left/Right Wings with Upturned Blended Winglets
+        this.ctx.fillStyle = "#e2e8f0";
+        this.ctx.strokeStyle = "#cbd5e1";
+        this.ctx.lineWidth = 1.5;
+        // Main swept delta wing
+        this.ctx.beginPath();
+        this.ctx.moveTo(30, 2);
+        this.ctx.lineTo(-40, 55);  // Starboard wingtip
+        this.ctx.lineTo(-55, 50);
+        this.ctx.lineTo(-10, 0);
+        this.ctx.lineTo(-55, -50); // Port wingtip
+        this.ctx.lineTo(-40, -55);
+        this.ctx.closePath();
+        this.ctx.fill();
+        this.ctx.stroke();
+
+        // Vertical Winglets
+        this.ctx.fillStyle = "#38bdf8";
+        this.ctx.fillRect(-45, 52, 10, 14); // Starboard winglet
+        this.ctx.fillRect(-45, -66, 10, 14); // Port winglet
+
+        // FAA Aviation Beacons
+        // Port wingtip = Red
+        this.ctx.fillStyle = "#ef4444";
+        this.ctx.beginPath();
+        this.ctx.arc(-42, -55, 4, 0, Math.PI * 2);
+        this.ctx.fill();
+
+        // Starboard wingtip = Green
+        this.ctx.fillStyle = "#22c55e";
+        this.ctx.beginPath();
+        this.ctx.arc(-42, 55, 4, 0, Math.PI * 2);
+        this.ctx.fill();
+
+        // High-Intensity White Strobe Anti-Collision Flash (every 30 frames)
+        if (this.frameCount % 30 < 4) {
+            this.ctx.fillStyle = "#ffffff";
+            this.ctx.shadowColor = "#ffffff";
+            this.ctx.shadowBlur = 18;
+            this.ctx.beginPath();
+            this.ctx.arc(-42, -55, 8, 0, Math.PI * 2);
+            this.ctx.arc(-42, 55, 8, 0, Math.PI * 2);
+            this.ctx.arc(-110, -18, 9, 0, Math.PI * 2); // Tail strobe
+            this.ctx.fill();
+            this.ctx.shadowBlur = 0;
+        }
+
+        // Sleek Pearl White Fuselage
+        const fuseGrad = this.ctx.createLinearGradient(120, -14, -120, 14);
+        fuseGrad.addColorStop(0, "#ffffff");
+        fuseGrad.addColorStop(0.5, "#f1f5f9");
+        fuseGrad.addColorStop(1, "#cbd5e1");
+        this.ctx.fillStyle = fuseGrad;
+        this.ctx.strokeStyle = "#94a3b8";
+        this.ctx.lineWidth = 2;
+
+        this.ctx.beginPath();
+        this.ctx.moveTo(130, 0);   // Nose radome
+        this.ctx.bezierCurveTo(80, -14, -40, -14, -100, -6);
+        this.ctx.lineTo(-125, -28); // T-Tail vertical fin base
+        this.ctx.lineTo(-118, -32); // Tail fin top
+        this.ctx.lineTo(-100, -6);
+        this.ctx.bezierCurveTo(-60, 14, 60, 14, 130, 0);
+        this.ctx.closePath();
+        this.ctx.fill();
+        this.ctx.stroke();
+
+        // Iconic G700 Oval Panoramic VIP Windows (Glowing Champagne Gold)
+        this.ctx.fillStyle = "#fde047";
+        this.ctx.shadowColor = "#eab308";
+        this.ctx.shadowBlur = 6;
+        for (let ox = 50; ox > -65; ox -= 18) {
+            this.ctx.beginPath();
+            this.ctx.ellipse(ox, 0, 5.5, 4, 0, 0, Math.PI * 2);
+            this.ctx.fill();
+        }
+        this.ctx.shadowBlur = 0;
+
+        // Cockpit Windshield (Polarized Mirror Titanium)
+        this.ctx.fillStyle = "#0284c7";
+        this.ctx.beginPath();
+        this.ctx.moveTo(114, -3);
+        this.ctx.lineTo(95, -7);
+        this.ctx.lineTo(95, 3);
+        this.ctx.closePath();
+        this.ctx.fill();
+
+        // Twin Rolls-Royce Pearl Turbofan Engines (Fuselage Mounted)
+        const nacelles = [-14, 14];
+        for (const ny of nacelles) {
+            // Engine nacelle pod
+            this.ctx.fillStyle = "#334155";
+            this.ctx.strokeStyle = "#0ea5e9";
+            this.ctx.lineWidth = 1.5;
+            this.ctx.beginPath();
+            this.ctx.roundRect(-75, ny - 6, 42, 12, 4);
+            this.ctx.fill();
+            this.ctx.stroke();
+
+            // Turbofan intake rim
+            this.ctx.fillStyle = "#0f172a";
+            this.ctx.fillRect(-35, ny - 5, 4, 10);
+
+            // Reheat Exhaust Core & Heat Shimmer Waves
+            this.ctx.fillStyle = "rgba(251, 146, 60, 0.9)";
+            this.ctx.beginPath();
+            this.ctx.moveTo(-75, ny - 4);
+            this.ctx.lineTo(-95 - Math.random() * 18, ny);
+            this.ctx.lineTo(-75, ny + 4);
+            this.ctx.closePath();
+            this.ctx.fill();
+        }
+        this.ctx.restore();
+
+        // 4. Floating Luxury Champagne Toast Motes & Shimmering Flares
+        if (Math.random() < 0.35 && (!this.extraData.jetParticles || this.extraData.jetParticles.length < 35)) {
+            if (!this.extraData.jetParticles) this.extraData.jetParticles = [];
+            this.extraData.jetParticles.push({
+                x: w + 20,
+                y: Math.random() * h,
+                vx: 4 + Math.random() * 6,
+                char: ["🥂", "✨", "💎", "⭐"][Math.floor(Math.random() * 4)],
+                size: 16 + Math.random() * 14,
+                life: 110
+            });
+        }
+        if (this.extraData.jetParticles) {
+            for (let i = this.extraData.jetParticles.length - 1; i >= 0; i--) {
+                const jp = this.extraData.jetParticles[i];
+                jp.x -= jp.vx;
+                jp.life--;
+                this.ctx.font = `${jp.size}px sans-serif`;
+                this.ctx.textAlign = "center";
+                this.ctx.fillText(jp.char, jp.x, jp.y);
+                if (jp.life <= 0 || jp.x < -30) this.extraData.jetParticles.splice(i, 1);
+            }
+        }
+
+        // 5. Cinema Luxury Victory HUD Banner
+        this.ctx.save();
+        this.ctx.translate(w / 2, 75);
+        this.ctx.fillStyle = "rgba(8, 14, 28, 0.94)";
+        this.ctx.strokeStyle = "#38bdf8";
+        this.ctx.lineWidth = 3;
+        this.ctx.beginPath();
+        this.ctx.roundRect(-360, -40, 720, 80, 14);
+        this.ctx.fill();
+        this.ctx.stroke();
+
+        this.ctx.font = "bold 25px 'Segoe UI', Roboto, sans-serif";
+        this.ctx.fillStyle = "#38bdf8";
+        this.ctx.textAlign = "center";
+        this.ctx.textBaseline = "middle";
+        this.ctx.fillText(this.titleOverride || "✈️ GULFSTREAM G700 STRATOSPHERE • MACH 0.925 TRANSATLANTIC ✈️", 0, -10);
+
+        this.ctx.font = "bold 12px 'Segoe UI', Roboto, sans-serif";
+        this.ctx.fillStyle = "#ffffff";
+        this.ctx.fillText("51,000 FT CRUISING ALTITUDE • PRIVATE FLIGHT DECK • GLOBAL REACH", 0, 20);
+        this.ctx.restore();
     }
 }
 

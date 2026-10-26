@@ -286,6 +286,7 @@ it("tunes trading engine temperature and scales stock volatility correctly", () 
 load("public/js/chart.js");
 load("public/js/firebase-matchmaker.js");
 load("public/js/win-animations.js");
+load("public/js/ws-client.js");
 load("public/js/app.js");
 
 console.log("\n3. TRADER SHOP & PROFILE INTEGRITY VERIFICATION");
@@ -294,9 +295,10 @@ it("SHOP_ITEMS catalog contains all expected animations, themes, sfx, and titles
     const ids = SHOP_ITEMS.map(i => i.id);
     const expected = [
         "money_rain", "rocket_moon", "matrix_glitch", "diamond_hands", "golden_bull",
+        "supercar_drift", "mega_yacht", "private_jet",
         "theme_default", "theme_cyberpunk", "theme_gold_vip",
         "sfx_standard", "sfx_airhorn",
-        "title_trader", "title_whale"
+        "title_trader", "title_whale", "title_hypercar", "title_oligarch"
     ];
     for (const exp of expected) {
         assert.ok(ids.includes(exp), `Missing catalog item: ${exp}`);
@@ -395,24 +397,25 @@ it("equipping items switches active animation, theme, sfx, and title", () => {
 
 // 4. Win Animations Engine
 console.log("\n4. CRAZY WIN ANIMATIONS ENGINE VERIFICATION");
-it("WinAnimationEngine handles all 5 animation presets without errors", () => {
+it("WinAnimationEngine handles all 8 animation presets without errors", () => {
     const mockCtx = {
         save: () => {},
         restore: () => {},
         translate: () => {},
         rotate: () => {},
+        scale: () => {},
         beginPath: () => {},
         closePath: () => {},
         moveTo: () => {},
         lineTo: () => {},
         arc: () => {},
+        ellipse: () => {},
         stroke: () => {},
         fill: () => {},
         fillRect: () => {},
         clearRect: () => {},
         roundRect: () => {},
         fillText: () => {},
-        scale: () => {},
         quadraticCurveTo: () => {},
         bezierCurveTo: () => {},
         createRadialGradient: () => ({ addColorStop: () => {} }),
@@ -429,15 +432,77 @@ it("WinAnimationEngine handles all 5 animation presets without errors", () => {
     animEngine.canvas = mockCanvas;
     animEngine.ctx = mockCtx;
 
-    const animList = ["money_rain", "rocket_moon", "matrix_glitch", "diamond_hands", "golden_bull"];
+    const animList = [
+        "money_rain", "rocket_moon", "matrix_glitch", "diamond_hands", "golden_bull",
+        "supercar_drift", "mega_yacht", "private_jet"
+    ];
     for (const animId of animList) {
         animEngine.play(animId);
         assert.strictEqual(animEngine.active, true);
         assert.strictEqual(animEngine.animationId, animId);
-        assert.ok(animEngine.particles.length > 0 || animEngine.extraData.bull || animEngine.extraData.rocket || animEngine.extraData.dh);
+        assert.ok(
+            animEngine.particles.length > 0 ||
+            animEngine.extraData.bull ||
+            animEngine.extraData.rocket ||
+            animEngine.extraData.dh ||
+            animEngine.extraData.car ||
+            animEngine.extraData.yacht ||
+            animEngine.extraData.jet
+        );
+        // Execute loop frame without exceptions
+        animEngine._loop();
         animEngine.stop();
         assert.strictEqual(animEngine.active, false);
     }
+});
+
+it("WinAnimationEngine supports video registration, overlay render, and fallback", () => {
+    const mockCtx = {
+        save: () => {},
+        restore: () => {},
+        translate: () => {},
+        rotate: () => {},
+        scale: () => {},
+        beginPath: () => {},
+        closePath: () => {},
+        moveTo: () => {},
+        lineTo: () => {},
+        arc: () => {},
+        ellipse: () => {},
+        stroke: () => {},
+        fill: () => {},
+        fillRect: () => {},
+        clearRect: () => {},
+        roundRect: () => {},
+        fillText: () => {},
+        quadraticCurveTo: () => {},
+        bezierCurveTo: () => {},
+        createRadialGradient: () => ({ addColorStop: () => {} }),
+        createLinearGradient: () => ({ addColorStop: () => {} })
+    };
+    const mockCanvas = {
+        getContext: () => mockCtx,
+        width: 1920,
+        height: 1080,
+        style: {}
+    };
+
+    const animEngine = new WinAnimationEngine();
+    animEngine.canvas = mockCanvas;
+    animEngine.ctx = mockCtx;
+
+    // Test register custom video
+    animEngine.registerVideo("supercar_drift", "assets/videos/custom_bugatti.mp4");
+    assert.strictEqual(animEngine.videoSources["supercar_drift"], "assets/videos/custom_bugatti.mp4");
+
+    // Test video overlay frame loop
+    animEngine.play("supercar_drift");
+    animEngine.videoPlaying = true;
+    animEngine._loop();
+    assert.strictEqual(animEngine.active, true);
+    animEngine.stop();
+    assert.strictEqual(animEngine.active, false);
+    assert.strictEqual(animEngine.videoPlaying, false);
 });
 
 // 5. Firebase Matchmaker & Protocol Verification

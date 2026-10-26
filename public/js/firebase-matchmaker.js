@@ -317,9 +317,9 @@ class FirebaseMatchmaker {
                 equipped_animation: myAnimation || "money_rain"
             }, false);
 
-            // Polling loop: up to 15 seconds before bot fallback
+            // Polling loop: up to 2.5 seconds before instant bot fallback
             const pollStart = Date.now();
-            while ((Date.now() - pollStart) < 15000) {
+            while ((Date.now() - pollStart) < 2500) {
                 if (abortSignal && abortSignal.aborted) {
                     await this._firestoreDelete(queuePath);
                     return null;

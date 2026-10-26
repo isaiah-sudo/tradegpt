@@ -54,13 +54,25 @@ class SoundFx {
         } catch (e) {}
     }
 
-    playWin(equippedSfx = "default") {
+    playWin(equippedSfx = "default", equippedAnim = null) {
         try {
             this._init();
             if (!this.ctx) return;
             if (equippedSfx === "sfx_airhorn") {
                 this.playAirhorn();
                 this._playChaChing();
+                return;
+            }
+            if (equippedAnim === "supercar_drift") {
+                this.playSupercar();
+                return;
+            }
+            if (equippedAnim === "mega_yacht") {
+                this.playYacht();
+                return;
+            }
+            if (equippedAnim === "private_jet") {
+                this.playJet();
                 return;
             }
             const notes = [523.25, 659.25, 783.99, 1046.50]; // C, E, G, C
@@ -77,6 +89,69 @@ class SoundFx {
                 osc.start(now);
                 osc.stop(now + 0.26);
             });
+        } catch (e) {}
+    }
+
+    playSupercar() {
+        try {
+            this._init();
+            if (!this.ctx) return;
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = "sawtooth";
+            osc.frequency.setValueAtTime(80, now);
+            osc.frequency.exponentialRampToValueAtTime(320, now + 0.35);
+            osc.frequency.exponentialRampToValueAtTime(120, now + 0.7);
+            gain.gain.setValueAtTime(0.16, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.75);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.76);
+            this._playChaChing();
+        } catch (e) {}
+    }
+
+    playYacht() {
+        try {
+            this._init();
+            if (!this.ctx) return;
+            const now = this.ctx.currentTime;
+            [1046.5, 1318.5, 1567.98].forEach((f, idx) => {
+                const t = now + (idx * 0.18);
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = "sine";
+                osc.frequency.setValueAtTime(f, t);
+                gain.gain.setValueAtTime(0.15, t);
+                gain.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(t);
+                osc.stop(t + 0.62);
+            });
+            this._playChaChing();
+        } catch (e) {}
+    }
+
+    playJet() {
+        try {
+            this._init();
+            if (!this.ctx) return;
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(300, now);
+            osc.frequency.exponentialRampToValueAtTime(1400, now + 0.45);
+            gain.gain.setValueAtTime(0.14, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.62);
+            this._playChaChing();
         } catch (e) {}
     }
 
@@ -173,6 +248,30 @@ const SHOP_ITEMS = [
         description: "The ultimate Wall Street flex. Giant mechanical golden bull charges across screen with laser eyes & bullion explosions!"
     },
     {
+        id: "supercar_drift",
+        name: "1,500 HP Hypercar Drift",
+        category: "animation",
+        price: 350000,
+        icon: "🏎️",
+        description: "Midnight hypercar drift flex! Bugatti Chiron smoking tires, quad-LED projector beams, twin-turbo backfire flames & redline tachometer HUD."
+    },
+    {
+        id: "mega_yacht",
+        name: "Monaco 300ft Superyacht",
+        category: "animation",
+        price: 750000,
+        icon: "🛥️",
+        description: "Billionaire prestige! Multi-tier 300ft mega-yacht anchored off Monaco, underwater cyan hull LEDs, rooftop jacuzzi & private helipad."
+    },
+    {
+        id: "private_jet",
+        name: "Gulfstream G700 Stratosphere",
+        category: "animation",
+        price: 1500000,
+        icon: "✈️",
+        description: "Mach 0.925 global domination! Gulfstream G700 cruising at 51,000 ft through sunset clouds with twin Pearl turbofan exhaust shimmer & champagne toast."
+    },
+    {
         id: "theme_default",
         name: "Classic Obsidian Dark Theme",
         category: "theme",
@@ -227,17 +326,59 @@ const SHOP_ITEMS = [
         price: 100000,
         icon: "🐋",
         description: "Display the prestigious [WHALE] title on your trader badge in duels & menu."
+    },
+    {
+        id: "title_hypercar",
+        name: "Title: 'Hypercar Collector'",
+        category: "title",
+        price: 250000,
+        icon: "🏎️",
+        description: "Display the elite [HYPERCAR] title on your trader badge in duels & terminal."
+    },
+    {
+        id: "title_oligarch",
+        name: "Title: 'Monaco Yacht Club'",
+        category: "title",
+        price: 1000000,
+        icon: "🛥️",
+        description: "The ultimate sovereign flex. Display the prestigious [MONACO] title on your trader badge."
     }
 ];
 
 // --- App State & Controller ---
 class TradingApp {
+    _safeStorageGet(key, fallback = null) {
+        try {
+            if (typeof localStorage !== "undefined") {
+                const val = localStorage.getItem(key);
+                return val !== null ? val : fallback;
+            }
+        } catch (e) {}
+        return fallback;
+    }
+
+    _safeStorageSet(key, val) {
+        try {
+            if (typeof localStorage !== "undefined") {
+                localStorage.setItem(key, val);
+            }
+        } catch (e) {}
+    }
+
+    _safeStorageRemove(key) {
+        try {
+            if (typeof localStorage !== "undefined") {
+                localStorage.removeItem(key);
+            }
+        } catch (e) {}
+    }
+
     constructor() {
         window.app = this;
         this.sfx = new SoundFx();
         this.fb = new FirebaseMatchmaker();
 
-        this.nickname = localStorage.getItem("trader_nickname") || `Trader_${Math.floor(100 + Math.random() * 900)}`;
+        this.nickname = this._safeStorageGet("trader_nickname") || `Trader_${Math.floor(100 + Math.random() * 900)}`;
         this.mode = "solo"; // "solo" or "online"
         this.activeTicker = "NVXP";
         this.selectedQty = 50;
@@ -260,6 +401,11 @@ class TradingApp {
         this.engine = new MarketEngine(25000.0, null, initialTemp);
         this.chart = null;
         this.loopTimer = null;
+        this.selectedDuelDuration = 60;
+
+        // Initialize Real-time WebSocket Client
+        this.wsClient = (typeof LiveTradeWsClient !== 'undefined') ? new LiveTradeWsClient() : null;
+        if (this.wsClient) this._setupWsListeners();
 
         this._bindDom();
         this._initChart();
@@ -342,7 +488,7 @@ class TradingApp {
         if (cloudData.player_name) {
             this.profile.player_name = cloudData.player_name;
             this.nickname = cloudData.player_name;
-            localStorage.setItem("trader_nickname", this.nickname);
+            this._safeStorageSet("trader_nickname", this.nickname);
             if (this.elNicknameInput) this.elNicknameInput.value = this.nickname;
             if (this.fb) this.fb.displayName = this.nickname;
         }
@@ -527,7 +673,7 @@ class TradingApp {
             if (val) {
                 this.nickname = val;
                 this.profile.player_name = val;
-                localStorage.setItem("trader_nickname", val);
+                this._safeStorageSet("trader_nickname", val);
                 if (this.fb) this.fb.displayName = val;
                 this._saveProfile();
                 this._updateTitleBadge();
@@ -733,9 +879,46 @@ class TradingApp {
         document.getElementById("btn-next-opp").addEventListener("click", () => this._handleNextOpponent());
         document.getElementById("btn-leave-duel").addEventListener("click", () => this._leaveDuel());
 
-        // Modal triggers
-        document.getElementById("mode-solo").addEventListener("click", () => this._startSoloMode());
-        document.getElementById("mode-online").addEventListener("click", () => this._startOnlineMatchmaking());
+        // Duel duration cards selection
+        document.querySelectorAll(".duel-dur-card").forEach(card => {
+            card.addEventListener("click", (e) => {
+                e.stopPropagation();
+                document.querySelectorAll(".duel-dur-card").forEach(c => c.classList.remove("active"));
+                card.classList.add("active");
+                const dur = parseInt(card.getAttribute("data-duration"), 10) || 60;
+                this.selectedDuelDuration = dur;
+                const durSub = document.getElementById("duel-btn-sub");
+                if (durSub) {
+                    durSub.textContent = dur === 60 ? "Format: 60-Second Blitz Duel" : dur === 120 ? "Format: 2-Minute Tactical Duel" : "Format: 5-Minute Marathon Duel";
+                }
+            });
+        });
+
+        // Launch duel button
+        const btnLaunchDuel = document.getElementById("btn-launch-duel");
+        if (btnLaunchDuel) {
+            btnLaunchDuel.addEventListener("click", (e) => {
+                e.stopPropagation();
+                this._startOnlineMatchmaking(this.selectedDuelDuration);
+            });
+        }
+
+        // Solo launch button and cards
+        const btnLaunchSolo = document.getElementById("btn-launch-solo");
+        if (btnLaunchSolo) {
+            btnLaunchSolo.addEventListener("click", (e) => {
+                e.stopPropagation();
+                this._startSoloMode();
+            });
+        }
+        const cardSolo = document.getElementById("card-mode-solo") || document.getElementById("mode-solo");
+        if (cardSolo) {
+            cardSolo.addEventListener("click", () => this._startSoloMode());
+        }
+        const cardOnline = document.getElementById("card-mode-pvp") || document.getElementById("mode-online");
+        if (cardOnline && !document.getElementById("btn-launch-duel")) {
+            cardOnline.addEventListener("click", () => this._startOnlineMatchmaking(this.selectedDuelDuration));
+        }
         document.getElementById("btn-cancel-match").addEventListener("click", () => {
             if (this.searchAbortCtrl) this.searchAbortCtrl.abort();
             this.elModalMatchmaking.style.display = "none";
@@ -745,7 +928,7 @@ class TradingApp {
         // Match end buttons
         document.getElementById("btn-end-next").addEventListener("click", () => {
             this.elModalMatchEnd.style.display = "none";
-            this._startOnlineMatchmaking();
+            this._startOnlineMatchmaking(this.selectedDuelDuration);
         });
         document.getElementById("btn-end-menu").addEventListener("click", () => {
             this.elModalMatchEnd.style.display = "none";
@@ -940,12 +1123,20 @@ class TradingApp {
     }
 
     _scheduleNextTick() {
+        if (this.mode !== "solo") return;
         const diffCfg = MarketEngine.DIFFICULTIES[this.engine.currentDifficulty] || MarketEngine.DIFFICULTIES["Day Trader (3x)"];
         const tickMs = diffCfg.tickMs;
-
+        if (this.loopTimer) clearTimeout(this.loopTimer);
         this.loopTimer = setTimeout(() => {
-            this._tick();
-            this._scheduleNextTick();
+            try {
+                this._tick();
+            } catch (err) {
+                console.error("[Simulation Loop Error]:", err);
+            } finally {
+                if (this.mode === "solo") {
+                    this._scheduleNextTick();
+                }
+            }
         }, tickMs);
     }
 
@@ -966,6 +1157,24 @@ class TradingApp {
             this.elActiveChg.textContent = `${chgSign}$${activeStock.change.toFixed(2)} (${chgSign}${activeStock.changePct.toFixed(2)}%)`;
 
             this.elDeskPrice.textContent = `$${activeStock.price.toFixed(2)}`;
+
+            // Update subtle live ticker inside the Mode Select Menu card
+            const menuLivePrice = document.getElementById("menu-live-price");
+            const menuLiveChg = document.getElementById("menu-live-chg");
+            const menuLivePill = document.getElementById("menu-live-ticker");
+            if (menuLivePrice && menuLiveChg) {
+                const prevText = menuLivePrice.textContent;
+                const nextText = `$${activeStock.price.toFixed(2)}`;
+                menuLivePrice.textContent = nextText;
+                menuLiveChg.className = `lt-chg ${chgClass}`;
+                menuLiveChg.textContent = `${chgSign}${activeStock.changePct.toFixed(2)}%`;
+                if (menuLivePill && prevText && prevText !== nextText && menuLivePill.classList) {
+                    const prevNum = parseFloat(prevText.replace("$", ""));
+                    const flashCls = activeStock.price >= prevNum ? "flash-up" : "flash-down";
+                    menuLivePill.classList.remove("flash-up", "flash-down");
+                    menuLivePill.classList.add(flashCls);
+                }
+            }
         }
 
         // Update row prices in scanner
@@ -989,25 +1198,35 @@ class TradingApp {
     }
 
     _updateAllUi() {
-        // Header metrics
-        this.elBalance.textContent = `$${this.engine.totalEquity.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-        this.elBuyingPower.textContent = `$${this.engine.buyingPower.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        // Header metrics with full element defensive guards
+        if (this.elBalance) {
+            this.elBalance.textContent = `${this.engine.totalEquity.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+        if (this.elBuyingPower) {
+            this.elBuyingPower.textContent = `${this.engine.buyingPower.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
 
-        const unrl = this.engine.totalUnrealizedPnL;
-        const unrlSign = unrl >= 0 ? "+" : "";
-        this.elUnrealized.textContent = `${unrlSign}$${unrl.toFixed(2)}`;
-        this.elUnrealized.className = `value ${unrl >= 0 ? 'up' : 'down'}`;
+        if (this.elUnrealized) {
+            const unrl = this.engine.totalUnrealizedPnL;
+            const unrlSign = unrl >= 0 ? "+" : "";
+            this.elUnrealized.textContent = `${unrlSign}${unrl.toFixed(2)}`;
+            this.elUnrealized.className = `value ${unrl >= 0 ? 'up' : 'down'}`;
+        }
 
-        const rlz = this.engine.realizedPnL;
-        const rlzSign = rlz >= 0 ? "+" : "";
-        this.elRealized.textContent = `${rlzSign}$${rlz.toFixed(2)}`;
-        this.elRealized.className = `value ${rlz >= 0 ? 'up' : 'down'}`;
+        if (this.elRealized) {
+            const rlz = this.engine.realizedPnL;
+            const rlzSign = rlz >= 0 ? "+" : "";
+            this.elRealized.textContent = `${rlzSign}${rlz.toFixed(2)}`;
+            this.elRealized.className = `value ${rlz >= 0 ? 'up' : 'down'}`;
+        }
 
-        const pnl = this.engine.totalPnL;
-        const pnlPct = this.engine.totalPnLPct;
-        const pnlSign = pnl >= 0 ? "+" : "";
-        this.elTotalPnl.textContent = `${pnlSign}$${pnl.toFixed(2)} (${pnlSign}${pnlPct.toFixed(2)}%)`;
-        this.elTotalPnl.className = `value ${pnl >= 0 ? 'up' : 'down'}`;
+        if (this.elTotalPnl) {
+            const pnl = this.engine.totalPnL;
+            const pnlPct = this.engine.totalPnLPct;
+            const pnlSign = pnl >= 0 ? "+" : "";
+            this.elTotalPnl.textContent = `${pnlSign}${pnl.toFixed(2)} (${pnlSign}${pnlPct.toFixed(2)}%)`;
+            this.elTotalPnl.className = `value ${pnl >= 0 ? 'up' : 'down'}`;
+        }
 
         // Bank Profit Button update
         if (this.elBtnBankProfit) {
@@ -1137,10 +1356,25 @@ class TradingApp {
         if (this.matchTimerInterval) clearInterval(this.matchTimerInterval);
         if (this.syncMetricsInterval) clearInterval(this.syncMetricsInterval);
 
+        // Resume engine unpaused
+        this.engine.isPaused = false;
+        if (this.elBtnPause) this.elBtnPause.textContent = "⏸ Pause";
+
         // Apply solo trading temperature
         const soloTemp = (this.profile && typeof this.profile.trading_temperature === "number") ? this.profile.trading_temperature : 1.0;
         this.engine.setTemperature(soloTemp);
         this._updateModeTempDisplay();
+
+        // Ensure chart is sized correctly and rendered
+        if (this.chart) {
+            this.chart.resize();
+        }
+        this._selectTicker(this.activeTicker || "NVXP");
+
+        // Restart tick loop if not running
+        if (this.loopTimer) clearTimeout(this.loopTimer);
+        this._scheduleNextTick();
+        this._tick();
     }
 
     async _startOnlineMatchmaking(duration = null) {
@@ -1527,7 +1761,7 @@ class TradingApp {
         if (won) {
             this.profile.duels_won = (this.profile.duels_won || 0) + 1;
             this._saveProfile();
-            this.sfx.playWin(this.profile.equipped_sfx);
+            this.sfx.playWin(this.profile.equipped_sfx, this.profile.equipped_animation);
         }
 
         this._showMatchEndModal(title, myEq, oppEq);
@@ -1715,10 +1949,13 @@ class TradingApp {
     }
 
     async _handleNextOpponent() {
+        if (this.wsClient && this.wsClient.inMatch) {
+            this.wsClient.leaveMatch();
+        }
         await this.fb.forfeitOrLeave();
         if (this.matchTimerInterval) clearInterval(this.matchTimerInterval);
         if (this.syncMetricsInterval) clearInterval(this.syncMetricsInterval);
-        this._startOnlineMatchmaking();
+        this._startOnlineMatchmaking(this.selectedDuelDuration);
     }
 
     async _leaveDuel() {
@@ -1790,24 +2027,36 @@ class TradingApp {
     }
 
     _updateTitleBadge() {
-        const isWhale = this.profile.equipped_title === "title_whale";
+        const titleId = this.profile ? this.profile.equipped_title : "title_trader";
+        let badgeText = "";
+        let prefix = "";
+        if (titleId === "title_whale") {
+            badgeText = "🐋 WHALE";
+            prefix = "🐋 [WHALE] ";
+        } else if (titleId === "title_hypercar") {
+            badgeText = "🏎️ HYPERCAR";
+            prefix = "🏎️ [HYPERCAR] ";
+        } else if (titleId === "title_oligarch") {
+            badgeText = "🛥️ MONACO";
+            prefix = "🛥️ [MONACO] ";
+        }
+
         let brandBadge = document.getElementById("hdr-whale-badge");
-        if (isWhale) {
+        if (badgeText) {
             if (!brandBadge) {
                 brandBadge = document.createElement("span");
                 brandBadge.id = "hdr-whale-badge";
                 brandBadge.className = "whale-badge";
-                brandBadge.textContent = "🐋 WHALE";
                 const brand = document.querySelector("#top-header .brand");
                 if (brand) brand.appendChild(brandBadge);
             }
+            if (brandBadge) brandBadge.textContent = badgeText;
         } else if (brandBadge) {
             brandBadge.remove();
         }
 
         if (this.elHudMyName) {
-            const titlePrefix = isWhale ? "🐋 [WHALE] " : "";
-            this.elHudMyName.textContent = `YOU (${titlePrefix}${this.nickname})`;
+            this.elHudMyName.textContent = `YOU (${prefix}${this.nickname})`;
         }
     }
 
@@ -1939,6 +2188,9 @@ class TradingApp {
         if (window.winAnimations) {
             window.winAnimations.play(animationId);
         }
+        if (this.sfx) {
+            this.sfx.playWin("default", animationId);
+        }
     }
 
     _previewSfx(sfxId) {
@@ -1981,10 +2233,12 @@ class TradingApp {
     _updateAuthUi() {
         if (!this.elTopLeftAuth) return;
         if (this.profile && this.profile.auth_uid) {
-            const name = this.nickname || this.profile.auth_display_name || "Trader";
             this.elTopLeftAuth.innerHTML = `
-                <button class="btn-ctrl" id="btn-top-auth" style="background:#161a25;color:#00e676;border:1px solid #2a2e39;font-weight:700;padding:6px 12px;border-radius:6px;cursor:pointer;">🟢 ${name}</button>
-                <button class="btn-ctrl" id="btn-top-signout" style="background:#1e222d;color:var(--text-muted);border:1px solid #2a2e39;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:11px;">Sign Out</button>
+                <button class="btn-ctrl btn-auth-profile" id="btn-top-auth" title="Cloud Account &amp; Synced Stats">
+                    <span class="auth-status-dot"></span>
+                    <span>Profile</span>
+                </button>
+                <button class="btn-ctrl btn-auth-signout" id="btn-top-signout" title="Sign Out">Sign Out</button>
             `;
             const bAuth = document.getElementById("btn-top-auth");
             if (bAuth) bAuth.onclick = () => this._openAuthModal();
@@ -1992,7 +2246,7 @@ class TradingApp {
             if (bOut) bOut.onclick = () => this._handleSignOut();
         } else {
             this.elTopLeftAuth.innerHTML = `
-                <button class="btn-ctrl" id="btn-top-auth" style="background:#2962ff;color:#fff;font-weight:700;padding:6px 12px;border-radius:6px;cursor:pointer;border:none;">👤 Sign In</button>
+                <button class="btn-ctrl btn-auth-signin" id="btn-top-auth">Sign In</button>
             `;
             const bAuth = document.getElementById("btn-top-auth");
             if (bAuth) bAuth.onclick = () => this._openAuthModal();
@@ -2342,7 +2596,7 @@ class TradingApp {
     _updateModeTempDisplay() {
         const temp = (this.profile && typeof this.profile.trading_temperature === "number") ? this.profile.trading_temperature : 1.0;
         if (this.elModeTempTag) {
-            this.elModeTempTag.textContent = `⚙️ Temp: ${temp.toFixed(2)}x`;
+            this.elModeTempTag.textContent = `Temp: ${temp.toFixed(2)}x`;
         }
     }
 

@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DayTradeSim Pro • Real-Time Trading Arena & 1v1 PvP Duels</title>
-    <meta name="description" content="Experience high-frequency paper trading with 100+ simulated stocks, breaking news catalysts, 4x margin leverage, and real-time 1v1 PvP trading duels across 60s, 2m, and 5m formats. Play online or download for Windows.">
+    <title>DayTradeSim Pro • Real-Time Cyber Trading Arena & 1v1 PvP Duels</title>
+    <meta name="description" content="Step into the ultimate cyber-terminal trading arena. Trade 100+ simulated stocks with breaking news catalysts, 4x margin leverage, 1v1 PvP trading duels (60s Blitz, 2m Tactical, 5m Marathon), and unlock 3D supercars & yachts in your Vault.">
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="stylesheet" href="css/landing.css">
 
@@ -15,22 +15,47 @@
 <body>
 
     <!-- =========================================================
-         TOP NAVIGATION BAR
+         AMBIENT FLOATING BACKGROUND TICKERS (SUBTLE LIVE FLASHES)
+         ========================================================= -->
+    <div class="ambient-cyber-bg" aria-hidden="true">
+        <div class="ambient-node" data-amb-ticker="NVDA" data-amb-price="128.45" style="top: 14%; left: 4%; animation-delay: 0s;">
+            <span class="amb-sym">NVDA</span> <span class="amb-val">$128.45</span> <span class="amb-chg">+6.4%</span>
+        </div>
+        <div class="ambient-node" data-amb-ticker="TSLA" data-amb-price="254.10" style="top: 26%; right: 4%; animation-delay: -3s;">
+            <span class="amb-sym">TSLA</span> <span class="amb-val">$254.10</span> <span class="amb-chg">+4.2%</span>
+        </div>
+        <div class="ambient-node" data-amb-ticker="BTCX" data-amb-price="64250.00" style="top: 48%; left: 3%; animation-delay: -6s;">
+            <span class="amb-sym">BTCX</span> <span class="amb-val">$64,250</span> <span class="amb-chg">+8.7%</span>
+        </div>
+        <div class="ambient-node" data-amb-ticker="AMD" data-amb-price="158.90" style="top: 56%; right: 3%; animation-delay: -9s;">
+            <span class="amb-sym">AMD</span> <span class="amb-val">$158.90</span> <span class="amb-chg">-2.3%</span>
+        </div>
+        <div class="ambient-node" data-amb-ticker="PLTR" data-amb-price="37.40" style="top: 76%; left: 5%; animation-delay: -11s;">
+            <span class="amb-sym">PLTR</span> <span class="amb-val">$37.40</span> <span class="amb-chg">+9.2%</span>
+        </div>
+        <div class="ambient-node" data-amb-ticker="AAPL" data-amb-price="228.30" style="top: 82%; right: 5%; animation-delay: -4s;">
+            <span class="amb-sym">AAPL</span> <span class="amb-val">$228.30</span> <span class="amb-chg">-1.1%</span>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         TOP NAVIGATION BAR (FROSTED GLASS HUD)
          ========================================================= -->
     <header class="nav-wrap">
         <div class="nav-container">
             <a href="/" class="nav-brand">
                 <img src="assets/icon.png" alt="DayTradeSim Pro Logo">
                 <span>DAYTRADESIM PRO</span>
-                <span class="badge-tag">v2.2</span>
+                <span class="badge-tag">v2.1.1</span>
             </a>
 
             <nav class="nav-links">
-                <a href="#features">Features</a>
+                <a href="#modes">1v1 Arena</a>
+                <a href="#progression">3D Vault & Flex</a>
+                <a href="#features">HUD Tech</a>
                 <a href="#how-it-works">How It Works</a>
-                <a href="#modes">Game Modes</a>
                 <a href="#comparison">Web vs Desktop</a>
-                <a href="/download" style="color:var(--accent-blue);font-weight:700;">Downloads</a>
+                <a href="/download" style="color:var(--accent-cyan);">Downloads</a>
             </nav>
 
             <div class="nav-actions">
@@ -44,207 +69,444 @@
                 <!-- Sign in button when logged out -->
                 <a href="#auth" class="btn btn-secondary btn-sm" id="nav-btn-signin">Sign In</a>
 
-                <!-- Web Version button -->
-                <a href="/play" class="btn btn-primary btn-sm">Launch Web Terminal</a>
+                <!-- Primary Breathing Web Terminal CTA -->
+                <a href="/play" class="btn btn-primary btn-pulse btn-sm">⚡ Launch Web Terminal</a>
             </div>
         </div>
     </header>
 
     <!-- =========================================================
-         LIVE TICKER MARQUEE
+         LIVE TICKER MARQUEE (MONOSPACE TERMINAL STREAM)
          ========================================================= -->
     <div class="ticker-strip">
-        <div class="ticker-track">
-            <div class="ticker-item"><span class="ticker-symbol">NVDA</span> <span class="ticker-price">$124.85</span> <span class="ticker-up">+6.42%</span></div>
-            <div class="ticker-item"><span class="ticker-symbol">TSLA</span> <span class="ticker-price">$254.10</span> <span class="ticker-up">+4.18%</span></div>
-            <div class="ticker-item"><span class="ticker-symbol">AAPL</span> <span class="ticker-price">$228.30</span> <span class="ticker-down">-1.12%</span></div>
-            <div class="ticker-item"><span class="ticker-symbol">BTCX</span> <span class="ticker-price">$64,250.00</span> <span class="ticker-up">+8.75%</span></div>
-            <div class="ticker-item"><span class="ticker-symbol">SPY</span> <span class="ticker-price">$562.40</span> <span class="ticker-up">+0.84%</span></div>
-            <div class="ticker-item"><span class="ticker-symbol">AMD</span> <span class="ticker-price">$158.90</span> <span class="ticker-down">-2.35%</span></div>
-            <div class="ticker-item"><span class="ticker-symbol">MSFT</span> <span class="ticker-price">$432.15</span> <span class="ticker-up">+1.45%</span></div>
-            <div class="ticker-item"><span class="ticker-symbol">AMZN</span> <span class="ticker-price">$186.20</span> <span class="ticker-up">+3.10%</span></div>
-            <div class="ticker-item"><span class="ticker-symbol">META</span> <span class="ticker-price">$512.75</span> <span class="ticker-down">-0.65%</span></div>
-            <div class="ticker-item"><span class="ticker-symbol">PLTR</span> <span class="ticker-price">$37.40</span> <span class="ticker-up">+9.20%</span></div>
+        <div class="ticker-track" id="live-ticker-track">
+            <div class="ticker-item" data-symbol="NVDA" data-price="128.45" data-chg="6.42"><span class="ticker-symbol">NVDA</span> <span class="ticker-price">$128.45</span> <span class="ticker-up">+6.42%</span></div>
+            <div class="ticker-item" data-symbol="TSLA" data-price="254.10" data-chg="4.18"><span class="ticker-symbol">TSLA</span> <span class="ticker-price">$254.10</span> <span class="ticker-up">+4.18%</span></div>
+            <div class="ticker-item" data-symbol="AAPL" data-price="228.30" data-chg="-1.12"><span class="ticker-symbol">AAPL</span> <span class="ticker-price">$228.30</span> <span class="ticker-down">-1.12%</span></div>
+            <div class="ticker-item" data-symbol="BTCX" data-price="64250.00" data-chg="8.75"><span class="ticker-symbol">BTCX</span> <span class="ticker-price">$64,250.00</span> <span class="ticker-up">+8.75%</span></div>
+            <div class="ticker-item" data-symbol="SPY" data-price="562.40" data-chg="0.84"><span class="ticker-symbol">SPY</span> <span class="ticker-price">$562.40</span> <span class="ticker-up">+0.84%</span></div>
+            <div class="ticker-item" data-symbol="AMD" data-price="158.90" data-chg="-2.35"><span class="ticker-symbol">AMD</span> <span class="ticker-price">$158.90</span> <span class="ticker-down">-2.35%</span></div>
+            <div class="ticker-item" data-symbol="MSFT" data-price="432.15" data-chg="1.45"><span class="ticker-symbol">MSFT</span> <span class="ticker-price">$432.15</span> <span class="ticker-up">+1.45%</span></div>
+            <div class="ticker-item" data-symbol="AMZN" data-price="186.20" data-chg="3.10"><span class="ticker-symbol">AMZN</span> <span class="ticker-price">$186.20</span> <span class="ticker-up">+3.10%</span></div>
+            <div class="ticker-item" data-symbol="META" data-price="512.75" data-chg="-0.65"><span class="ticker-symbol">META</span> <span class="ticker-price">$512.75</span> <span class="ticker-down">-0.65%</span></div>
+            <div class="ticker-item" data-symbol="PLTR" data-price="37.40" data-chg="9.20"><span class="ticker-symbol">PLTR</span> <span class="ticker-price">$37.40</span> <span class="ticker-up">+9.20%</span></div>
             <!-- Duplicate for seamless continuous loop -->
-            <div class="ticker-item"><span class="ticker-symbol">NVDA</span> <span class="ticker-price">$124.85</span> <span class="ticker-up">+6.42%</span></div>
-            <div class="ticker-item"><span class="ticker-symbol">TSLA</span> <span class="ticker-price">$254.10</span> <span class="ticker-up">+4.18%</span></div>
-            <div class="ticker-item"><span class="ticker-symbol">AAPL</span> <span class="ticker-price">$228.30</span> <span class="ticker-down">-1.12%</span></div>
-            <div class="ticker-item"><span class="ticker-symbol">BTCX</span> <span class="ticker-price">$64,250.00</span> <span class="ticker-up">+8.75%</span></div>
-            <div class="ticker-item"><span class="ticker-symbol">SPY</span> <span class="ticker-price">$562.40</span> <span class="ticker-up">+0.84%</span></div>
-            <div class="ticker-item"><span class="ticker-symbol">AMD</span> <span class="ticker-price">$158.90</span> <span class="ticker-down">-2.35%</span></div>
-            <div class="ticker-item"><span class="ticker-symbol">MSFT</span> <span class="ticker-price">$432.15</span> <span class="ticker-up">+1.45%</span></div>
-            <div class="ticker-item"><span class="ticker-symbol">AMZN</span> <span class="ticker-price">$186.20</span> <span class="ticker-up">+3.10%</span></div>
-            <div class="ticker-item"><span class="ticker-symbol">META</span> <span class="ticker-price">$512.75</span> <span class="ticker-down">-0.65%</span></div>
-            <div class="ticker-item"><span class="ticker-symbol">PLTR</span> <span class="ticker-price">$37.40</span> <span class="ticker-up">+9.20%</span></div>
+            <div class="ticker-item" data-symbol="NVDA" data-price="128.45" data-chg="6.42"><span class="ticker-symbol">NVDA</span> <span class="ticker-price">$128.45</span> <span class="ticker-up">+6.42%</span></div>
+            <div class="ticker-item" data-symbol="TSLA" data-price="254.10" data-chg="4.18"><span class="ticker-symbol">TSLA</span> <span class="ticker-price">$254.10</span> <span class="ticker-up">+4.18%</span></div>
+            <div class="ticker-item" data-symbol="AAPL" data-price="228.30" data-chg="-1.12"><span class="ticker-symbol">AAPL</span> <span class="ticker-price">$228.30</span> <span class="ticker-down">-1.12%</span></div>
+            <div class="ticker-item" data-symbol="BTCX" data-price="64250.00" data-chg="8.75"><span class="ticker-symbol">BTCX</span> <span class="ticker-price">$64,250.00</span> <span class="ticker-up">+8.75%</span></div>
+            <div class="ticker-item" data-symbol="SPY" data-price="562.40" data-chg="0.84"><span class="ticker-symbol">SPY</span> <span class="ticker-price">$562.40</span> <span class="ticker-up">+0.84%</span></div>
+            <div class="ticker-item" data-symbol="AMD" data-price="158.90" data-chg="-2.35"><span class="ticker-symbol">AMD</span> <span class="ticker-price">$158.90</span> <span class="ticker-down">-2.35%</span></div>
+            <div class="ticker-item" data-symbol="MSFT" data-price="432.15" data-chg="1.45"><span class="ticker-symbol">MSFT</span> <span class="ticker-price">$432.15</span> <span class="ticker-up">+1.45%</span></div>
+            <div class="ticker-item" data-symbol="AMZN" data-price="186.20" data-chg="3.10"><span class="ticker-symbol">AMZN</span> <span class="ticker-price">$186.20</span> <span class="ticker-up">+3.10%</span></div>
+            <div class="ticker-item" data-symbol="META" data-price="512.75" data-chg="-0.65"><span class="ticker-symbol">META</span> <span class="ticker-price">$512.75</span> <span class="ticker-down">-0.65%</span></div>
+            <div class="ticker-item" data-symbol="PLTR" data-price="37.40" data-chg="9.20"><span class="ticker-symbol">PLTR</span> <span class="ticker-price">$37.40</span> <span class="ticker-up">+9.20%</span></div>
         </div>
     </div>
 
     <!-- =========================================================
-         HERO SECTION
+         HERO SECTION & SPLIT-SCREEN 1V1 CLASH VISUALIZER
          ========================================================= -->
     <section class="hero-section">
         <div class="hero-content">
-            <div class="badge-glow">INSTITUTIONAL HIGH-FREQUENCY PAPER TRADING ARENA • CROSS-PLATFORM</div>
-            
+            <div class="badge-glow">⚡ HIGH-FREQUENCY CYBER-TERMINAL • LIVE 1V1 PVP ARENA</div>
+
             <h1 class="hero-title">
-                Master the Markets. <br>
-                <span class="gradient-text">Crush Your Rivals in Live 1v1 Duels.</span>
+                Out-Trade. Out-Leverage. <br>
+                <span class="gradient-text">Dominate the 1v1 Clash.</span>
             </h1>
 
             <p class="hero-subtitle">
-                DayTradeSim Pro is an institutional-grade paper trading battleground. Trade 100+ volatile simulated tickers with continuous algorithmic order books, macroeconomic catalysts, 4x day trading margin, and real-time 1v1 PvP duels across 60-second Blitz, 2-minute Tactical, and 5-minute Marathon formats.
+                Enter an OLED cyber-terminal built for high-stakes speed. Scalp 100+ volatile tickers with 4x day-trading margin, clash head-to-head in real-time 60s Blitz, 2m Tactical, and 5m Marathon duels, and bank profits into your Vault to unlock 1,500 HP Hypercars and 300ft Monaco Superyachts.
             </p>
 
             <div class="hero-cta-group">
-                <a href="/play" class="btn btn-primary btn-lg">
-                    <span>Launch Web Terminal</span>
-                    <span style="font-size:12px;opacity:0.85;">(Instant Free Play)</span>
+                <a href="/play" class="btn btn-primary btn-pulse btn-lg">
+                    <span>⚡ Launch Web Terminal</span>
+                    <span class="mono-data" style="font-size:11px;opacity:0.85;">[INSTANT PLAY]</span>
                 </a>
                 <a href="/download" class="btn btn-secondary btn-lg">
-                    <span>Download Desktop Client</span>
-                    <span style="font-size:12px;color:var(--text-muted);">(Windows 64-bit)</span>
+                    <span>💻 Download Desktop HUD</span>
+                    <span class="mono-data" style="font-size:11px;color:var(--text-muted);">[WIN 64-BIT]</span>
+                </a>
+            </div>
+
+            <!-- Frictionless Matchmaking Pulsing Radar Bar right near Main CTA -->
+            <div>
+                <a href="/play" class="matchmaking-radar-bar" title="Click to enter instant 1v1 matchmaking">
+                    <div class="radar-circle">
+                        <div class="radar-sweep"></div>
+                        <div class="radar-core-dot"></div>
+                    </div>
+                    <span class="radar-status-text" id="radar-status-text">SEARCHING FOR OPPONENT...</span>
+                    <span class="radar-divider">|</span>
+                    <span class="radar-queue-meta" id="radar-queue-meta">42 TRADERS ONLINE • EST. MATCH &lt;0.8s</span>
                 </a>
             </div>
 
             <div class="hero-meta-strip">
-                <span>✓ 100% Free & Risk-Free</span>
+                <span>✓ $25,000 SEED CAPITAL</span>
                 <span>•</span>
-                <span>✓ Zero Install Required for Web</span>
+                <span>✓ 4X MARGIN LEVERAGE</span>
                 <span>•</span>
-                <span>✓ Real-Time Cloud Save & PvP</span>
+                <span>✓ 60S / 2M / 5M LIVE PVP</span>
                 <span>•</span>
-                <span>✓ $25,000 Starting Cash</span>
+                <span>✓ 3D VAULT EMPIRE SHOP</span>
             </div>
         </div>
 
-        <!-- Interactive Terminal Preview Showcase -->
-        <div class="terminal-showcase-wrap">
-            <div class="terminal-glow-bg"></div>
-            <div class="terminal-mockup">
-                <div class="terminal-topbar">
-                    <div class="terminal-dots">
-                        <span></span><span></span><span></span>
+        <!-- =====================================================
+             VISUALIZING THE CLASH: SPLIT-SCREEN 1V1 HUD COLLISION
+             ===================================================== -->
+        <div class="clash-arena-wrap">
+            <div class="clash-ambient-glow"></div>
+
+            <div class="clash-frame">
+                <!-- Top Command Bar -->
+                <div class="clash-topbar">
+                    <div class="clash-topbar-left">
+                        <div class="terminal-dots">
+                            <span></span><span></span><span></span>
+                        </div>
+                        <div class="terminal-title">DAYTRADESIM PRO • 1V1 CLASH TELEMETRY HUD v2.1.1</div>
                     </div>
-                    <div class="terminal-title">DAYTRADESIM PRO • INSTITUTIONAL TRADING TERMINAL v2.2</div>
-                    <div class="terminal-live-tag">LIVE MARKET SIMULATION</div>
+
+                    <div class="clash-ticker-pill">
+                        <span>ACTIVE ARENA TICKER:</span>
+                        <strong>NVDA</strong>
+                        <span id="demo-term-price" class="mono-data" style="color:var(--accent-cyan);font-weight:800;">$128.45</span>
+                        <span id="demo-term-chg" class="ticker-up mono-data">+7.85 (+6.51%)</span>
+                    </div>
+
+                    <div class="terminal-live-tag">AUTHORITATIVE 60FPS TICK SYNC</div>
                 </div>
 
-                <div class="terminal-body">
-                    <!-- Left Column: Scanner -->
-                    <div class="term-col term-col-left">
-                        <div class="term-header-mini">
-                            <span>MARKET SCANNER</span>
-                            <span style="color:var(--accent-green);">100 ACTIVE</span>
-                        </div>
-                        <div class="term-stock-item active">
-                            <div>
-                                <strong style="color:#fff;">NVDA</strong>
-                                <div style="font-size:10px;color:var(--text-muted);">Tech • AI Chips</div>
+                <!-- Live Tug-of-War Dominance Bar -->
+                <div class="clash-tug-wrap">
+                    <div class="clash-tug-labels">
+                        <span style="color:var(--accent-green);" id="clash-tug-left-label">🟢 YOU [HYPERCAR] • 64% DOMINANCE</span>
+                        <span style="color:var(--text-muted);">LIVE NET P&amp;L TUG-OF-WAR</span>
+                        <span style="color:var(--accent-magenta);" id="clash-tug-right-label">36% DOMINANCE • RIVAL [WHALE] 🔴</span>
+                    </div>
+                    <div class="clash-tug-track">
+                        <div class="clash-tug-green" id="clash-tug-bar-green" style="width: 64%;"></div>
+                        <div class="clash-tug-red"></div>
+                    </div>
+                </div>
+
+                <!-- Split-Screen Collision Grid: GREEN HUD vs RED HUD -->
+                <div class="clash-split-grid">
+
+                    <!-- LEFT HUD: YOU (ELECTRIC GREEN BULLISH HUD) -->
+                    <div class="clash-hud-side clash-hud-green">
+                        <div class="hud-player-header">
+                            <div class="hud-player-id">
+                                <span class="hud-role-tag">🏎️ [HYPERCAR] • PLAYER 01</span>
+                                <div class="hud-trader-name">YOU (BULLISH SCALPER)</div>
                             </div>
-                            <div style="text-align:right;">
-                                <div>$124.85</div>
-                                <span class="ticker-up">+6.42%</span>
-                            </div>
-                        </div>
-                        <div class="term-stock-item">
-                            <div>
-                                <strong style="color:#fff;">TSLA</strong>
-                                <div style="font-size:10px;color:var(--text-muted);">EV • Momentum</div>
-                            </div>
-                            <div style="text-align:right;">
-                                <div>$254.10</div>
-                                <span class="ticker-up">+4.18%</span>
-                            </div>
-                        </div>
-                        <div class="term-stock-item">
-                            <div>
-                                <strong style="color:#fff;">PLTR</strong>
-                                <div style="font-size:10px;color:var(--text-muted);">Defense • Software</div>
-                            </div>
-                            <div style="text-align:right;">
-                                <div>$37.40</div>
-                                <span class="ticker-up">+9.20%</span>
+                            <div class="hud-pnl-box">
+                                <div class="hud-equity-val" id="hud-you-equity">$29,840.50</div>
+                                <span class="hud-pnl-badge pos" id="hud-you-pnl">+$4,840.50 (+19.36%)</span>
                             </div>
                         </div>
-                        <div class="term-stock-item">
-                            <div>
-                                <strong style="color:#fff;">AAPL</strong>
-                                <div style="font-size:10px;color:var(--text-muted);">Consumer Tech</div>
+
+                        <!-- Minimalist Green Candlestick Collision Canvas -->
+                        <div class="hud-chart-box" id="hud-green-candles">
+                            <div class="hud-position-overlay" id="hud-you-pos-tag">
+                                <span>🟢 LONG 400 NVDA</span>
+                                <span>•</span>
+                                <span>4X MARGIN</span>
                             </div>
-                            <div style="text-align:right;">
-                                <div>$228.30</div>
-                                <span class="ticker-down">-1.12%</span>
+                            <div class="term-order-toast" id="demo-toast" style="display:none;">🟢 BOUGHT 100 @ $128.45 • FILLED</div>
+
+                            <div class="sim-candle sim-green" style="height:42%;"><div class="sim-wick" style="height:120%;"></div><div class="sim-body" style="height:52%;"></div></div>
+                            <div class="sim-candle sim-red" style="height:36%;"><div class="sim-wick" style="height:115%;"></div><div class="sim-body" style="height:35%;"></div></div>
+                            <div class="sim-candle sim-green" style="height:56%;"><div class="sim-wick" style="height:118%;"></div><div class="sim-body" style="height:62%;"></div></div>
+                            <div class="sim-candle sim-green" style="height:68%;"><div class="sim-wick" style="height:125%;"></div><div class="sim-body" style="height:70%;"></div></div>
+                            <div class="sim-candle sim-red" style="height:54%;"><div class="sim-wick" style="height:130%;"></div><div class="sim-body" style="height:40%;"></div></div>
+                            <div class="sim-candle sim-green" style="height:75%;"><div class="sim-wick" style="height:115%;"></div><div class="sim-body" style="height:68%;"></div></div>
+                            <div class="sim-candle sim-green" style="height:86%;"><div class="sim-wick" style="height:120%;"></div><div class="sim-body" style="height:78%;"></div></div>
+                            <div class="sim-candle sim-green" style="height:94%;"><div class="sim-wick" style="height:115%;"></div><div class="sim-body" style="height:84%;"></div></div>
+                        </div>
+
+                        <div class="hud-telemetry-footer">
+                            <div class="hud-mini-stats">
+                                <span>BUYING POWER: <strong>$100,000</strong></span>
+                                <span>VAULT: <strong style="color:var(--accent-green);">$485,200</strong></span>
+                            </div>
+                            <div class="term-order-buttons">
+                                <button type="button" class="btn-term-buy" id="demo-btn-buy">+ BUY 100</button>
+                                <button type="button" class="btn-term-short" id="demo-btn-short">- SHORT 100</button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Center Column: Live Chart & PvP HUD -->
-                    <div class="term-center">
-                        <!-- PvP Duel HUD Simulation -->
-                        <div class="term-duel-hud-sim">
-                            <div class="term-duel-names">
-                                <span style="color:var(--accent-green);">🟢 YOU: $28,450.00 (+13.80%)</span>
-                                <span style="color:var(--accent-red);">🔴 OPPONENT: $26,120.00 (+4.48%)</span>
-                            </div>
-                            <div class="term-duel-progress">
-                                <div class="p-you"></div>
-                                <div class="p-opp"></div>
-                            </div>
+                    <!-- CENTER CLASH CORE: VS & MILLISECOND COUNTDOWN -->
+                    <div class="clash-center-core">
+                        <div class="clash-timer-box">
+                            <div class="clash-timer-label">BLITZ CLOCK</div>
+                            <div class="clash-timer-digits" id="clash-countdown-timer">00:42.85</div>
                         </div>
 
-                        <!-- Chart Header -->
-                        <div class="term-chart-header">
-                            <div>
-                                <span style="font-size:18px;font-weight:800;color:#fff;">NVDA • NVIDIA Corporation</span>
-                                <div style="font-size:11px;color:var(--text-muted);">Simulated Order Flow • Real-Time Brownian Motion</div>
-                            </div>
-                            <div style="text-align:right;">
-                                <div class="term-price-big" id="demo-term-price">$428.50</div>
-                                <span class="ticker-up" id="demo-term-chg" style="font-weight:700;font-size:13px;">+16.50 (+4.00%)</span>
-                            </div>
-                        </div>
+                        <div class="clash-vs-medallion">VS</div>
 
-                        <!-- Simulated Candlesticks -->
-                        <div class="term-chart-canvas-sim">
-                            <div class="term-order-toast" id="demo-toast" style="display:none;">🟢 BOUGHT 100 @ $428.50 • ORDER FILLED</div>
-                            
-                            <div class="sim-candle sim-green" style="height:45%;"><div class="sim-wick" style="height:120%;"></div><div class="sim-body" style="height:50%;"></div></div>
-                            <div class="sim-candle sim-red" style="height:38%;"><div class="sim-wick" style="height:115%;"></div><div class="sim-body" style="height:35%;"></div></div>
-                            <div class="sim-candle sim-green" style="height:55%;"><div class="sim-wick" style="height:110%;"></div><div class="sim-body" style="height:60%;"></div></div>
-                            <div class="sim-candle sim-green" style="height:65%;"><div class="sim-wick" style="height:125%;"></div><div class="sim-body" style="height:70%;"></div></div>
-                            <div class="sim-candle sim-red" style="height:50%;"><div class="sim-wick" style="height:130%;"></div><div class="sim-body" style="height:45%;"></div></div>
-                            <div class="sim-candle sim-green" style="height:72%;"><div class="sim-wick" style="height:115%;"></div><div class="sim-body" style="height:65%;"></div></div>
-                            <div class="sim-candle sim-green" style="height:85%;"><div class="sim-wick" style="height:120%;"></div><div class="sim-body" style="height:80%;"></div></div>
-                            <div class="sim-candle sim-red" style="height:75%;"><div class="sim-wick" style="height:110%;"></div><div class="sim-body" style="height:40%;"></div></div>
-                            <div class="sim-candle sim-green" style="height:92%;"><div class="sim-wick" style="height:120%;"></div><div class="sim-body" style="height:85%;"></div></div>
-                        </div>
-
-                        <!-- Trade Execution Row -->
-                        <div class="term-order-buttons">
-                            <button type="button" class="btn-term-buy" id="demo-btn-buy">BUY 100 (LONG)</button>
-                            <button type="button" class="btn-term-short" id="demo-btn-short">🔴 SHORT 100</button>
+                        <div class="clash-pot-badge">
+                            🏆 WINNER TAKES<br>RANK + VAULT XP
                         </div>
                     </div>
 
-                    <!-- Right Column: News & Account Feed -->
-                    <div class="term-col term-col-right">
-                        <div class="term-header-mini">
-                            <span>BREAKING NEWS CATALYSTS</span>
-                            <span style="color:var(--accent-blue);">LIVE</span>
+                    <!-- RIGHT HUD: RIVAL OPPONENT (VIVID MAGENTA / RED HUD) -->
+                    <div class="clash-hud-side clash-hud-red">
+                        <div class="hud-player-header">
+                            <div class="hud-player-id">
+                                <span class="hud-role-tag">🐋 [WHALE] • RIVAL 02</span>
+                                <div class="hud-trader-name">VORTEX_99 (COUNTER-TRADER)</div>
+                            </div>
+                            <div class="hud-pnl-box">
+                                <div class="hud-equity-val" id="hud-opp-equity">$26,410.00</div>
+                                <span class="hud-pnl-badge neg" id="hud-opp-pnl">+$1,410.00 (+5.64%)</span>
+                            </div>
                         </div>
-                        <div style="background:rgba(0,230,118,0.06);border:1px solid rgba(0,230,118,0.2);padding:10px;border-radius:6px;margin-bottom:8px;font-size:11px;">
-                            <div style="color:var(--accent-green);font-weight:700;">🚨 NVDA EARNINGS BEAT</div>
-                            <div style="color:var(--text-secondary);margin-top:2px;">Data center revenue spikes +180% YoY, guidance raised.</div>
+
+                        <!-- Minimalist Red Candlestick Collision Canvas -->
+                        <div class="hud-chart-box" id="hud-red-candles">
+                            <div class="hud-position-overlay">
+                                <span>🔴 SHORT 250 NVDA</span>
+                                <span>•</span>
+                                <span>SQUEEZED</span>
+                            </div>
+
+                            <div class="sim-candle sim-green" style="height:82%;"><div class="sim-wick" style="height:115%;"></div><div class="sim-body" style="height:65%;"></div></div>
+                            <div class="sim-candle sim-red" style="height:70%;"><div class="sim-wick" style="height:120%;"></div><div class="sim-body" style="height:55%;"></div></div>
+                            <div class="sim-candle sim-red" style="height:58%;"><div class="sim-wick" style="height:125%;"></div><div class="sim-body" style="height:60%;"></div></div>
+                            <div class="sim-candle sim-green" style="height:64%;"><div class="sim-wick" style="height:115%;"></div><div class="sim-body" style="height:45%;"></div></div>
+                            <div class="sim-candle sim-red" style="height:50%;"><div class="sim-wick" style="height:120%;"></div><div class="sim-body" style="height:52%;"></div></div>
+                            <div class="sim-candle sim-red" style="height:44%;"><div class="sim-wick" style="height:130%;"></div><div class="sim-body" style="height:58%;"></div></div>
+                            <div class="sim-candle sim-green" style="height:52%;"><div class="sim-wick" style="height:115%;"></div><div class="sim-body" style="height:40%;"></div></div>
+                            <div class="sim-candle sim-red" style="height:38%;"><div class="sim-wick" style="height:125%;"></div><div class="sim-body" style="height:62%;"></div></div>
                         </div>
-                        <div style="background:rgba(255,82,82,0.06);border:1px solid rgba(255,82,82,0.2);padding:10px;border-radius:6px;margin-bottom:8px;font-size:11px;">
-                            <div style="color:var(--accent-red);font-weight:700;">⚠️ TECH SECTOR DOWNGRADE</div>
-                            <div style="color:var(--text-secondary);margin-top:2px;">Analyst cites macro inflation pressure across legacy tech.</div>
+
+                        <div class="hud-telemetry-footer">
+                            <div class="hud-mini-stats">
+                                <span>MARGIN USED: <strong>$32,112</strong></span>
+                                <span>STATUS: <strong style="color:var(--accent-red);">TRAILING -13.72%</strong></span>
+                            </div>
+                            <a href="/play" class="btn btn-magenta btn-sm">⚔️ Challenge Live Now</a>
                         </div>
-                        <div style="background:#131826;padding:12px;border-radius:6px;margin-top:14px;border:1px solid var(--border-subtle);font-size:11px;line-height:1.7;">
-                            <div style="display:flex;justify-content:space-between;"><span>Seed Cash:</span><strong>$25,000.00</strong></div>
-                            <div style="display:flex;justify-content:space-between;"><span>Buying Power (4x):</span><strong style="color:var(--accent-blue);">$100,000.00</strong></div>
-                            <div style="display:flex;justify-content:space-between;"><span>Menu Vault:</span><strong style="color:var(--accent-green);">$14,250.00</strong></div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         HIGHLIGHT METRICS STRIP (MONOSPACE HUD TELEMETRY)
+         ========================================================= -->
+    <div class="metrics-strip">
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-number">100+</div>
+                <div class="metric-label">Simulated Tickers</div>
+                <div class="metric-sub">AI Tech, Crypto, Bio, Meme &amp; Defense</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-number">1v1 PvP</div>
+                <div class="metric-label">Live Matchmaking</div>
+                <div class="metric-sub">Cross-Platform Web &amp; Desktop Duels</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-number">60s / 2m / 5m</div>
+                <div class="metric-label">3 Arena Formats</div>
+                <div class="metric-sub">Blitz Scalping, Tactical &amp; Marathon</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-number">$1.5M+</div>
+                <div class="metric-label">3D Vault Rewards</div>
+                <div class="metric-sub">Unlock Hypercars, Superyachts &amp; Jets</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         GAME MODES SHOWCASE (TACTILE HOVER LIFT & GLOWING BORDERS)
+         ========================================================= -->
+    <section class="modes-section" id="modes">
+        <div class="section-header">
+            <span class="section-tag">CHOOSE YOUR COMBAT FORMAT</span>
+            <h2 class="section-title">Two Arenas. Three High-Voltage Duel Clocks.</h2>
+            <p class="section-desc">
+                Hover a format to inspect. Hone your edge in Solo Sandbox or lock into authoritative 1v1 PvP duels where every basis point counts.
+            </p>
+        </div>
+
+        <div class="modes-grid">
+            <!-- Mode 1: Solo Sandbox -->
+            <div class="mode-box">
+                <span class="mode-tag">UNLIMITED SANDBOX LAB</span>
+                <h3 class="mode-heading">🎮 Solo Sandbox Terminal</h3>
+                <p class="mode-description">
+                    The ultimate zero-risk paper trading laboratory. Master breakout scalping, short-selling squeezes, and 4x margin sizing with full control over simulation speed and market volatility temperature.
+                </p>
+                <ul class="mode-perks-list">
+                    <li><span>⏱</span> <strong>Adjustable Warp Speeds:</strong> <span class="mono-data">1x Casual, 3x Trader, 8x Scalper, 20x TURBO</span></li>
+                    <li><span>🌡️</span> <strong>Volatility Temperature:</strong> Tune market calm or extreme breakout chaos</li>
+                    <li><span>🏦</span> <strong>Direct Vault Banking:</strong> Lock profits above <span class="mono-data">$25,000</span> into your permanent Vault</li>
+                    <li><span>📰</span> <strong>Live Catalyst Engine:</strong> Trade earnings beats, FDA approvals &amp; sector shocks</li>
+                </ul>
+                <a href="/play" class="btn btn-secondary">Launch Solo Sandbox</a>
+            </div>
+
+            <!-- Mode 2: 1v1 Duel Arena -->
+            <div class="mode-box duel-box">
+                <span class="mode-tag">RANKED HEAD-TO-HEAD CLASH</span>
+                <h3 class="mode-heading">⚔️ 1v1 Online PvP Duels</h3>
+                <p class="mode-description">
+                    Synchronized real-time trading combat on identical tick streams. Pick your time control—hover a card below—and out-trade your rival before the clock hits <span class="mono-data">00:00</span>:
+                </p>
+
+                <!-- Tactile Hover-Lift Game Mode Cards -->
+                <div class="duel-formats-grid">
+                    <div class="duel-format-pill" onclick="window.location.href='/play'">
+                        <div class="fmt-time">60s</div>
+                        <div class="fmt-name">⚡ Blitz Duel</div>
+                        <div class="fmt-desc">Pure reflex momentum scalping &amp; instant 4x leverage flips</div>
+                    </div>
+                    <div class="duel-format-pill" onclick="window.location.href='/play'">
+                        <div class="fmt-time">2m</div>
+                        <div class="fmt-name">🎯 Tactical</div>
+                        <div class="fmt-desc">Multi-candle breakout setups &amp; mid-duel position reversals</div>
+                    </div>
+                    <div class="duel-format-pill" onclick="window.location.href='/play'">
+                        <div class="fmt-time">5m</div>
+                        <div class="fmt-name">👑 Marathon</div>
+                        <div class="fmt-desc">Macro news catalyst digestion &amp; deep margin risk control</div>
+                    </div>
+                </div>
+
+                <ul class="mode-perks-list">
+                    <li><span>•</span> <strong>Authoritative Tick Stream:</strong> Identical sub-second price feed for both rivals</li>
+                    <li><span>•</span> <strong>Live Dual P&amp;L Telemetry:</strong> Real-time tug-of-war dominance bar</li>
+                    <li><span>•</span> <strong>Instant "Next Opponent" Queue:</strong> Zero lobby friction between matches</li>
+                </ul>
+                <a href="/play" class="btn btn-magenta btn-pulse">⚔️ Enter 1v1 Duel Queue</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         TEASE THE FLEX: HIGH-ROLLER PROGRESSION & 3D VAULT SHOP
+         ========================================================= -->
+    <section class="flex-progression-section" id="progression">
+        <div class="section-header">
+            <span class="section-tag" style="color:var(--accent-gold);border-color:rgba(255,204,0,0.35);background:rgba(255,204,0,0.08);">HIGH-ROLLER PROGRESSION</span>
+            <h2 class="section-title">Grind the Markets. Flex Your Empire.</h2>
+            <p class="section-desc">
+                Every dollar you earn above your <span class="mono-data">$25,000</span> seed capital can be banked into your permanent Menu Vault. Spend your fortune in the 3D Trader Shop on exotic hypercars, 300ft Monaco superyachts, private jets, and prestigious PvP titles.
+            </p>
+        </div>
+
+        <div class="flex-showcase-layout">
+            <!-- Left: Interactive Live 60FPS 3D/Vector Showroom Preview -->
+            <div class="showroom-stage-card">
+                <div class="showroom-top-bar">
+                    <span class="showroom-badge">✨ LIVE 60FPS VAULT SHOWROOM PREVIEW</span>
+                    <div class="showroom-tabs" id="showroom-tabs">
+                        <button type="button" class="showroom-tab-btn active" data-scene="supercar">🏎️ Hypercar</button>
+                        <button type="button" class="showroom-tab-btn" data-scene="yacht">🛥️ Superyacht</button>
+                        <button type="button" class="showroom-tab-btn" data-scene="jet">✈️ G700 Jet</button>
+                        <button type="button" class="showroom-tab-btn" data-scene="bull">👑 Golden Bull</button>
+                    </div>
+                </div>
+
+                <div class="showroom-canvas-wrap">
+                    <canvas id="flex-showroom-canvas" width="760" height="340"></canvas>
+                    <div class="showroom-hud-overlay">
+                        <span class="showroom-unlock-pill" id="showroom-price-pill">🔒 VAULT UNLOCK: $350,000</span>
+                        <span class="showroom-live-tag" id="showroom-telemetry-tag">TELEMETRY // 1,500 HP W16 • 236 MPH DRIFT</span>
+                    </div>
+                </div>
+
+                <div class="showroom-meta-footer">
+                    <div>
+                        <div class="showroom-item-title" id="showroom-item-title">🏎️ 1,500 HP Bugatti Chiron Pur Sport Drift</div>
+                        <div class="showroom-item-desc" id="showroom-item-desc">Triggers a fullscreen 60fps midnight hypercar drift with tire smoke, twin-turbo exhaust flames, and V16 redline audio whenever you win a duel or bank profits.</div>
+                    </div>
+                    <a href="/play" class="btn btn-primary btn-sm">Open Vault Shop →</a>
+                </div>
+            </div>
+
+            <!-- Right: Exclusive Trader Titles & Empire Ladder -->
+            <div class="titles-ladder-card">
+                <div class="ladder-header">
+                    <h3>🏆 Unlockable Trader Titles &amp; Cosmetics</h3>
+                    <p>Your equipped Title and Victory Animation are broadcast live to your opponent in every 1v1 PvP duel.</p>
+                </div>
+
+                <div class="titles-list">
+                    <div class="title-tier-item">
+                        <div class="title-tier-left">
+                            <div class="title-tier-icon">🚀</div>
+                            <div>
+                                <span class="title-badge-preview badge-bull">[TO THE MOON]</span>
+                                <div class="title-tier-name">Rocket Blastoff Victory Engine</div>
+                            </div>
                         </div>
+                        <span class="shop-price-tag">$25,000</span>
+                    </div>
+
+                    <div class="title-tier-item">
+                        <div class="title-tier-left">
+                            <div class="title-tier-icon">🔮</div>
+                            <div>
+                                <span class="title-badge-preview badge-whale">[CYBERPUNK HUD]</span>
+                                <div class="title-tier-name">Neon Purple &amp; Cyan Terminal Theme</div>
+                            </div>
+                        </div>
+                        <span class="shop-price-tag">$50,000</span>
+                    </div>
+
+                    <div class="title-tier-item">
+                        <div class="title-tier-left">
+                            <div class="title-tier-icon">🐋</div>
+                            <div>
+                                <span class="title-badge-preview badge-whale">[WALL STREET WHALE]</span>
+                                <div class="title-tier-name">Prestigious PvP Matchmaking Title</div>
+                            </div>
+                        </div>
+                        <span class="shop-price-tag">$100,000</span>
+                    </div>
+
+                    <div class="title-tier-item">
+                        <div class="title-tier-left">
+                            <div class="title-tier-icon">🏎️</div>
+                            <div>
+                                <span class="title-badge-preview badge-hypercar">[HYPERCAR COLLECTOR]</span>
+                                <div class="title-tier-name">Elite Syndicate Badge + V16 Prestige</div>
+                            </div>
+                        </div>
+                        <span class="shop-price-tag">$250,000</span>
+                    </div>
+
+                    <div class="title-tier-item gold-tier">
+                        <div class="title-tier-left">
+                            <div class="title-tier-icon">🛥️</div>
+                            <div>
+                                <span class="title-badge-preview badge-monaco">[MONACO YACHT CLUB]</span>
+                                <div class="title-tier-name">Sovereign Billionaire Tier Flex</div>
+                            </div>
+                        </div>
+                        <span class="shop-price-tag" style="color:var(--accent-gold);border-color:rgba(255,204,0,0.4);background:rgba(255,204,0,0.12);">$1,000,000</span>
+                    </div>
+                </div>
+
+                <div style="background:rgba(3,6,14,0.9);border:1px solid var(--border-glass);border-radius:10px;padding:14px;">
+                    <div style="display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:11px;margin-bottom:6px;">
+                        <span style="color:var(--text-secondary);">YOUR LOCAL VAULT BALANCE:</span>
+                        <strong id="flex-local-vault" style="color:var(--accent-green);">$0.00</strong>
+                    </div>
+                    <div style="height:6px;background:#0d1424;border-radius:4px;overflow:hidden;">
+                        <div id="flex-vault-bar" style="width:18%;height:100%;background:linear-gradient(90deg,var(--accent-green),var(--accent-cyan));box-shadow:0 0 12px var(--accent-green);"></div>
                     </div>
                 </div>
             </div>
@@ -252,42 +514,14 @@
     </section>
 
     <!-- =========================================================
-         HIGHLIGHT METRICS STRIP
-         ========================================================= -->
-    <div class="metrics-strip">
-        <div class="metrics-grid">
-            <div class="metric-card">
-                <div class="metric-number">100+</div>
-                <div class="metric-label">Simulated Tickers</div>
-                <div class="metric-sub">Tech, Energy, Crypto, Bio, Meme & Indices</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-number">1v1 PvP</div>
-                <div class="metric-label">Cloud Matchmaking</div>
-                <div class="metric-sub">Cross-play between Desktop & Web Traders</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-number">3 Formats</div>
-                <div class="metric-label">60s, 2m & 5m Duels</div>
-                <div class="metric-sub">Blitz scalping, tactical, and marathon matches</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-number">$25,000</div>
-                <div class="metric-label">Starting Capital</div>
-                <div class="metric-sub">4x Day Trading Buying Power Margin</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- =========================================================
-         DETAILED FEATURES SECTION
+         DETAILED FEATURES SECTION (FROSTED GLASS HUD CARDS)
          ========================================================= -->
     <section class="features-section" id="features">
         <div class="section-header">
-            <span class="section-tag">ENGINEERED FOR TRADERS</span>
-            <h2 class="section-title">Everything You Need to Scalp the Market</h2>
+            <span class="section-tag">INSTITUTIONAL HUD ARCHITECTURE</span>
+            <h2 class="section-title">Engineered for High-Speed Execution</h2>
             <p class="section-desc">
-                From high-speed order execution and short selling to real-time PvP combat and vault banking, DayTradeSim Pro replicates the adrenaline of professional day trading.
+                Every panel is crafted with translucent glassmorphism and zero-latency canvas rendering so you never miss a breakout tick.
             </p>
         </div>
 
@@ -295,112 +529,84 @@
             <!-- Feature 1: Engine -->
             <div class="feature-card green-theme">
                 <div class="feature-icon-wrap">📈</div>
-                <h3 class="feature-title">Real-Time Simulation Engine</h3>
+                <h3 class="feature-title">Merton Jump-Diffusion Engine</h3>
                 <p class="feature-text">
-                    Experience dynamic pricing driven by Geometric Brownian Motion, volume clustering, trend momentum drift, and realistic volatility spikes. No canned replays—every session is a unique trading day.
+                    Experience dynamic pricing driven by Geometric Brownian Motion, volume clustering, momentum drift, and realistic volatility spikes across 100 stocks.
                 </p>
                 <ul class="feature-bullets">
-                    <li><span>✓</span> Continuous algorithmic order flow</li>
-                    <li><span>✓</span> 100+ unique stocks across 8 distinct sectors</li>
-                    <li><span>✓</span> Adjustable speeds from 1x Casual to 20x TURBO</li>
+                    <li><span>✓</span> 100+ unique tickers across 8 market sectors</li>
+                    <li><span>✓</span> Tunable Volatility Temperature slider</li>
+                    <li><span>✓</span> Speeds from 1x Casual to 20x TURBO</li>
                 </ul>
             </div>
 
             <!-- Feature 2: 1v1 PvP Duels -->
-            <div class="feature-card">
-                <div class="feature-icon-wrap" style="color:#ff5252;">⚔️</div>
-                <h3 class="feature-title">1v1 Real-Time PvP Duels</h3>
+            <div class="feature-card purple-theme">
+                <div class="feature-icon-wrap">⚔️</div>
+                <h3 class="feature-title">1v1 Authoritative PvP Duels</h3>
                 <p class="feature-text">
-                    Queue up into instant head-to-head trading battles against live desktop and web opponents. Choose between 60-second Blitz, 2-minute Tactical, or 5-minute Marathon duels on synchronized tick streams—highest net P&L takes the match.
+                    Queue into instant head-to-head trading battles against live desktop and web opponents across 60s Blitz, 2m Tactical, and 5m Marathon clocks.
                 </p>
                 <ul class="feature-bullets">
-                    <li><span>✓</span> Firebase-powered real-time synchronization</li>
-                    <li><span>✓</span> Live rival P&L tracker & time remaining HUD</li>
-                    <li><span>✓</span> Intelligent fallback bot if no human is queueing</li>
+                    <li><span>✓</span> Synchronized WebSocket &amp; Firebase tick feeds</li>
+                    <li><span>✓</span> Live rival P&amp;L tug-of-war HUD bar</li>
+                    <li><span>✓</span> Instant fallback AI rival if queue is quiet</li>
                 </ul>
             </div>
 
             <!-- Feature 3: News & Catalysts -->
             <div class="feature-card">
                 <div class="feature-icon-wrap">📰</div>
-                <h3 class="feature-title">Breaking News & Catalysts</h3>
+                <h3 class="feature-title">Breaking News Catalysts</h3>
                 <p class="feature-text">
-                    Markets don't move in a vacuum. A dynamic news engine injects breaking headlines—earnings surprises, FDA drug approvals, CEO tweets, and sector downgrades—that create instant breakout volatility.
+                    A live news engine injects breaking headlines—earnings surprises, FDA approvals, and macro downgrades—that trigger instant price breakouts.
                 </p>
                 <ul class="feature-bullets">
-                    <li><span>✓</span> Live news feed directly beside the charts</li>
-                    <li><span>✓</span> Instant sentiment impact on stock prices</li>
-                    <li><span>✓</span> Trade the immediate reaction or scalp the fade</li>
+                    <li><span>✓</span> Real-time catalyst feed beside the chart</li>
+                    <li><span>✓</span> Immediate directional sentiment impact</li>
+                    <li><span>✓</span> Scalp the initial impulse or short the fade</li>
                 </ul>
             </div>
 
             <!-- Feature 4: Day Trading Execution Desk -->
             <div class="feature-card gold-theme">
                 <div class="feature-icon-wrap">⚡</div>
-                <h3 class="feature-title">Professional Execution Desk</h3>
+                <h3 class="feature-title">4x Margin Execution Desk</h3>
                 <p class="feature-text">
-                    Enter and exit positions with institutional precision. Execute Longs, Shorts, 1-click position reversals (Flip), and smart MAX share sizing calculated directly from your available Buying Power.
+                    Deploy Longs, Shorts, 1-click position reversals (Flip), and smart MAX share sizing calculated automatically from your 4x Day Trading Buying Power.
                 </p>
                 <ul class="feature-bullets">
-                    <li><span>✓</span> Instant Market orders & customizable Limit orders</li>
-                    <li><span>✓</span> 4x Day Trading Margin & Short selling with collateral</li>
-                    <li><span>✓</span> Rapid-fire keyboard hotkeys for lightning execution</li>
+                    <li><span>✓</span> $25,000 cash = $100,000 buying power</li>
+                    <li><span>✓</span> Instant Market &amp; precision Limit orders</li>
+                    <li><span>✓</span> Rapid-fire keyboard execution hotkeys</li>
                 </ul>
             </div>
 
             <!-- Feature 5: Interactive Candlestick Charts -->
             <div class="feature-card">
                 <div class="feature-icon-wrap">📊</div>
-                <h3 class="feature-title">Hardware-Accelerated Charts</h3>
+                <h3 class="feature-title">60FPS Canvas Candlesticks</h3>
                 <p class="feature-text">
-                    Custom high-performance canvas candlestick charts with accurate wicks, volume histograms, moving averages, and on-chart entry & exit execution badges showing your exact fill prices.
+                    Hardware-accelerated candlestick charts with wicks, volume histograms, moving averages, and on-chart entry/exit badges marking your exact fills.
                 </p>
                 <ul class="feature-bullets">
                     <li><span>✓</span> Real-time candlestick formation at 60 FPS</li>
-                    <li><span>✓</span> Buy & Sell trade markers drawn directly on canvas</li>
-                    <li><span>✓</span> Interactive crosshair price and date cursor</li>
+                    <li><span>✓</span> Buy &amp; Short fill markers plotted on canvas</li>
+                    <li><span>✓</span> Precision crosshair price &amp; time telemetry</li>
                 </ul>
             </div>
 
-            <!-- Feature 6: Menu Vault & Profit Banking -->
+            <!-- Feature 6: Menu Vault & Cloud Sync -->
             <div class="feature-card green-theme">
                 <div class="feature-icon-wrap">🏦</div>
-                <h3 class="feature-title">Menu Vault & Career Mode</h3>
+                <h3 class="feature-title">Cloud Vault &amp; Cross-Play</h3>
                 <p class="feature-text">
-                    Don't risk blowing up your gains. Hit "Bank Profit" whenever your equity exceeds your $25,000 initial seed money. Profits are locked safely into your permanent Menu Vault across sessions.
+                    Hit "Bank Profit" anytime your equity exceeds $25,000 to lock gains permanently into your Cloud Vault—synced across Web and Windows Desktop.
                 </p>
                 <ul class="feature-bullets">
-                    <li><span>✓</span> Permanent Vault storage immune to market wipeouts</li>
-                    <li><span>✓</span> Career progression and lifetime banked profit stats</li>
-                    <li><span>✓</span> Reset session balance without losing your vault</li>
-                </ul>
-            </div>
-
-            <!-- Feature 7: Trader Shop & Celebrations -->
-            <div class="feature-card purple-theme">
-                <div class="feature-icon-wrap">🎆</div>
-                <h3 class="feature-title">Crazy Win Celebrations & Shop</h3>
-                <p class="feature-text">
-                    Spend your banked vault profits in the Trader Shop. Unlock insane fullscreen particle victory animations—Rocket to the Moon, Golden Riches, Nuclear Meltdown—plus audio SFX and VIP themes.
-                </p>
-                <ul class="feature-bullets">
-                    <li><span>✓</span> 5 animated celebration engines with custom physics</li>
-                    <li><span>✓</span> Cyberpunk & Gold VIP terminal color themes</li>
-                    <li><span>✓</span> Unlockable trader titles to flex in 1v1 PvP</li>
-                </ul>
-            </div>
-
-            <!-- Feature 8: Cloud Sync & Cross-Platform -->
-            <div class="feature-card">
-                <div class="feature-icon-wrap">☁️</div>
-                <h3 class="feature-title">Universal Cloud Synchronization</h3>
-                <p class="feature-text">
-                    Sign in with Google or Email on tradeism.men to automatically sync your trader nickname, money vault, purchased cosmetics, and duel wins between the Web version and the Windows Desktop app.
-                </p>
-                <ul class="feature-bullets">
-                    <li><span>✓</span> 1-click Google Sign-In with official Firebase SDK</li>
-                    <li><span>✓</span> Direct credential handoff to Desktop game</li>
-                    <li><span>✓</span> Play on any browser, anywhere, anytime</li>
+                    <li><span>✓</span> Permanent Vault immune to session wipeouts</li>
+                    <li><span>✓</span> 1-click Google &amp; Email cloud sync</li>
+                    <li><span>✓</span> Shared inventory across Web &amp; Desktop</li>
                 </ul>
             </div>
         </div>
@@ -412,106 +618,40 @@
     <section class="how-it-works-section" id="how-it-works">
         <div class="how-container">
             <div class="section-header">
-                <span class="section-tag">QUICKSTART GUIDE</span>
-                <h2 class="section-title">How To Play in 3 Simple Steps</h2>
+                <span class="section-tag">TACTICAL BRIEFING</span>
+                <h2 class="section-title">Master the Loop in 3 Steps</h2>
                 <p class="section-desc">
-                    Whether you're practicing solo or competing for rank in 1v1 duels, here is the core gameplay loop.
+                    From scouting momentum catalysts to banking six-figure payouts into your Vault.
                 </p>
             </div>
 
             <div class="steps-grid">
                 <div class="step-card">
-                    <span class="step-badge">STEP 1</span>
+                    <span class="step-badge">STEP 01</span>
                     <span class="step-icon">🔍</span>
-                    <h3 class="step-title">Scout the Tickers & News</h3>
+                    <h3 class="step-title">Scout the 100-Stock Scanner</h3>
                     <p class="step-desc">
-                        Open the 100-stock scanner. Look for high-volume movers, sector trends, and breaking catalyst headlines. Notice a positive earnings announcement? That stock is primed for a spike.
+                        Filter by AI Tech, Crypto, Biotech, or Meme sectors. Watch the live news feed for breaking catalyst alerts that ignite massive multi-candle breakouts.
                     </p>
                 </div>
 
                 <div class="step-card">
-                    <span class="step-badge">STEP 2</span>
+                    <span class="step-badge">STEP 02</span>
                     <span class="step-icon">⚡</span>
-                    <h3 class="step-title">Go Long or Short with Leverage</h3>
+                    <h3 class="step-title">Deploy 4x Leverage Long or Short</h3>
                     <p class="step-desc">
-                        Pick your position size or tap <strong>MAX</strong> to deploy your full 4x Buying Power. Click <strong>BUY</strong> if you expect prices to rise, or <strong>SHORT</strong> to profit from steep downtrends. If the momentum reverses, tap <strong>FLIP</strong> to instantly switch sides.
+                        Tap <strong>MAX</strong> to size up with 4x margin. Hit <strong>BUY</strong> to ride bullish momentum or <strong>SHORT</strong> to profit from crashes. Tap <strong>FLIP</strong> to reverse your position in a single click.
                     </p>
                 </div>
 
                 <div class="step-card">
-                    <span class="step-badge">STEP 3</span>
-                    <span class="step-icon">💰</span>
-                    <h3 class="step-title">Bank Profits & Level Up</h3>
+                    <span class="step-badge">STEP 03</span>
+                    <span class="step-icon">🏎️</span>
+                    <h3 class="step-title">Bank Vault Profits &amp; Flex</h3>
                     <p class="step-desc">
-                        Flatten your positions when in profit. Click <strong>Bank Profit</strong> to lock earnings into your permanent Menu Vault. Spend your vault fortune in the Trader Shop to customize your terminal and climb the PvP leaderboard.
+                        Lock session gains into your permanent Menu Vault. Unlock the Bugatti Hypercar Drift, 300ft Monaco Superyacht, and <span class="mono-data">[WHALE]</span> title to flex in 1v1 PvP.
                     </p>
                 </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- =========================================================
-         GAME MODES SHOWCASE
-         ========================================================= -->
-    <section class="modes-section" id="modes">
-        <div class="section-header">
-            <span class="section-tag">CHOOSE YOUR ARENA</span>
-            <h2 class="section-title">Two Distinct Ways to Play</h2>
-            <p class="section-desc">
-                Hone your strategies at your own pace in Solo Sandbox or battle human traders in timed 1v1 PvP showmatches.
-            </p>
-        </div>
-
-        <div class="modes-grid">
-            <!-- Mode 1: Solo -->
-            <div class="mode-box">
-                <span class="mode-tag">PRACTICE ARENA</span>
-                <h3 class="mode-heading">🎮 Solo Sandbox Mode</h3>
-                <p class="mode-description">
-                    The ultimate risk-free paper trading laboratory. Test new strategies, practice scalping breakouts, and experiment with short selling without time limits or pressure.
-                </p>
-                <ul class="mode-perks-list">
-                    <li><span>⏱</span> <strong>Custom Speeds:</strong> 1x Casual, 3x Day Trader, 8x Scalper, 20x Turbo</li>
-                    <li><span>↺</span> <strong>Instant Session Reset:</strong> Wipe clean and start fresh at any time</li>
-                    <li><span>🏦</span> <strong>Menu Vault Banking:</strong> Stash profits to your persistent profile</li>
-                    <li><span>📰</span> <strong>Full News Stream:</strong> React to unpredictable market catalysts</li>
-                </ul>
-                <a href="/play" class="btn btn-secondary">Enter Solo Sandbox</a>
-            </div>
-
-            <!-- Mode 2: Duel -->
-            <div class="mode-box duel-box">
-                <span class="mode-tag">HIGH STAKES COMPETITIVE</span>
-                <h3 class="mode-heading">1v1 Online PvP Duels</h3>
-                <p class="mode-description">
-                    Synchronized real-time trading duels with authoritative tick streaming. Pair up against human traders or simulated market makers across 3 competitive formats:
-                </p>
-
-                <div class="duel-formats-grid">
-                    <div class="duel-format-pill">
-                        <div class="fmt-time">60s</div>
-                        <div class="fmt-name">Blitz Duel</div>
-                        <div class="fmt-desc">Fast momentum scalping, high leverage reflexes</div>
-                    </div>
-                    <div class="duel-format-pill">
-                        <div class="fmt-time">2m</div>
-                        <div class="fmt-name">Tactical</div>
-                        <div class="fmt-desc">Trend confirmation, multi-candle setups</div>
-                    </div>
-                    <div class="duel-format-pill">
-                        <div class="fmt-time">5m</div>
-                        <div class="fmt-name">Marathon</div>
-                        <div class="fmt-desc">News digestion, deep risk & margin control</div>
-                    </div>
-                </div>
-
-                <ul class="mode-perks-list">
-                    <li><span>•</span> <strong>Authoritative Server Sync:</strong> Sub-second latency market tick stream</li>
-                    <li><span>•</span> <strong>Live Opponent Telemetry:</strong> Real-time dual PnL tug-of-war meter</li>
-                    <li><span>•</span> <strong>Omegle-Style Matchmaking:</strong> Instant pairings with "Next Opponent" skip</li>
-                    <li><span>•</span> <strong>Cross-Platform Play:</strong> Seamless web vs desktop match pool</li>
-                </ul>
-                <a href="/play" class="btn btn-primary" style="background:#ff3d00;box-shadow:0 4px 18px rgba(255,61,0,0.4);">Enter 1v1 Duel Arena</a>
             </div>
         </div>
     </section>
@@ -522,16 +662,16 @@
     <section class="auth-section" id="auth">
         <div class="auth-wrapper">
             <div class="auth-info-col">
-                <span class="badge-glow" style="margin-bottom:14px;">☁️ UNIVERSAL CLOUD ACCOUNT</span>
-                <h3>Sync Your Vault & Shop Items Across Devices</h3>
+                <span class="badge-glow" style="margin-bottom:14px;">☁️ UNIVERSAL CLOUD TELEMETRY</span>
+                <h3>Sync Your Vault &amp; 3D Fleet Everywhere</h3>
                 <p>
-                    Create a free account or log in with Google. Your trader nickname, Menu Vault balance, unlockable cosmetics, and 1v1 PvP duel records will instantly sync between the Web Terminal and Desktop application.
+                    Sign in with Google or Email. Your trader callsign, Menu Vault balance, unlocked 3D victory animations, and 1v1 PvP duel rank sync automatically between the Web Terminal and Windows Desktop client.
                 </p>
                 <ul class="auth-benefits">
-                    <li><span>✓</span> Never lose your saved vault money or shop unlocks</li>
-                    <li><span>✓</span> Seamlessly jump between your browser and Windows desktop app</li>
-                    <li><span>✓</span> Verified trader nickname in 1v1 PvP matches</li>
-                    <li><span>✓</span> Fast 1-click Google authentication via official Firebase SDK</li>
+                    <li><span>✓</span> Persistent Cloud Vault protection across all devices</li>
+                    <li><span>✓</span> Instant handoff between Browser and Windows Desktop</li>
+                    <li><span>✓</span> Verified Trader Callsign &amp; Title in 1v1 PvP lobbies</li>
+                    <li><span>✓</span> 1-click Google authentication via Firebase</li>
                 </ul>
             </div>
 
@@ -541,20 +681,20 @@
                     <div class="profile-avatar-circle">👑</div>
                     <div class="profile-username" id="profile-user-name">Trader</div>
                     <div class="profile-email" id="profile-user-email">user@example.com</div>
-                    
-                    <div style="display:inline-block;font-size:11px;font-weight:700;color:var(--accent-green);background:rgba(0,230,118,0.12);border:1px solid rgba(0,230,118,0.3);border-radius:20px;padding:3px 12px;margin-bottom:16px;">
-                        ● CLOUD SYNC ACTIVE
+
+                    <div class="mono-data" style="display:inline-block;font-size:11px;font-weight:700;color:var(--accent-green);background:rgba(0,255,136,0.12);border:1px solid rgba(0,255,136,0.35);border-radius:20px;padding:3px 12px;margin-bottom:16px;">
+                        ● CLOUD TELEMETRY ONLINE
                     </div>
 
                     <div class="profile-stats-grid">
                         <div class="profile-stats-row"><span>💰 Menu Vault:</span><strong id="profile-vault-bal" style="color:var(--accent-green);">$0.00</strong></div>
-                        <div class="profile-stats-row"><span>📈 Banked Profit:</span><strong id="profile-banked-prof" style="color:#fff;">$0.00</strong></div>
-                        <div class="profile-stats-row"><span>🏆 Duels Won:</span><strong id="profile-duels-won" style="color:#fff;">0</strong></div>
+                        <div class="profile-stats-row"><span>📈 Lifetime Banked:</span><strong id="profile-banked-prof" style="color:#fff;">$0.00</strong></div>
+                        <div class="profile-stats-row"><span>🏆 PvP Duels Won:</span><strong id="profile-duels-won" style="color:var(--accent-cyan);">0</strong></div>
                     </div>
 
                     <div style="display:flex;gap:10px;justify-content:center;">
-                        <a href="/play" class="btn btn-primary btn-sm" style="flex:1;">⚡ Launch Terminal</a>
-                        <button type="button" class="btn btn-secondary btn-sm" id="btn-signout" style="border-color:#ff5252;color:#ff8a80;">Sign Out</button>
+                        <a href="/play" class="btn btn-primary btn-pulse btn-sm" style="flex:1;">⚡ Launch Terminal</a>
+                        <button type="button" class="btn btn-secondary btn-sm" id="btn-signout" style="border-color:var(--accent-red);color:#ff8a9f;">Sign Out</button>
                     </div>
                 </div>
 
@@ -567,11 +707,11 @@
                             <path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.039l3.007-2.332z"/>
                             <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/>
                         </svg>
-                        Sign in with Google
+                        Continue with Google
                     </button>
 
                     <div class="auth-divider">
-                        <span>or with email</span>
+                        <span>or email credentials</span>
                     </div>
 
                     <div class="auth-tabs">
@@ -581,17 +721,17 @@
 
                     <form id="home-auth-form">
                         <div class="auth-form-group" id="group-nickname" style="display:none;">
-                            <label for="auth-nick">Trader Nickname</label>
+                            <label for="auth-nick">TRADER CALLSIGN</label>
                             <input type="text" id="auth-nick" class="auth-input" placeholder="e.g. BullishBeast">
                         </div>
 
                         <div class="auth-form-group">
-                            <label for="auth-email">Email Address</label>
+                            <label for="auth-email">EMAIL ADDRESS</label>
                             <input type="email" id="auth-email" class="auth-input" placeholder="trader@example.com" required>
                         </div>
 
                         <div class="auth-form-group">
-                            <label for="auth-pass">Password</label>
+                            <label for="auth-pass">PASSWORD</label>
                             <input type="password" id="auth-pass" class="auth-input" placeholder="••••••••" required>
                         </div>
 
@@ -609,10 +749,10 @@
          ========================================================= -->
     <section class="comparison-section" id="comparison">
         <div class="section-header">
-            <span class="section-tag">TWO WAYS TO PLAY</span>
-            <h2 class="section-title">Web Terminal vs. Desktop App</h2>
+            <span class="section-tag">CROSS-PLATFORM DEPLOYMENT</span>
+            <h2 class="section-title">Web Terminal vs. Desktop Client</h2>
             <p class="section-desc">
-                Play instantly in your browser or install the dedicated Windows client for ultra-low latency.
+                Jump into a duel in 1 second from your browser or run the native Windows 64-bit executable.
             </p>
         </div>
 
@@ -620,46 +760,41 @@
             <table class="comparison-table">
                 <thead>
                     <tr>
-                        <th>Feature</th>
-                        <th style="color:var(--accent-blue);">🌐 Web Terminal (tradeism.men)</th>
-                        <th style="color:var(--accent-green);">💻 Windows Desktop App</th>
+                        <th>System Capability</th>
+                        <th style="color:var(--accent-cyan);">🌐 Web Cyber-Terminal (tradeism.men)</th>
+                        <th style="color:var(--accent-green);">💻 Windows Desktop Client</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td><strong>Zero Installation</strong></td>
-                        <td class="check">✓ Instant (1-click access)</td>
-                        <td style="color:var(--text-muted);">Requires quick installer</td>
+                        <td><strong>Deployment Speed</strong></td>
+                        <td class="check">✓ Instant (Zero install)</td>
+                        <td style="color:var(--text-muted);">Lightweight 13 MB installer / portable</td>
                     </tr>
                     <tr>
-                        <td><strong>100+ Stocks Simulation</strong></td>
-                        <td class="check">✓ Full 100 stock universe</td>
-                        <td class="check">✓ Full 100 stock universe</td>
+                        <td><strong>100+ Stock Simulation Universe</strong></td>
+                        <td class="check">✓ Full 100-ticker engine</td>
+                        <td class="check">✓ Full 100-ticker engine</td>
                     </tr>
                     <tr>
-                        <td><strong>1v1 Live Online PvP</strong></td>
-                        <td class="check">✓ Real-time cross-play</td>
-                        <td class="check">✓ Real-time cross-play</td>
+                        <td><strong>1v1 Live Online PvP (60s / 2m / 5m)</strong></td>
+                        <td class="check">✓ Cross-platform matchmaking</td>
+                        <td class="check">✓ Cross-platform matchmaking</td>
                     </tr>
                     <tr>
-                        <td><strong>Cloud Profile & Vault Sync</strong></td>
-                        <td class="check">✓ Synced via Firebase</td>
-                        <td class="check">✓ Synced via Firebase</td>
+                        <td><strong>3D Vault Shop &amp; Luxury Animations</strong></td>
+                        <td class="check">✓ Hypercar, Yacht, Jet &amp; Titles</td>
+                        <td class="check">✓ Hypercar, Yacht, Jet &amp; Titles</td>
                     </tr>
                     <tr>
-                        <td><strong>Keyboard Hotkey Execution</strong></td>
-                        <td>Standard browser keys</td>
-                        <td class="check">✓ Global, zero-lag desktop hotkeys</td>
+                        <td><strong>Cloud Profile &amp; Vault Sync</strong></td>
+                        <td class="check">✓ Real-time Firebase Sync</td>
+                        <td class="check">✓ Real-time Firebase Sync</td>
                     </tr>
                     <tr>
-                        <td><strong>Automatic Background Updates</strong></td>
-                        <td class="check">✓ Always on latest build</td>
-                        <td class="check">✓ Built-in GitHub self-updater</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Offline Simulation Sandbox</strong></td>
+                        <td><strong>Offline Standalone Mode</strong></td>
                         <td>Requires initial load</td>
-                        <td class="check">✓ 100% offline standalone support</td>
+                        <td class="check">✓ 100% offline capable</td>
                     </tr>
                 </tbody>
             </table>
@@ -671,13 +806,13 @@
          ========================================================= -->
     <section class="cta-banner-section">
         <div class="cta-banner">
-            <h2>Ready to Test Your Trading Instincts?</h2>
+            <h2>Ready to Enter the Cyber-Terminal?</h2>
             <p>
-                Step onto the trading floor today. Build your seed capital into a multimillion-dollar vault or take on traders across the globe in 1v1 PvP.
+                Your $25,000 starting capital and 4x leverage desk are armed. Crush your rivals in live 1v1 PvP duels and build your multimillion-dollar Vault empire.
             </p>
             <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
-                <a href="/play" class="btn btn-primary btn-lg">⚡ Launch Web Terminal Now</a>
-                <a href="/download" class="btn btn-secondary btn-lg">💾 Download Desktop App</a>
+                <a href="/play" class="btn btn-primary btn-pulse btn-lg">⚡ Launch Web Terminal Now</a>
+                <a href="/download" class="btn btn-secondary btn-lg">💾 Download Windows Client</a>
             </div>
         </div>
     </section>
@@ -690,39 +825,39 @@
             <div class="footer-col">
                 <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
                     <img src="assets/icon.png" alt="Logo" style="width:26px;height:26px;border-radius:4px;">
-                    <strong style="color:#fff;font-size:16px;">DAYTRADESIM PRO</strong>
+                    <strong style="color:#fff;font-family:var(--font-display);font-size:15px;letter-spacing:1px;">DAYTRADESIM PRO</strong>
                 </div>
                 <p style="font-size:13px;color:var(--text-muted);line-height:1.6;max-width:340px;">
-                    The ultimate paper trading arena. Featuring real-time stock simulations, breaking news catalysts, 4x day trading margin, and live 1v1 PvP battles.
+                    The high-frequency paper trading cyber-terminal. Featuring 100+ simulated tickers, breaking news catalysts, 4x margin, 3D Vault progression, and live 1v1 PvP duels.
                 </p>
             </div>
 
             <div class="footer-col">
-                <h4>Play & Download</h4>
+                <h4>Play &amp; Download</h4>
                 <ul class="footer-links">
-                    <li><a href="/play">Web Terminal (Play Online)</a></li>
+                    <li><a href="/play">Web Terminal (Instant Play)</a></li>
                     <li><a href="/download">Windows Desktop App</a></li>
                     <li><a href="/download#specs">System Requirements</a></li>
-                    <li><a href="https://github.com/isaiah-sudo/tradeism/releases" target="_blank" rel="noopener">GitHub Releases</a></li>
+                    <li><a href="https://github.com/isaiah-sudo/tradegpt/releases" target="_blank" rel="noopener">GitHub Releases</a></li>
                 </ul>
             </div>
 
             <div class="footer-col">
-                <h4>Features</h4>
+                <h4>Arena &amp; Vault</h4>
                 <ul class="footer-links">
-                    <li><a href="#features">100 Stock Universe</a></li>
-                    <li><a href="#modes">1v1 PvP Duels</a></li>
-                    <li><a href="#features">Menu Vault Banking</a></li>
+                    <li><a href="#modes">1v1 PvP Duels (60s / 2m / 5m)</a></li>
+                    <li><a href="#progression">3D Vault Showroom</a></li>
+                    <li><a href="#features">100-Stock Engine</a></li>
                     <li><a href="#auth">Cloud Synchronization</a></li>
                 </ul>
             </div>
 
             <div class="footer-col">
-                <h4>Community & Open Source</h4>
+                <h4>Community &amp; Open Source</h4>
                 <ul class="footer-links">
-                    <li><a href="https://github.com/isaiah-sudo/tradeism" target="_blank" rel="noopener">GitHub Repository</a></li>
-                    <li><a href="https://github.com/isaiah-sudo/tradeism/issues" target="_blank" rel="noopener">Report an Issue</a></li>
-                    <li><a href="/play">Trader Shop & Rewards</a></li>
+                    <li><a href="https://github.com/isaiah-sudo/tradegpt" target="_blank" rel="noopener">GitHub Repository</a></li>
+                    <li><a href="https://github.com/isaiah-sudo/tradegpt/issues" target="_blank" rel="noopener">Report an Issue</a></li>
+                    <li><a href="/play">Trader Shop &amp; Rewards</a></li>
                 </ul>
             </div>
         </div>
@@ -732,7 +867,7 @@
                 © 2026 DayTradeSim Pro • tradeism.men • All rights reserved.
             </div>
             <div>
-                Version 2.2 Stable
+                Version 2.1.1 Stable
             </div>
         </div>
 
@@ -743,7 +878,7 @@
         </div>
     </footer>
 
-    <!-- Custom Landing Auth & Showcase Script -->
+    <!-- Custom Landing Auth, Live Micro-Animations & 3D Showroom Script -->
     <script src="js/landing-auth.js"></script>
 
 </body>

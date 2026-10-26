@@ -27,7 +27,11 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
 
 class CandlestickChart {
     constructor(canvasId) {
-        this.canvas = document.getElementById(canvasId);
+        this.canvas = typeof canvasId === 'string' ? document.getElementById(canvasId) : canvasId;
+        if (!this.canvas) {
+            console.error("[Chart] Canvas element not found:", canvasId);
+            return;
+        }
         this.ctx = this.canvas.getContext('2d');
 
         this.mousePos = null;
@@ -110,7 +114,15 @@ class CandlestickChart {
         const list = [...stock.candles];
         if (stock.currentCandle) {
             const last = list[list.length - 1];
-            if (!last || Math.abs(last.timestamp - stock.currentCandle.timestamp) >= 1) {
+            if (last) {
+                if (last !== stock.currentCandle) {
+                    if (Math.abs(last.timestamp - stock.currentCandle.timestamp) < 0.001) {
+                        list[list.length - 1] = stock.currentCandle;
+                    } else {
+                        list.push(stock.currentCandle);
+                    }
+                }
+            } else {
                 list.push(stock.currentCandle);
             }
         }
@@ -151,6 +163,9 @@ class CandlestickChart {
     }
 
     render() {
+        if (!this.width || this.width === 0 || !this.height || this.height === 0) {
+            this.resize();
+        }
         if (typeof requestAnimationFrame !== 'undefined') {
             if (this._rafPending) return;
             this._rafPending = true;
